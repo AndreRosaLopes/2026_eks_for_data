@@ -48,6 +48,7 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 - [D-011 — Public API Source](../../docs/decisions/011-public-api-source.md)
 - [D-012 — Cluster and UI Access](../../docs/decisions/012-cluster-and-ui-access.md)
 - [D-013 — EKS Node Cost Tracking](../../docs/decisions/013-eks-node-cost-tracking.md)
+- [D-014 — EKS API Data Encryption](../../docs/decisions/014-eks-api-data-encryption.md)
 
 ## Steps
 
