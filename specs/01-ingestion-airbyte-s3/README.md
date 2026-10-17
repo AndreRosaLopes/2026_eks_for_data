@@ -51,5 +51,66 @@ Written on the last step: walkthrough proving the phase "Done When".
 
 ## Teardown
 
+All steps so far live in one Terraform root (`infra/aws/cluster`), so a single `destroy` removes the
+whole environment. Each step's own teardown is in its spec (links below).
+
+### Turn Off
+
+In Git Bash, from the repository root:
+
+```bash
+set -a; source .env; set +a
+export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"   # required variable
+kubectl delete pod --all                     # no test pods keeping nodes alive
+terraform -chdir=infra/aws/cluster destroy   # shows the plan and asks for "yes"
+```
+
+It takes about 10–15 minutes, mostly deleting the cluster and the NAT Gateways.
+
+| Removed | Cost that stops |
+|---|---|
+| EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
+| 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
+| VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
+
+What stays, at no cost:
+
+- The code and `.terraform.lock.hcl` in Git.
+- The local `terraform.tfstate`, now empty; the next `apply` recreates everything from it.
+- The `eks-for-data` context in `~/.kube/config`, pointing to a cluster that no longer exists.
+  Remove it with `kubectl config delete-context eks-for-data`.
+- The `aws:eks:cluster-name` cost allocation tag activation in Billing.
+
+### Check Nothing Is Left
+
+```bash
+P="--profile eks-ws --region us-east-1 --output text"
+aws eks list-clusters $P
+aws ec2 describe-nat-gateways $P --query 'NatGateways[?State!=`deleted`].NatGatewayId'
+aws ec2 describe-addresses $P --query 'Addresses[].PublicIp'
+aws ec2 describe-vpcs --filters Name=tag:project,Values=2026_eks_for_data $P --query 'Vpcs[].VpcId'
+```
+
+- Expected result: every command returns empty (NAT Gateways may show `deleting` for a few minutes).
+- EKS may recreate the `/aws/eks/eks-for-data/cluster` log group right after the destroy with
+  in-flight logs. It costs cents, but the next `apply` fails because the log group already exists.
+  Check with `MSYS_NO_PATHCONV=1 aws logs describe-log-groups --log-group-name-prefix /aws/eks/eks-for-data $P`
+  and, if it is there, delete it with
+  `MSYS_NO_PATHCONV=1 aws logs delete-log-group --log-group-name /aws/eks/eks-for-data/cluster --profile eks-ws --region us-east-1`.
+
+### Turn On Again
+
+```bash
+set -a; source .env; set +a
+export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"
+terraform -chdir=infra/aws/cluster plan -out=tfplan
+terraform -chdir=infra/aws/cluster apply tfplan
+aws eks update-kubeconfig --name eks-for-data --region us-east-1
+```
+
+It takes about 15–20 minutes and recreates the same environment (resource IDs change).
+
+### Step Teardowns
+
 - [01.01 — Network](01-network/spec.md#teardown)
 - [01.02 — EKS Cluster](02-eks-cluster/spec.md#teardown)
