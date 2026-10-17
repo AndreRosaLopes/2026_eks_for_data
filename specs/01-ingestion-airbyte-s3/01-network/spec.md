@@ -1,6 +1,6 @@
 # 01.01 — Network: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [01 — Ingestion: Airbyte Writing Parquet to S3](../plan.md)
 
 ## Design
@@ -54,7 +54,7 @@ All AWS commands use `--profile eks-ws --region us-east-1`.
 | 7 | Automated | Private routes | `aws ec2 describe-route-tables --filters Name=vpc-id,Values=<vpc_id>` | Each private route table has `0.0.0.0/0` to the NAT of the same AZ and a route to the S3 prefix list | Pass: private 1a → `nat-06e4…` (az1), private 1b → `nat-0584…` (az2); both with `pl-63a5400a` → `vpce-09567c9745489c8dd` |
 | 8 | Automated | S3 endpoint | `aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values=<vpc_id>` | `com.amazonaws.us-east-1.s3`, type `Gateway`, `available`, attached to the 2 private route tables | Pass: `com.amazonaws.us-east-1.s3`, `Gateway`, `available`, route tables `rtb-06973f89e022b0343`, `rtb-033286ebb4081cb1c` (private) |
 | 9 | Automated | State outside Git | `git check-ignore infra/aws/cluster/terraform.tfstate` and `git status --short` | State ignored; only the 3 `.tf` files and `.terraform.lock.hcl` appear as new | Pass: `terraform.tfstate` ignored by `*.tfstate`; new files: 3 `.tf` + `.terraform.lock.hcl` |
-| 10 | Manual | Visual topology | AWS console (us-east-1) → VPC → Your VPCs → `eks-for-data-vpc` → **Resource map** tab | 2 AZs, 2 public and 2 private subnets, 1 Internet Gateway, 2 NAT Gateways, S3 endpoint; each private route table linked to the NAT of its AZ | Pending |
+| 10 | Manual | Visual topology | AWS console (us-east-1) → VPC → Your VPCs → `eks-for-data-vpc` → **Resource map** tab | 2 AZs, 2 public and 2 private subnets, 1 Internet Gateway, 2 NAT Gateways, S3 endpoint; each private route table linked to the NAT of its AZ | Pass: confirmed by the user |
 
 ## Teardown
 
