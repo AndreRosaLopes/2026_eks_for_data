@@ -47,13 +47,14 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 - [D-010 — Airbyte Connection Configuration](../../docs/decisions/010-airbyte-connection-config.md)
 - [D-011 — Public API Source](../../docs/decisions/011-public-api-source.md)
 - [D-012 — Cluster and UI Access](../../docs/decisions/012-cluster-and-ui-access.md)
+- [D-013 — EKS Node Cost Tracking](../../docs/decisions/013-eks-node-cost-tracking.md)
 
 ## Steps
 
 | # | Step | Status |
 |---|---|---|
-| 01.01 | [Network](01-network/spec.md): VPC in 2 AZs, public and private subnets, one NAT Gateway per AZ, S3 gateway endpoint | In progress |
-| 01.02 | [EKS cluster](02-eks-cluster/spec.md): Auto Mode cluster, operator access entry, OIDC provider; `kubectl` runs a test pod | To do |
+| 01.01 | [Network](01-network/spec.md): VPC in 2 AZs, public and private subnets, one NAT Gateway per AZ, S3 gateway endpoint | Done |
+| 01.02 | [EKS cluster](02-eks-cluster/spec.md): Auto Mode cluster, operator access entry, OIDC provider; `kubectl` runs a test pod | In progress |
 | 01.03 | [Data storage and access](03-data-storage/spec.md): bronze and Airbyte internal buckets, Airbyte IAM role (IRSA); policy tested | To do |
 | 01.04 | [Argo CD](04-argo-cd/spec.md): Helm via Terraform and root Application pointing to `platform/aws`; UI by port-forward | To do |
 | 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | To do |
