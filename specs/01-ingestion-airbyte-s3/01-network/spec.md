@@ -21,7 +21,7 @@ Credentials come from `AWS_PROFILE=eks-ws`, loaded from `.env`, and never enter 
 | NAT | `enable_nat_gateway = true`, `one_nat_gateway_per_az = true`: 2 NATs, each with an EIP; each private subnet goes out through the NAT of its AZ ([D-005](../../../docs/decisions/005-network-topology.md)) | |
 | S3 endpoint | Submodule `vpc/aws//modules/vpc-endpoints`, Gateway type, attached to the private route tables | Free; S3 traffic bypasses the NAT (D-005) |
 | DNS | `enable_dns_hostnames` and `enable_dns_support` = `true` (module default) | Required by EKS |
-| Tags | Provider `default_tags`: `Project = 2026_eks_for_data`, `ManagedBy = terraform`. Name prefix: `eks-for-data` | |
+| Tags | Provider `default_tags`: `project = 2026_eks_for_data`, `managed-by = terraform`. Name prefix: `eks-for-data` | Lowercase keys and values, so the same tags are valid as GCP labels (lowercase letters, digits, `_` and `-` only) |
 | Versions | Terraform `>= 1.10`, `hashicorp/aws ~> 6.28` (the module requires `>= 6.28`), module pinned to `6.7.3`. `.terraform.lock.hcl` is versioned | |
 
 **Cost while running:** 2 NATs × US$ 0.045/h + 2 public IPv4 × US$ 0.005/h = **US$ 0.10/h**,
@@ -45,15 +45,15 @@ All AWS commands use `--profile eks-ws --region us-east-1`.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Formatting | `terraform -chdir=infra/aws/cluster fmt -check` | Exit 0 | Pending |
-| 2 | Automated | Syntax | `terraform -chdir=infra/aws/cluster init && terraform -chdir=infra/aws/cluster validate` | `Success! The configuration is valid.` | Pending |
-| 3 | Automated | Plan | `terraform -chdir=infra/aws/cluster plan` | Only creations (0 to change, 0 to destroy): 1 VPC, 4 subnets, 2 `aws_nat_gateway`, 2 `aws_eip`, 1 `aws_vpc_endpoint` | Pending |
-| 4 | Automated | Apply (**asks for confirmation: incurs cost**) | `terraform -chdir=infra/aws/cluster apply` | `Apply complete!` | Pending |
-| 5 | Automated | Subnets | `aws ec2 describe-subnets --filters Name=vpc-id,Values=<vpc_id>` | 4 subnets, 2 per AZ (use1-az1, use1-az2), none in use1-az3; private ones with `MapPublicIpOnLaunch=false` | Pending |
-| 6 | Automated | NATs | `aws ec2 describe-nat-gateways --filter Name=vpc-id,Values=<vpc_id>` | 2 NATs `available`, each in a public subnet of a different AZ | Pending |
-| 7 | Automated | Private routes | `aws ec2 describe-route-tables --filters Name=vpc-id,Values=<vpc_id>` | Each private route table has `0.0.0.0/0` to the NAT of the same AZ and a route to the S3 prefix list | Pending |
-| 8 | Automated | S3 endpoint | `aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values=<vpc_id>` | `com.amazonaws.us-east-1.s3`, type `Gateway`, `available`, attached to the 2 private route tables | Pending |
-| 9 | Automated | State outside Git | `git check-ignore infra/aws/cluster/terraform.tfstate` and `git status --short` | State ignored; only the 3 `.tf` files and `.terraform.lock.hcl` appear as new | Pending |
+| 1 | Automated | Formatting | `terraform -chdir=infra/aws/cluster fmt -check` | Exit 0 | Pass: exit 0 |
+| 2 | Automated | Syntax | `terraform -chdir=infra/aws/cluster init && terraform -chdir=infra/aws/cluster validate` | `Success! The configuration is valid.` | Pass |
+| 3 | Automated | Plan | `terraform -chdir=infra/aws/cluster plan` | Only creations (0 to change, 0 to destroy): 1 VPC, 4 subnets, 2 `aws_nat_gateway`, 2 `aws_eip`, 1 `aws_vpc_endpoint` | Pass: 24 to add, 0 to change, 0 to destroy (expected resources plus module defaults: IGW, route tables, routes, associations, default NACL/SG/route table); AZs us-east-1a, us-east-1b; re-run after the tag change |
+| 4 | Automated | Apply (**asks for confirmation: incurs cost**) | `terraform -chdir=infra/aws/cluster apply` | `Apply complete!` | Pass: `Apply complete! Resources: 24 added`, run by the user; `vpc-0e436d7de52ff5b90` |
+| 5 | Automated | Subnets | `aws ec2 describe-subnets --filters Name=vpc-id,Values=<vpc_id>` | 4 subnets, 2 per AZ (use1-az1, use1-az2), none in use1-az3; private ones with `MapPublicIpOnLaunch=false` | Pass: private 10.0.0.0/19 (use1-az1), 10.0.32.0/19 (use1-az2); public 10.0.64.0/24 (use1-az1), 10.0.65.0/24 (use1-az2); all `MapPublicIpOnLaunch=False` |
+| 6 | Automated | NATs | `aws ec2 describe-nat-gateways --filter Name=vpc-id,Values=<vpc_id>` | 2 NATs `available`, each in a public subnet of a different AZ | Pass: `nat-06e4293875c55f591` (public use1-az1), `nat-05844be179f65284b` (public use1-az2), both `available` |
+| 7 | Automated | Private routes | `aws ec2 describe-route-tables --filters Name=vpc-id,Values=<vpc_id>` | Each private route table has `0.0.0.0/0` to the NAT of the same AZ and a route to the S3 prefix list | Pass: private 1a → `nat-06e4…` (az1), private 1b → `nat-0584…` (az2); both with `pl-63a5400a` → `vpce-09567c9745489c8dd` |
+| 8 | Automated | S3 endpoint | `aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values=<vpc_id>` | `com.amazonaws.us-east-1.s3`, type `Gateway`, `available`, attached to the 2 private route tables | Pass: `com.amazonaws.us-east-1.s3`, `Gateway`, `available`, route tables `rtb-06973f89e022b0343`, `rtb-033286ebb4081cb1c` (private) |
+| 9 | Automated | State outside Git | `git check-ignore infra/aws/cluster/terraform.tfstate` and `git status --short` | State ignored; only the 3 `.tf` files and `.terraform.lock.hcl` appear as new | Pass: `terraform.tfstate` ignored by `*.tfstate`; new files: 3 `.tf` + `.terraform.lock.hcl` |
 | 10 | Manual | Visual topology | AWS console (us-east-1) → VPC → Your VPCs → `eks-for-data-vpc` → **Resource map** tab | 2 AZs, 2 public and 2 private subnets, 1 Internet Gateway, 2 NAT Gateways, S3 endpoint; each private route table linked to the NAT of its AZ | Pending |
 
 ## Teardown
