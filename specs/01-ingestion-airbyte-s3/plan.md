@@ -12,7 +12,8 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 - VPC, EKS cluster, S3 buckets (bronze and Airbyte internal storage) and IAM, in Terraform
 - Argo CD, bootstrapped by Terraform
 - Airbyte (Helm chart v2), deployed by Argo CD
-- Airbyte source, destination (Parquet) and connection, in Terraform
+- Airbyte source, destination (Parquet) and connection: created manually in the Airbyte UI by the
+  user, following the phase README, then saved as Terraform code with `import`
 - Phase walkthrough and teardown
 
 ## Out of Scope
@@ -56,4 +57,4 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 | 01.03 | [Data storage and access](03-data-storage/spec.md): bronze and Airbyte internal buckets, Airbyte IAM role (IRSA); policy tested | To do |
 | 01.04 | [Argo CD](04-argo-cd/spec.md): Helm via Terraform and root Application pointing to `platform/aws`; UI by port-forward | To do |
 | 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | To do |
-| 01.06 | [Ingestion pipeline](06-ingestion-pipeline/spec.md): source, destination (Parquet) and connection in Terraform; sync writes Parquet; phase README | To do |
+| 01.06 | [Phase walkthrough](06-phase-walkthrough/spec.md): phase README only, describing how the user verifies the phase: create source, destination (Parquet) and connection in the Airbyte UI, run the sync, check the Parquet files, then save the configuration in `pipelines/airbyte/aws` with Terraform `import` | To do |
