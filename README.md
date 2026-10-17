@@ -2,7 +2,8 @@
 
 ## 1. Objective
 
-Build and test an open-source data platform on the three major clouds: **AWS**, **Azure** and **GCP**.
+Build, test and compare an open-source data platform on the three major clouds: **AWS**, **Azure** and **GCP**.
+Every component and decision must have an equivalent on all three clouds, so they can be compared side by side.
 The goal is to learn modern data platform architecture by deploying it hands-on.
 The platform uses open-source components on Kubernetes, with each cloud's native object storage.
 
@@ -33,7 +34,7 @@ Phases are a guide, not a fixed plan: their order and scope may change as the pr
 | 03 | **Orchestration:** Airflow | To be defined |
 | — | **Next phases** | To be decided |
 
-## 4. Principles
+## 4. Premises
 
 - **Learning first:** the focus is on understanding the architecture, not on delivering production systems.
 - **Open source and portable:** the same stack runs on all three clouds. Only the infrastructure layer

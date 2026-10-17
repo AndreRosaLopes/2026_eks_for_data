@@ -41,5 +41,7 @@ Always indicate one recommended alternative, chosen by applying principles 1 to 
 
 Every decision and step must adhere to the objective and architecture described in the README,
 these principles and the decisions already recorded.
+To check it, list each requirement stated in those documents and state, for every alternative,
+whether it meets each one.
 When a decision or step diverges from them, state the divergence explicitly to the user
 and indicate which documents must be updated.
