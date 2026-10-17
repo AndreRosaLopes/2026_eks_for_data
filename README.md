@@ -73,7 +73,9 @@ Phases are a guide, not a fixed plan: their order and scope may change as the pr
 2. **For each step of the plan, in order:**
    1. **Specify:** run `/sdd-spec <phase.step>` and approve the specification.
    2. **Implement:** run `/sdd-implement <phase.step>` and confirm each irreversible or costly action.
-3. **Verify the phase:** on the last step, follow the phase README and confirm that it works.
+   3. **Verify the step:** follow the step's section in the phase README and confirm that it works.
+3. **Verify the phase:** on the last step, also follow the end-to-end verification in the phase README
+   and confirm that it works.
 
 ### 7.3 Skills
 
@@ -81,7 +83,7 @@ Phases are a guide, not a fixed plan: their order and scope may change as the pr
 |---|---|---|---|
 | `/sdd-plan` | Phase idea (free text) | `specs/NN-phase/plan.md`: objective, scope, out of scope, done when, decisions, steps. `docs/decisions/NNN-name.md`: one ADR per decision | Answer questions; approve |
 | `/sdd-spec` | `phase.step` of an approved plan | `specs/NN-phase/NN-step/spec.md`: design, files, verification plan, teardown | Approve |
-| `/sdd-implement` | `phase.step` of an approved spec | Code; verification results in `spec.md`; status in `plan.md`. Last step: `specs/NN-phase/README.md`, the walkthrough to verify the phase | Confirm costly actions; on the last step, follow the README and confirm |
+| `/sdd-implement` | `phase.step` of an approved spec | Code; verification results in `spec.md`; status in `plan.md`. Every step: its section in `specs/NN-phase/README.md`; last step: the end-to-end walkthrough | Confirm costly actions; follow the README section and confirm |
 
 ### 7.4 Structure
 
@@ -92,7 +94,7 @@ docs/
 specs/
   NN-phase-name/
     plan.md           # the phase
-    README.md         # how to verify the phase (written on the last step)
+    README.md         # how to verify each step and the phase (updated on every step)
     NN-step-name/
       spec.md         # the step
 ```
