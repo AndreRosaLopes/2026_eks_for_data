@@ -1,6 +1,6 @@
 # 01.02 — EKS Cluster: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [01 — Ingestion: Airbyte Writing Parquet to S3](../plan.md)
 
 ## Design
@@ -58,9 +58,9 @@ AWS commands use `--profile eks-ws --region us-east-1`; `TF_VAR_operator_cidr` m
 | 8 | Automated | kubectl | `aws eks update-kubeconfig --name eks-for-data` and `kubectl auth can-i '*' '*' --all-namespaces` | `yes` | Pass: `yes`; client v1.37.1, server v1.37.0 |
 | 9 | Automated | Test pod + NAT egress (pending from 01.01) | `kubectl run nat-test --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- wget -qO- https://pokeapi.co/api/v2/pokemon/ditto`; then `kubectl logs nat-test`, `kubectl get nodes -o wide`, `kubectl delete pod nat-test` | Pod `Completed`; log has the `ditto` JSON; the node has a `10.0.x` InternalIP (private subnet) and no external IP | Pass: pod `Completed` in 31 s; log has the `ditto` JSON; node `c6a.large` in us-east-1a, InternalIP `10.0.9.3`, no external IP, Bottlerocket (EKS Auto); pod deleted |
 | 10 | Automated | State outside Git | `git status --short` | Only the files listed above appear | Pass: no new files; state ignored |
-| 11 | Manual | Cluster in the console | AWS console (N. Virginia) → **EKS** → `eks-for-data` | Status `Active`, Kubernetes `1.37`, **EKS Auto Mode** enabled | Pending |
-| 12 | Manual | User runs a pod | `kubectl run hello --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- echo hello`; `kubectl logs hello`; `kubectl delete pod hello` | `hello` | Pending |
-| 13 | Manual | Cost tags (D-013) | Console → **Billing and Cost Management** → **Cost allocation tags**: activate `aws:eks:cluster-name` (AWS-generated) and `project` (user-defined) | Both `Active` (may take up to 24 h to appear in the list) | Pending |
+| 11 | Manual | Cluster in the console | AWS console (N. Virginia) → **EKS** → `eks-for-data` | Status `Active`, Kubernetes `1.37`, **EKS Auto Mode** enabled | Pass: confirmed by the user |
+| 12 | Manual | User runs a pod | `kubectl run hello --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- echo hello`; `kubectl logs hello`; `kubectl delete pod hello` | `hello` | Pass: confirmed by the user |
+| 13 | Manual | Cost tags (D-013) | Console → **Billing and Cost Management** → **Cost allocation tags**: activate `aws:eks:cluster-name` (AWS-generated) and `project` (user-defined) | Both `Active` (may take up to 24 h to appear in the list) | Partial: `aws:eks:cluster-name` Active (checked via CLI); `project` not yet listed by Billing (up to 24 h), to be activated when it appears |
 
 ## Teardown
 
