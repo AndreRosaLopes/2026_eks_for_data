@@ -28,8 +28,10 @@ preferring official sources.
 ## 5. Evaluate Alternatives
 
 Always compare the alternatives in a table, stating precisely and objectively the advantages
-and disadvantages of adopting each one against principles 1 to 3.
-Alternatives that break principle 7 are discarded before the comparison.
+and disadvantages of adopting each one against principles 1 to 3, and how each one adheres
+to principle 7.
+Alternatives that cannot adhere to principle 7 are discarded before the comparison,
+with the reason stated.
 
 ## 6. Recommend a Solution
 
@@ -37,7 +39,7 @@ Always indicate one recommended alternative, chosen by applying principles 1 to 
 
 ## 7. Consistency with the Whole
 
-Every step must stay consistent with the project as a whole: the objective and architecture
-in the README, these principles and the decisions already recorded.
-When a step needs to diverge, update the affected documents in the same change,
-so that the documentation always matches what is implemented.
+Every decision and step must adhere to the objective and architecture described in the README,
+these principles and the decisions already recorded.
+When a decision or step diverges from them, state the divergence explicitly to the user
+and indicate which documents must be updated.
