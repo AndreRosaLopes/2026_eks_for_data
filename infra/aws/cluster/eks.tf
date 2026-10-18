@@ -3,7 +3,7 @@ module "eks" {
   version = "21.29.0"
 
   name               = local.name
-  kubernetes_version = "1.37"
+  kubernetes_version = "1.36"
 
   # Auto Mode with the general-purpose pool only (D-006)
   compute_config = {

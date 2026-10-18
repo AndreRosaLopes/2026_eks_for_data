@@ -13,7 +13,7 @@ on the private subnets of 01.01.
 | Item | Value | Why |
 |---|---|---|
 | Name | `eks-for-data` (`local.name`) | |
-| Kubernetes | `1.37`, the newest in standard support (until 2027-11-30) | Longest support window; avoids extended support charges |
+| Kubernetes | `1.36`, in standard support until 2027-08-02 ([D-017](../../../docs/decisions/017-kubernetes-version.md)); first applied as `1.37` | Newest version tested by Argo CD 3.5; avoids extended support charges |
 | Compute | `compute_config = { enabled = true, node_pools = ["general-purpose"] }` ([D-006](../../../docs/decisions/006-eks-compute-mode.md)) | The `system` pool is tainted `CriticalAddonsOnly` and nothing in the phase needs it; in Auto Mode, CoreDNS, kube-proxy and the CNI run managed |
 | Subnets | `module.vpc.private_subnets` | Private nodes ([D-005](../../../docs/decisions/005-network-topology.md)) |
 | API endpoint | `endpoint_public_access = true`, `endpoint_public_access_cidrs = [var.operator_cidr]`; private access stays on (default) | [D-012](../../../docs/decisions/012-cluster-and-ui-access.md) |
@@ -29,7 +29,7 @@ on the private subnets of 01.01.
 them (EC2 price + Auto Mode fee per node), and consolidation removes the empty node after the test.
 CloudWatch logs cost cents. With the network: **about US$ 0.20/h without nodes**.
 
-**New prerequisite:** kubectl **1.36 to 1.38** (the client supports one minor version of skew from
+**New prerequisite:** kubectl **1.35 to 1.37** (the client supports one minor version of skew from
 the cluster). Latest stable: `v1.37.1`.
 
 ## Files
@@ -52,13 +52,13 @@ AWS commands use `--profile eks-ws --region us-east-1`; `TF_VAR_operator_cidr` m
 | 2 | Automated | Syntax | `terraform -chdir=infra/aws/cluster init -upgrade && terraform -chdir=infra/aws/cluster validate` | `Success! The configuration is valid.` | Pass; lock adds `cloudinit`, `null`, `time`, `tls` (used by the EKS module) |
 | 3 | Automated | Plan | `terraform -chdir=infra/aws/cluster plan -out=tfplan` | Only EKS module creations (cluster, IAM roles, OIDC provider, access entry, log group, security groups); **0 to change, 0 to destroy** in the network | Pass: 31 to add, 0 to change, 0 to destroy; no KMS resources (D-014) |
 | 4 | Automated | Apply (**run by the user; incurs cost; ~10–15 min**) | `terraform -chdir=infra/aws/cluster apply tfplan` | `Apply complete!` | Pass: `Apply complete! Resources: 31 added` |
-| 5 | Automated | Cluster | `aws eks describe-cluster --name eks-for-data` | `ACTIVE`, version `1.37`, `computeConfig.enabled=true`, `nodePools=[general-purpose]`, `publicAccessCidrs=[<operator IP>/32]`, private subnets only, `project` tag | Pass: `ACTIVE`, `1.37`, Auto Mode with `general-purpose`, public access limited to the operator `/32`, private access on, 2 private subnets, `authenticationMode=API`, no `encryptionConfig` (D-014), tags `project` and `managed-by` |
+| 5 | Automated | Cluster | `aws eks describe-cluster --name eks-for-data` | `ACTIVE`, version `1.36`, `computeConfig.enabled=true`, `nodePools=[general-purpose]`, `publicAccessCidrs=[<operator IP>/32]`, private subnets only, `project` tag | Pass: `ACTIVE`, `1.37`, Auto Mode with `general-purpose`, public access limited to the operator `/32`, private access on, 2 private subnets, `authenticationMode=API`, no `encryptionConfig` (D-014), tags `project` and `managed-by` |
 | 6 | Automated | OIDC provider | `aws iam list-open-id-connect-providers` | Includes the cluster issuer | Pass: `oidc.eks.us-east-1.amazonaws.com/id/5AF0EA393EA3EBF4FB2F7832DCF6DEB2` |
 | 7 | Automated | Access entry | `aws eks list-associated-access-policies --cluster-name eks-for-data --principal-arn <eks-ws-deployer ARN>` | `AmazonEKSClusterAdminPolicy`, cluster scope | Pass: `AmazonEKSClusterAdminPolicy`, scope `cluster` |
 | 8 | Automated | kubectl | `aws eks update-kubeconfig --name eks-for-data` and `kubectl auth can-i '*' '*' --all-namespaces` | `yes` | Pass: `yes`; client v1.37.1, server v1.37.0 |
 | 9 | Automated | Test pod + NAT egress (pending from 01.01) | `kubectl run nat-test --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- wget -qO- https://pokeapi.co/api/v2/pokemon/ditto`; then `kubectl logs nat-test`, `kubectl get nodes -o wide`, `kubectl delete pod nat-test` | Pod `Completed`; log has the `ditto` JSON; the node has a `10.0.x` InternalIP (private subnet) and no external IP | Pass: pod `Completed` in 31 s; log has the `ditto` JSON; node `c6a.large` in us-east-1a, InternalIP `10.0.9.3`, no external IP, Bottlerocket (EKS Auto); pod deleted |
 | 10 | Automated | State outside Git | `git status --short` | Only the files listed above appear | Pass: no new files; state ignored |
-| 11 | Manual | Cluster in the console | AWS console (N. Virginia) → **EKS** → `eks-for-data` | Status `Active`, Kubernetes `1.37`, **EKS Auto Mode** enabled | Pass: confirmed by the user |
+| 11 | Manual | Cluster in the console | AWS console (N. Virginia) → **EKS** → `eks-for-data` | Status `Active`, Kubernetes `1.36`, **EKS Auto Mode** enabled | Pass: confirmed by the user |
 | 12 | Manual | User runs a pod | `kubectl run hello --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- echo hello`; `kubectl logs hello`; `kubectl delete pod hello` | `hello` | Pass: confirmed by the user |
 | 13 | Manual | Cost tags (D-013) | Console → **Billing and Cost Management** → **Cost allocation tags**: activate `aws:eks:cluster-name` (AWS-generated) and `project` (user-defined) | Both `Active` (may take up to 24 h to appear in the list) | Partial: `aws:eks:cluster-name` Active (checked via CLI); `project` not yet listed by Billing (up to 24 h), to be activated when it appears |
 

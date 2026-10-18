@@ -9,7 +9,7 @@ verification proves the phase [Done When](plan.md#done-when).
 - AWS account access through the `eks-ws` profile (see `.env`)
 - AWS console access to the same account, region `us-east-1`
 - Git Bash with the `.env` variables loaded: `set -a; source .env; set +a`
-- kubectl 1.36 to 1.38 (`kubectl version --client`)
+- kubectl 1.35 to 1.37 (`kubectl version --client`)
 
 ## Access
 
@@ -33,7 +33,7 @@ verification proves the phase [Done When](plan.md#done-when).
 ### 01.02 — EKS Cluster
 
 1. Open the AWS console → **EKS** → **Clusters** → `eks-for-data`.
-   - Expected result: status `Active`, Kubernetes version `1.37`, **EKS Auto Mode** enabled.
+   - Expected result: status `Active`, Kubernetes version `1.36`, **EKS Auto Mode** enabled.
 2. Run a pod and read its output:
    ```bash
    kubectl run hello --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- echo hello
