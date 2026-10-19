@@ -53,6 +53,8 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 - [D-016 — Bronze Bucket Versioning](../../docs/decisions/016-bronze-bucket-versioning.md)
 - [D-017 — Kubernetes Version](../../docs/decisions/017-kubernetes-version.md)
 - [D-018 — Workload Resource Requests](../../docs/decisions/018-workload-resource-requests.md)
+- [D-019 — Airbyte Sync Policy in Argo CD](../../docs/decisions/019-airbyte-sync-policy.md)
+- [D-020 — AWS Account ID in the Public Repository](../../docs/decisions/020-aws-account-id-in-git.md)
 
 ## Steps
 
@@ -62,5 +64,5 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 | 01.02 | [EKS cluster](02-eks-cluster/spec.md): Auto Mode cluster, operator access entry, OIDC provider; `kubectl` runs a test pod | Done |
 | 01.03 | [Data storage and access](03-data-storage/spec.md): bronze and Airbyte internal buckets, Airbyte IAM role (IRSA); policy tested | In progress |
 | 01.04 | [Argo CD](04-argo-cd/spec.md): Helm via Terraform and root Application pointing to `platform/aws`; UI by port-forward | In progress |
-| 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | To do |
+| 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | In progress |
 | 01.06 | [Phase walkthrough](06-phase-walkthrough/spec.md): adds its phase README section, describing how the user creates source, destination (Parquet) and connection in the Airbyte UI, runs the sync, checks the Parquet files, then saves the configuration in `pipelines/airbyte/aws` with Terraform `import`; and the end-to-end walkthrough | To do |
