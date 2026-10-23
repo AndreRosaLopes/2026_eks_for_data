@@ -26,6 +26,7 @@ The platform uses open-source components on Kubernetes, with each cloud's native
 A phase is a functional objective: something that works end to end. Each phase is broken into
 implementation steps (see [section 7](#7-development-process-sdd)) and documented in `specs/NN-name/plan.md`.
 Phases are a guide, not a fixed plan: their order and scope may change as the project evolves.
+To bring up the environment and its services, see [HOW_TO_RUN.md](HOW_TO_RUN.md).
 
 | # | Phase | Initial idea of steps |
 |---|---|---|
