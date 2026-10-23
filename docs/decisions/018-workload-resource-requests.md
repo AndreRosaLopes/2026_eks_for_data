@@ -29,7 +29,21 @@ requests for every workload and, with consolidation, memory limits equal to memo
 - **Revisit:** once the usage of Argo CD (01.04) and Airbyte (01.05) has been measured, set the
   requests and memory limits in a later step, or earlier if pods are evicted or OOM-killed.
 
+## Update — 2026-10-23: Airbyte Needs Requests to Start
+
+Step 01.05 showed that Airbyte cannot be measured without requests: Auto Mode placed all its pods
+and Argo CD on one `c6a.large` (2 vCPU), five JVMs started together and saturated the CPU, and the
+liveness probe killed them before they finished starting, in an endless loop.
+
+- **Change:** Airbyte gets initial CPU and memory requests in `platform/aws/airbyte.yaml` (server
+  and worker 500m/1Gi; workload launcher and workload API server 250m/768Mi; manifest server
+  250m/512Mi; cron 100m/512Mi; temporal 250m/256Mi), based on the official minimum (4 CPUs and 8 GB
+  for all of Airbyte), the usage of a started JVM (cron, 481Mi) and the chart example for temporal.
+- **Unchanged:** Argo CD keeps the chart defaults; memory limits and the final requests are still
+  set from the usage measured in check 9 of 01.05, as decided above.
+
 ## Sources
 
+- [Airbyte quickstart: requirements](https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart)
 - [EKS best practices: Karpenter, scheduling pods](https://docs.aws.amazon.com/eks/latest/best-practices/karpenter.html)
 - [EKS best practices: data plane, size resource requests and limits](https://docs.aws.amazon.com/eks/latest/best-practices/data-plane.html)

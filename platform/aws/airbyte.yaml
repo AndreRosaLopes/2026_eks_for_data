@@ -33,6 +33,42 @@ spec:
             eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-airbyte
         minio:
           enabled: false
+        # Requests so Auto Mode sizes the nodes; without them Airbyte does not start (D-018)
+        server:
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+        worker:
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+        workloadLauncher:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+        workloadApiServer:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+        cron:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+        manifestServer:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+        temporal:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: airbyte
