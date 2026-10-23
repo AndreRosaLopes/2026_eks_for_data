@@ -1,6 +1,6 @@
 # 01 — Ingestion: Airbyte Writing Parquet to S3: Plan
 
-Status: Approved
+Status: Done
 
 ## Objective
 
