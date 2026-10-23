@@ -1,0 +1,44 @@
+# Airbyte (chart v2), deployed by Argo CD; values from the infra/aws/cluster outputs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: airbyte
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://airbytehq.github.io/charts
+    chart: airbyte
+    targetRevision: 2.4.0
+    helm:
+      valuesObject:
+        global:
+          airbyteUrl: http://localhost:8001
+          # Internal storage in S3 through IRSA (D-008, D-009)
+          storage:
+            type: s3
+            bucket:
+              log: eks-for-data-airbyte-283429977024
+              state: eks-for-data-airbyte-283429977024
+              workloadOutput: eks-for-data-airbyte-283429977024
+              activityPayload: eks-for-data-airbyte-283429977024
+              auditLogging: eks-for-data-airbyte-283429977024
+            s3:
+              region: us-east-1
+              authenticationType: instanceProfile
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-airbyte
+        minio:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: airbyte
+  # No selfHeal: chart hooks are recreated on every sync (D-019)
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

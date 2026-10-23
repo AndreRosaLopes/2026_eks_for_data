@@ -1,0 +1,18 @@
+# EBS StorageClass for EKS Auto Mode, which creates none (D-006).
+# Default class, because the Airbyte Postgres PVC sets no storageClassName.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: auto-ebs-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.eks.amazonaws.com
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+  - matchLabelExpressions:
+      - key: eks.amazonaws.com/compute-type
+        values:
+          - auto
+parameters:
+  type: gp3
+  encrypted: "true"
