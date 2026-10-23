@@ -45,6 +45,35 @@ verification proves the phase [Done When](plan.md#done-when).
    (AWS-generated tags) and `project` (user-defined tags).
    - Expected result: both `Active`. New tags can take up to 24 hours to appear in the list.
 
+### 01.03 — Data Storage and Access
+
+1. Open the AWS console → **S3** → `eks-for-data-bronze-<account_id>` → **Permissions** tab, then
+   **Properties** tab. Repeat for `eks-for-data-airbyte-<account_id>`.
+   - Expected result: **Block all public access: On**; **Default encryption: SSE-S3**;
+     **Bucket Versioning: Disabled**.
+2. Write a file to the bronze bucket from a pod, as Airbyte will, using the `eks-for-data-airbyte`
+   role (IRSA):
+   ```bash
+   ROLE=$(terraform -chdir=infra/aws/cluster output -raw airbyte_role_arn)
+   BUCKET=$(terraform -chdir=infra/aws/cluster output -raw bronze_bucket)
+   kubectl create namespace airbyte
+   kubectl -n airbyte create serviceaccount airbyte-admin
+   kubectl -n airbyte annotate serviceaccount airbyte-admin eks.amazonaws.com/role-arn=$ROLE
+   kubectl -n airbyte run hello-s3 --image=public.ecr.aws/aws-cli/aws-cli:2.38.1 --restart=Never \
+     --overrides='{"spec":{"serviceAccountName":"airbyte-admin"}}' \
+     --command -- bash -c "echo hello | aws s3 cp - s3://$BUCKET/test/hello.txt && echo uploaded"
+   kubectl -n airbyte logs hello-s3      # wait a minute if the pod is still starting
+   ```
+   - Expected result: the log shows `uploaded`, and the console shows `hello.txt` under `test/` in
+     the bronze bucket. If `kubectl logs` returns `tls: internal error`, the node was just created:
+     wait a minute and run it again.
+3. Clean up:
+   ```bash
+   aws s3 rm s3://$BUCKET/test/hello.txt
+   kubectl delete namespace airbyte
+   ```
+   - Expected result: the file and the namespace are gone.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -72,6 +101,7 @@ It takes about 10–15 minutes, mostly deleting the cluster and the NAT Gateways
 | EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
 | 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
 | VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
+| Bronze and Airbyte buckets, emptied first (**bronze data is lost**); Airbyte IAM role and policy | Cents (S3 storage) |
 
 What stays, at no cost:
 
@@ -114,3 +144,4 @@ It takes about 15–20 minutes and recreates the same environment (resource IDs 
 
 - [01.01 — Network](01-network/spec.md#teardown)
 - [01.02 — EKS Cluster](02-eks-cluster/spec.md#teardown)
+- [01.03 — Data Storage and Access](03-data-storage/spec.md#teardown)
