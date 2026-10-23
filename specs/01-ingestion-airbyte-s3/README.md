@@ -36,11 +36,15 @@ verification proves the phase [Done When](plan.md#done-when).
    - Expected result: status `Active`, Kubernetes version `1.36`, **EKS Auto Mode** enabled.
 2. Run a pod and read its output:
    ```bash
-   kubectl run hello --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- echo hello
-   kubectl logs hello      # wait a minute if the pod is still starting
+   kubectl run hello --image=public.ecr.aws/docker/library/busybox:1.37 --restart=Never -- sh -c 'echo hello; sleep 120'
+   kubectl wait --for=condition=Ready pod/hello --timeout=180s
+   kubectl logs hello
    kubectl delete pod hello
    ```
-   - Expected result: `hello`. Auto Mode creates a node for the pod and removes it once empty.
+   - Expected result: `hello`. Auto Mode creates a node for the pod and removes it once empty;
+     `sleep 120` keeps the pod, and so the node, alive while you read the log.
+   - If `kubectl logs` returns `tls: internal error`, the new node does not have its kubelet
+     certificate yet (about 20 seconds after the pod starts): wait 30 seconds and run it again.
 3. Open **Billing and Cost Management** → **Cost allocation tags**; activate `aws:eks:cluster-name`
    (AWS-generated tags) and `project` (user-defined tags).
    - Expected result: both `Active`. New tags can take up to 24 hours to appear in the list.
@@ -61,12 +65,14 @@ verification proves the phase [Done When](plan.md#done-when).
    kubectl -n airbyte annotate serviceaccount airbyte-admin eks.amazonaws.com/role-arn=$ROLE
    kubectl -n airbyte run hello-s3 --image=public.ecr.aws/aws-cli/aws-cli:2.38.1 --restart=Never \
      --overrides='{"spec":{"serviceAccountName":"airbyte-admin"}}' \
-     --command -- bash -c "echo hello | aws s3 cp - s3://$BUCKET/test/hello.txt && echo uploaded"
-   kubectl -n airbyte logs hello-s3      # wait a minute if the pod is still starting
+     --command -- bash -c "echo hello | aws s3 cp - s3://$BUCKET/test/hello.txt && echo uploaded; sleep 120"
+   kubectl -n airbyte wait --for=condition=Ready pod/hello-s3 --timeout=180s
+   kubectl -n airbyte logs hello-s3
    ```
    - Expected result: the log shows `uploaded`, and the console shows `hello.txt` under `test/` in
-     the bronze bucket. If `kubectl logs` returns `tls: internal error`, the node was just created:
-     wait a minute and run it again.
+     the bronze bucket. `sleep 120` keeps the pod, and so the node, alive while you read the log.
+   - If `kubectl logs` returns `tls: internal error` or shows nothing yet, the node or the upload
+     is still starting: wait 30 seconds and run it again.
 3. Clean up:
    ```bash
    aws s3 rm s3://$BUCKET/test/hello.txt
