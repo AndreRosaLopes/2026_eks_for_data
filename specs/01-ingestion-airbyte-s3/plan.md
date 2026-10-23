@@ -64,5 +64,5 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 | 01.02 | [EKS cluster](02-eks-cluster/spec.md): Auto Mode cluster, operator access entry, OIDC provider; `kubectl` runs a test pod | Done |
 | 01.03 | [Data storage and access](03-data-storage/spec.md): bronze and Airbyte internal buckets, Airbyte IAM role (IRSA); policy tested | Done |
 | 01.04 | [Argo CD](04-argo-cd/spec.md): Helm via Terraform and root Application pointing to `platform/aws`; UI by port-forward | Done |
-| 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | In progress |
+| 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | Done |
 | 01.06 | [Phase walkthrough](06-phase-walkthrough/spec.md): adds its phase README section, describing how the user creates source, destination (Parquet) and connection in the Airbyte UI, runs the sync, checks the Parquet files, then saves the configuration in `pipelines/airbyte/aws` with Terraform `import`; and the end-to-end walkthrough | To do |

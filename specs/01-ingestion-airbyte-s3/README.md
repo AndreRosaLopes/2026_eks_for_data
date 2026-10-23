@@ -105,14 +105,31 @@ verification proves the phase [Done When](plan.md#done-when).
    ```
    - Expected result: `jobs` no longer lists it, and `https://localhost:8080` stops loading.
 
+### 01.05 — Airbyte
+
+1. Open the Argo CD UI (01.04, steps 1–2) → application `airbyte`.
+   - Expected result: **Synced** and **Healthy**; the resource tree shows the Airbyte pods
+     (server, worker, workload-launcher, workload-api-server, temporal, cron, manifest-server,
+     `airbyte-db`).
+2. Get the Airbyte password and open the UI by port-forward, in the background:
+   ```bash
+   kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' | base64 -d; echo
+   kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &
+   ```
+   - Expected result: a password printed, then `Forwarding from 127.0.0.1:8001 -> 8001`.
+3. Open `http://localhost:8001`, enter your email, and sign in with the password from step 2.
+   - Expected result: the Airbyte home page.
+4. Stop the port-forwards (Airbyte and, if open, Argo CD): `jobs`, then `kill %N` for each one.
+   - Expected result: `jobs` lists nothing.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
 
 ## Teardown
 
-All steps so far live in one Terraform root (`infra/aws/cluster`), so a single `destroy` removes the
-whole environment. Each step's own teardown is in its spec (links below).
+The environment has two Terraform roots (`infra/aws/cluster` and `infra/aws/gitops`) plus what Argo
+CD deploys, removed in the order below. Each step's own teardown is in its spec (links below).
 
 ### Turn Off
 
@@ -123,12 +140,14 @@ set -a; source .env; set +a
 export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"   # required variable
 kubectl delete pod --all                     # no test pods keeping nodes alive
 kubectl delete application platform -n argocd   # waits for the cascade to its child applications
+kubectl delete namespace airbyte --ignore-not-found   # PVC → Airbyte EBS volume deleted
 terraform -chdir=infra/aws/gitops destroy    # Argo CD; asks for "yes"
 terraform -chdir=infra/aws/cluster destroy   # shows the plan and asks for "yes"
 ```
 
-The order matters: Argo CD must delete its applications before it is removed, and the `gitops` root
-needs the cluster to exist. It takes about 10–15 minutes, mostly deleting the cluster and the NAT
+The order matters: Argo CD must delete its applications before it is removed, the `airbyte`
+namespace must go while the cluster is up (otherwise its EBS volume is left behind and keeps
+costing), and the `gitops` root needs the cluster to exist. It takes about 10–15 minutes, mostly deleting the cluster and the NAT
 Gateways.
 
 | Removed | Cost that stops |
@@ -137,6 +156,7 @@ Gateways.
 | 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
 | VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
 | Bronze and Airbyte buckets, emptied first (**bronze data is lost**); Airbyte IAM role and policy | Cents (S3 storage) |
+| Argo CD, Airbyte and the Airbyte EBS volume (1 GiB gp3) | Extra Auto Mode node(s) + ~US$ 0.08/month |
 
 What stays, at no cost:
 
@@ -184,3 +204,4 @@ deploys what is in `platform/aws` on `main`.
 - [01.02 — EKS Cluster](02-eks-cluster/spec.md#teardown)
 - [01.03 — Data Storage and Access](03-data-storage/spec.md#teardown)
 - [01.04 — Argo CD](04-argo-cd/spec.md#teardown)
+- [01.05 — Airbyte](05-airbyte/spec.md#teardown)

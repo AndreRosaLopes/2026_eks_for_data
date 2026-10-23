@@ -1,6 +1,6 @@
 # 01.05 — Airbyte: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [01 — Ingestion: Airbyte Writing Parquet to S3](../plan.md)
 
 ## Design
@@ -45,17 +45,17 @@ Requires `AWS_PROFILE=eks-ws`, the kubeconfig, and the commit pushed to `main`.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Manifests valid | `kubectl apply --dry-run=server -f platform/aws/` | Both accepted, no errors | Pending |
-| 2 | Automated | Argo CD picks up the change | `kubectl -n argocd get applications` after `git push` | `platform` and `airbyte` both `Synced` and `Healthy`; `platform` revision = `git rev-parse origin/main` | Pending |
-| 3 | Automated | Sync policy (D-019) | `kubectl -n argocd get application airbyte -o jsonpath='{.spec.syncPolicy}'` | `automated.prune=true`, no `selfHeal` | Pending |
-| 4 | Automated | Pods | `kubectl -n airbyte get pods` | All `Running`/`Ready` (server, worker, workload-launcher, temporal, cron, `airbyte-db`, etc.); bootloader `Completed`; no `minio` | Pending |
-| 5 | Automated | Volume | `kubectl -n airbyte get pvc` and `aws ec2 describe-volumes --filters Name=tag:kubernetes.io/created-for/pvc/namespace,Values=airbyte` | PVC `Bound` on `auto-ebs-sc`; volume `gp3`, `Encrypted: true` | Pending |
-| 6 | Automated | IRSA injected | `kubectl -n airbyte get pod -l app.kubernetes.io/name=server -o yaml` (and workload-launcher) | `serviceAccountName: airbyte-admin`; env `AWS_ROLE_ARN=…eks-for-data-airbyte` and `AWS_WEB_IDENTITY_TOKEN_FILE` | Pending |
-| 7 | Automated | Forced re-sync (D-019) | Count rows of `workspace` in `airbyte-db` (`psql`), trigger a sync (`kubectl -n argocd patch application airbyte --type merge -p '{"operation":{"sync":{}}}'`), wait, count again, then `kubectl -n airbyte get pods` | Same row count (data kept); app `Synced`/`Healthy`; pods `Ready`. Any pod failing Kubernetes API auth after the ServiceAccount is recreated is recorded and reported | Pending |
-| 8 | Automated | State outside Git | `git status --short` | Clean after the commit | Pending |
-| 9 | Automated | Measured usage (D-018) | `kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary` for the nodes with `airbyte` pods: `memory.workingSetBytes`, `cpu.usageNanoCores`, idle | Usage per pod recorded in this column | Pending |
-| 10 | Manual | Airbyte in Argo CD | Argo CD UI (port-forward from 01.04) → application `airbyte` | **Synced** and **Healthy**; resource tree with the Airbyte pods | Pending |
-| 11 | Manual | Airbyte UI | Commands in the phase README: password from `airbyte-auth-secrets`, `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001`, open `http://localhost:8001`, sign up with your email and that password | Airbyte home page after login | Pending |
+| 1 | Automated | Manifests valid | `kubectl apply --dry-run=server -f platform/aws/` | Both accepted, no errors | Pass: both accepted by server dry run (warning only on the standard Argo CD finalizer name) |
+| 2 | Automated | Argo CD picks up the change | `kubectl -n argocd get applications` after `git push` | `platform` and `airbyte` both `Synced` and `Healthy`; `platform` revision = `git rev-parse origin/main` | Pass after the D-018 update: `airbyte` and `platform` `Synced Healthy`; revision `1835270` = `origin/main`. First attempt without requests: 5 JVMs in a restart loop on one `c6a.large` (CPU starvation) |
+| 3 | Automated | Sync policy (D-019) | `kubectl -n argocd get application airbyte -o jsonpath='{.spec.syncPolicy}'` | `automated.prune=true`, no `selfHeal` | Pass: `{"automated":{"prune":true},"syncOptions":["CreateNamespace=true"]}`, no `selfHeal` |
+| 4 | Automated | Pods | `kubectl -n airbyte get pods` | All `Running`/`Ready` (server, worker, workload-launcher, temporal, cron, `airbyte-db`, etc.); bootloader `Completed`; no `minio` | Pass: 8 pods `Running` 1/1, bootloader `Completed`, no `minio`; `workload-launcher` restarted twice at start (exit 1, dependencies not ready), then stable. 2 × `c6a.large` nodes |
+| 5 | Automated | Volume | `kubectl -n airbyte get pvc` and `aws ec2 describe-volumes --filters Name=tag:kubernetes.io/created-for/pvc/namespace,Values=airbyte` | PVC `Bound` on `auto-ebs-sc`; volume `gp3`, `Encrypted: true` | Pass: PVC `Bound` on `auto-ebs-sc`, 1Gi; `vol-050eaea3d59375a36` `gp3`, `Encrypted: True` |
+| 6 | Automated | IRSA injected | `kubectl -n airbyte get pod -l app.kubernetes.io/name=server -o yaml` (and workload-launcher) | `serviceAccountName: airbyte-admin`; env `AWS_ROLE_ARN=…eks-for-data-airbyte` and `AWS_WEB_IDENTITY_TOKEN_FILE` | Pass: server and workload-launcher use `airbyte-admin` with `AWS_ROLE_ARN=…:role/eks-for-data-airbyte` and `AWS_WEB_IDENTITY_TOKEN_FILE` |
+| 7 | Automated | Forced re-sync (D-019) | Count rows of `workspace` in `airbyte-db` (`psql`), trigger a sync (`kubectl -n argocd patch application airbyte --type merge -p '{"operation":{"sync":{}}}'`), wait, count again, then `kubectl -n airbyte get pods` | Same row count (data kept); app `Synced`/`Healthy`; pods `Ready`. Any pod failing Kubernetes API auth after the ServiceAccount is recreated is recorded and reported | Pass: `workspace` 1 row before and after; sync `Succeeded`, `Synced Healthy`; bootloader and `airbyte-db-0` recreated by the hooks, data kept; all pods `Ready`, no API auth failure |
+| 8 | Automated | State outside Git | `git status --short` | Clean after the commit | Pass: clean |
+| 9 | Automated | Measured usage (D-018) | `kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary` for the nodes with `airbyte` pods: `memory.workingSetBytes`, `cpu.usageNanoCores`, idle | Usage per pod recorded in this column | Idle (CPU / memory): server 3m/632Mi; worker 5m/401Mi; workload-api-server 10m/417Mi; workload-launcher 3m/344Mi; cron 1m/458Mi; manifest-server 2m/119Mi; temporal 14m/96Mi; db 8m/66Mi |
+| 10 | Manual | Airbyte in Argo CD | Argo CD UI (port-forward from 01.04) → application `airbyte` | **Synced** and **Healthy**; resource tree with the Airbyte pods | Pass: confirmed by the user |
+| 11 | Manual | Airbyte UI | Commands in the phase README: password from `airbyte-auth-secrets`, `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001`, open `http://localhost:8001`, sign up with your email and that password | Airbyte home page after login | Pass: confirmed by the user |
 
 ## Teardown
 
