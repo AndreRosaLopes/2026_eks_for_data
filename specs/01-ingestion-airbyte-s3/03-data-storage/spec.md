@@ -12,7 +12,7 @@ The buckets and the Airbyte role join the same `infra/aws/cluster` root
 
 | Item | Value | Why |
 |---|---|---|
-| Bronze bucket | `eks-for-data-bronze-<account_id>` | Raw data layer: destination of the Parquet files (01.06); one bucket per layer ([D-015](../../../docs/decisions/015-data-lake-bucket-layout.md)). The account ID (`data "aws_caller_identity"`) makes the global name unique |
+| Bronze bucket | `eks-for-data-bronze-<account_id>` | Raw data layer: destination of the Parquet files (phase lab); one bucket per layer ([D-015](../../../docs/decisions/015-data-lake-bucket-layout.md)). The account ID (`data "aws_caller_identity"`) makes the global name unique |
 | Airbyte internal bucket | `eks-for-data-airbyte-<account_id>` | Airbyte logs, state and workload output, not data ([D-009](../../../docs/decisions/009-airbyte-internal-storage.md)); one bucket for the three chart keys `global.storage.bucket.{log,state,workloadOutput}` (01.05) |
 | Bucket security | Module defaults: Block Public Access (all 4 on), ACLs disabled (`BucketOwnerEnforced`), S3 default encryption SSE-S3; plus `attach_deny_insecure_transport_policy = true` | No public access, encryption at rest, HTTPS only |
 | Versioning | Off on both (module default; [D-016](../../../docs/decisions/016-bronze-bucket-versioning.md)) | Ephemeral environment; bronze data is recreated by re-running the sync |
@@ -29,7 +29,7 @@ plus nodes. Buckets and the role cost cents or nothing.
 | File | Change |
 |---|---|
 | `infra/aws/cluster/storage.tf` | Create: `data "aws_caller_identity"`, `module "s3_bronze"`, `module "s3_airbyte"`, `module "airbyte_irsa"` |
-| `infra/aws/cluster/outputs.tf` | Modify: add `bronze_bucket`, `airbyte_bucket`, `airbyte_role_arn` (used in 01.05 and 01.06) |
+| `infra/aws/cluster/outputs.tf` | Modify: add `bronze_bucket`, `airbyte_bucket`, `airbyte_role_arn` (used in 01.05 and the phase lab) |
 | `infra/aws/cluster/.terraform.lock.hcl` | Modify, if `init` changes it |
 
 ## Verification Plan

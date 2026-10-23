@@ -12,8 +12,9 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 - VPC, EKS cluster, S3 buckets (bronze and Airbyte internal storage) and IAM, in Terraform
 - Argo CD, bootstrapped by Terraform
 - Airbyte (Helm chart v2), deployed by Argo CD
-- Airbyte source, destination (Parquet) and connection: created manually in the Airbyte UI by the
-  user, following the phase README, then saved as Terraform code with `import`
+- Airbyte source, destination (Parquet) and connection: created manually in the Airbyte UI as a lab
+  ([lab01](lab01-api-ingestion.md)); the configuration is not saved
+  ([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md))
 - Phase walkthrough and teardown
 
 ## Out of Scope
@@ -26,8 +27,8 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 
 ## Done When
 
-- Following the walkthrough from an empty account recreates everything with `terraform apply`
-  and Argo CD
+- Following the phase README from an empty account recreates the infrastructure and Airbyte with
+  `terraform apply` and Argo CD, and the connection by repeating the lab in the UI
 - Argo CD shows Airbyte `Synced` and `Healthy`
 - A sync from the public API to S3 succeeds and readable Parquet files exist in the bronze bucket
 - The teardown removes every resource that incurs cost
@@ -55,6 +56,7 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 - [D-018 — Workload Resource Requests](../../docs/decisions/018-workload-resource-requests.md)
 - [D-019 — Airbyte Sync Policy in Argo CD](../../docs/decisions/019-airbyte-sync-policy.md)
 - [D-020 — AWS Account ID in the Public Repository](../../docs/decisions/020-aws-account-id-in-git.md)
+- [D-021 — Airbyte Connection as a UI Lab](../../docs/decisions/021-airbyte-connection-ui-lab.md)
 
 ## Steps
 
@@ -65,4 +67,3 @@ and writes Parquet files to the S3 bronze bucket. It is the foundation the next 
 | 01.03 | [Data storage and access](03-data-storage/spec.md): bronze and Airbyte internal buckets, Airbyte IAM role (IRSA); policy tested | Done |
 | 01.04 | [Argo CD](04-argo-cd/spec.md): Helm via Terraform and root Application pointing to `platform/aws`; UI by port-forward | Done |
 | 01.05 | [Airbyte](05-airbyte/spec.md): chart v2 Application and StorageClass; healthy pods; UI reachable | Done |
-| 01.06 | [Phase walkthrough](06-phase-walkthrough/spec.md): adds its phase README section, describing how the user creates source, destination (Parquet) and connection in the Airbyte UI, runs the sync, checks the Parquet files, then saves the configuration in `pipelines/airbyte/aws` with Terraform `import`; and the end-to-end walkthrough | To do |

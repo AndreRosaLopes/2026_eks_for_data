@@ -124,7 +124,17 @@ verification proves the phase [Done When](plan.md#done-when).
 
 ## End-to-End Verification
 
-Written on the last step: walkthrough proving the phase "Done When".
+Proves the phase [Done When](plan.md#done-when).
+
+1. Bring the environment up: [Turn On Again](#turn-on-again) (skip it if the environment is already
+   up).
+   - Expected result: `terraform apply` completes for `cluster` and `gitops`; Argo CD shows
+     `platform` and `airbyte` **Synced** and **Healthy** (01.04 and 01.05 sections above).
+2. Follow [Lab 01 — API Ingestion](lab01-api-ingestion.md).
+   - Expected result: the sync **Succeeded**, and the Parquet file in the bronze bucket is readable,
+     with `ditto`.
+3. Tear down: [Turn Off](#turn-off), then [Check Nothing Is Left](#check-nothing-is-left).
+   - Expected result: every command returns empty; nothing that costs is left.
 
 ## Teardown
 

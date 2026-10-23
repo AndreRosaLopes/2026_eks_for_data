@@ -1,6 +1,6 @@
 # D-010 — Airbyte Connection Configuration
 
-Status: Accepted
+Status: Superseded by D-021
 Date: 2026-10-17
 Phase: specs/01-ingestion-airbyte-s3
 

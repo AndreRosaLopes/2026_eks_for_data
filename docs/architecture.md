@@ -110,7 +110,7 @@ Idle usage, measured on 2026-10-23.
 | Airbyte `airbyte-db` (Postgres) | 1 | None (chart default) | 8m / 66Mi |
 | **Total** | 14 | **2100m / 4.8Gi** | **51m / 2.6Gi** |
 
-Not included: Airbyte sync job pods (01.06), created per sync, and the system pods Auto Mode manages.
+Not included: Airbyte sync job pods (phase lab), created per sync, and the system pods Auto Mode manages.
 
 #### Resulting Nodes
 
@@ -122,4 +122,4 @@ node and the five Airbyte JVMs never finished starting (CPU starvation).
 
 About **US$ 0.153/h** of EC2 for the 2 nodes (on-demand, us-east-1), plus the Auto Mode fee per
 instance. CPU is mostly idle and memory is about half the requests, so the requests can be lowered
-once sync usage (01.06) is measured.
+once sync usage (phase lab) is measured.
