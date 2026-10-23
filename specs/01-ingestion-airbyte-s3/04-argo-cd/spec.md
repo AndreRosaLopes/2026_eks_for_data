@@ -1,6 +1,6 @@
 # 01.04 — Argo CD: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [01 — Ingestion: Airbyte Writing Parquet to S3](../plan.md)
 
 ## Design
@@ -50,16 +50,16 @@ Requires `AWS_PROFILE=eks-ws` and the kubeconfig for `eks-for-data`.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Formatting | `terraform -chdir=infra/aws/gitops fmt -check` | Exit 0 | Pending |
-| 2 | Automated | Syntax | `terraform -chdir=infra/aws/gitops init && terraform -chdir=infra/aws/gitops validate` | `Success! The configuration is valid.` | Pending |
-| 3 | Automated | Plan | `terraform -chdir=infra/aws/gitops plan -out=tfplan` | 2 to add (`argocd`, `argocd_apps`), 0 to change, 0 to destroy | Pending |
-| 4 | Automated | Apply (**run by the user**) | `terraform -chdir=infra/aws/gitops apply tfplan` | `Apply complete! Resources: 2 added` | Pending |
-| 5 | Automated | Argo CD pods | `kubectl -n argocd get pods` | `application-controller`, `applicationset-controller`, `notifications-controller`, `redis`, `repo-server`, `server` all `Running`/`Ready`; no `dex` | Pending |
-| 6 | Automated | Root Application | `kubectl -n argocd get application platform -o jsonpath='{.status.sync.status} {.status.health.status} {.spec.source.path}'` | `Synced Healthy platform/aws` | Pending |
-| 7 | Automated | Argo CD reads this repository | `.status.sync.revision` of `platform` vs. `git rev-parse origin/main` | Same commit | Pending |
-| 8 | Automated | State outside Git | `git status --short` | Only the files listed above | Pending |
-| 9 | Automated | Measured usage (D-018) | For each node running Argo CD pods: `kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary`, reading `memory.workingSetBytes` and `cpu.usageNanoCores` of the `argocd` pods, idle after sync | Usage per pod recorded in this column | Pending |
-| 10 | Manual | UI by port-forward | Commands in the phase README: get the `admin` password, run the port-forward, open `https://localhost:8080`, accept the certificate | Login works; application `platform` **Synced** and **Healthy**, pointing to `platform/aws` | Pending |
+| 1 | Automated | Formatting | `terraform -chdir=infra/aws/gitops fmt -check` | Exit 0 | Pass: exit 0 |
+| 2 | Automated | Syntax | `terraform -chdir=infra/aws/gitops init && terraform -chdir=infra/aws/gitops validate` | `Success! The configuration is valid.` | Pass: `helm` 3.3.0, `aws` 6.70.0; valid |
+| 3 | Automated | Plan | `terraform -chdir=infra/aws/gitops plan -out=tfplan` | 2 to add (`argocd`, `argocd_apps`), 0 to change, 0 to destroy | Pass: `2 to add, 0 to change, 0 to destroy` |
+| 4 | Automated | Apply (**run by the user**) | `terraform -chdir=infra/aws/gitops apply tfplan` | `Apply complete! Resources: 2 added` | Pass: run by the user; `Resources: 2 added` |
+| 5 | Automated | Argo CD pods | `kubectl -n argocd get pods` | `application-controller`, `applicationset-controller`, `notifications-controller`, `redis`, `repo-server`, `server` all `Running`/`Ready`; no `dex` | Pass: the 6 pods `Running` 1/1; no `dex` |
+| 6 | Automated | Root Application | `kubectl -n argocd get application platform -o jsonpath='{.status.sync.status} {.status.health.status} {.spec.source.path}'` | `Synced Healthy platform/aws` | Pass: `Synced Healthy platform/aws` |
+| 7 | Automated | Argo CD reads this repository | `.status.sync.revision` of `platform` vs. `git rev-parse origin/main` | Same commit | Pass: both `f51e532` |
+| 8 | Automated | State outside Git | `git status --short` | Only the files listed above | Pass: clean (step files committed in `f51e532`) |
+| 9 | Automated | Measured usage (D-018) | For each node running Argo CD pods: `kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary`, reading `memory.workingSetBytes` and `cpu.usageNanoCores` of the `argocd` pods, idle after sync | Usage per pod recorded in this column | Idle, one `c6a.large` node: application-controller 1m/73Mi; applicationset-controller 0m/21Mi; notifications-controller 0m/17Mi; redis 2m/5Mi; repo-server 1m/24Mi; server 1m/24Mi |
+| 10 | Manual | UI by port-forward | Commands in the phase README: get the `admin` password, run the port-forward, open `https://localhost:8080`, accept the certificate | Login works; application `platform` **Synced** and **Healthy**, pointing to `platform/aws` | Pass: confirmed by the user |
 
 ## Teardown
 

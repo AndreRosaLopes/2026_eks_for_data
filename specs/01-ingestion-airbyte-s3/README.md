@@ -80,6 +80,31 @@ verification proves the phase [Done When](plan.md#done-when).
    ```
    - Expected result: the file and the namespace are gone.
 
+### 01.04 — Argo CD
+
+1. Get the `admin` password and open the UI by port-forward, in the background (`&`) so the
+   terminal stays free:
+   ```bash
+   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
+   kubectl -n argocd port-forward svc/argocd-server 8080:443 &
+   ```
+   - Expected result: a password printed, then `Forwarding from 127.0.0.1:8080 -> 8080`. Lines like
+     `Handling connection for 8080` may appear while you type; they are harmless.
+   - `jobs` lists the background processes of this terminal, e.g. `[1]+ Running kubectl ... &`;
+     the number in brackets identifies each one.
+2. Open `https://localhost:8080`, accept the self-signed certificate warning, and log in with user
+   `admin` and the password from step 1.
+   - Expected result: the **Applications** page shows `platform`, **Synced** and **Healthy**.
+3. Open `platform` → **App Details**.
+   - Expected result: repository `https://github.com/AndreRosaLopes/2026_eks_for_data.git`,
+     revision `main`, path `platform/aws`; **Sync Policy** automated, with prune and self heal.
+4. Stop the port-forward, from the same terminal:
+   ```bash
+   jobs        # find the port-forward number, e.g. [1]
+   kill %1     # use that number
+   ```
+   - Expected result: `jobs` no longer lists it, and `https://localhost:8080` stops loading.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -97,10 +122,14 @@ In Git Bash, from the repository root:
 set -a; source .env; set +a
 export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"   # required variable
 kubectl delete pod --all                     # no test pods keeping nodes alive
+kubectl delete application platform -n argocd   # waits for the cascade to its child applications
+terraform -chdir=infra/aws/gitops destroy    # Argo CD; asks for "yes"
 terraform -chdir=infra/aws/cluster destroy   # shows the plan and asks for "yes"
 ```
 
-It takes about 10–15 minutes, mostly deleting the cluster and the NAT Gateways.
+The order matters: Argo CD must delete its applications before it is removed, and the `gitops` root
+needs the cluster to exist. It takes about 10–15 minutes, mostly deleting the cluster and the NAT
+Gateways.
 
 | Removed | Cost that stops |
 |---|---|
@@ -142,12 +171,16 @@ export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"
 terraform -chdir=infra/aws/cluster plan -out=tfplan
 terraform -chdir=infra/aws/cluster apply tfplan
 aws eks update-kubeconfig --name eks-for-data --region us-east-1
+terraform -chdir=infra/aws/gitops plan -out=tfplan
+terraform -chdir=infra/aws/gitops apply tfplan
 ```
 
-It takes about 15–20 minutes and recreates the same environment (resource IDs change).
+It takes about 20–25 minutes and recreates the same environment (resource IDs change). Argo CD then
+deploys what is in `platform/aws` on `main`.
 
 ### Step Teardowns
 
 - [01.01 — Network](01-network/spec.md#teardown)
 - [01.02 — EKS Cluster](02-eks-cluster/spec.md#teardown)
 - [01.03 — Data Storage and Access](03-data-storage/spec.md#teardown)
+- [01.04 — Argo CD](04-argo-cd/spec.md#teardown)
