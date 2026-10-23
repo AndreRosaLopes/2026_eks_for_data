@@ -78,3 +78,48 @@ The state is local (`infra/aws/cluster/terraform.tfstate`), outside Git
 
 About **US$ 0.10/h** while it exists: 2 NATs + 2 public IPv4 addresses, plus US$ 0.045 per GB
 processed by the NATs. The VPC, subnets, route tables, Internet Gateway and S3 endpoint are free.
+
+### 1.2 Cluster Capacity (steps 01.04 and 01.05)
+
+Sources: [01.04 — Argo CD](../specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md) and
+[01.05 — Airbyte](../specs/01-ingestion-airbyte-s3/05-airbyte/spec.md) (check 9: measured usage);
+requests in [`platform/aws/airbyte.yaml`](../platform/aws/airbyte.yaml)
+([D-018](decisions/018-workload-resource-requests.md)).
+
+#### How Nodes Are Sized
+
+EKS Auto Mode (`general-purpose` pool, [D-006](decisions/006-eks-compute-mode.md)) creates nodes from
+the pods' **requests**, not their usage: it picks the cheapest on-demand `c`/`m`/`r` instance
+(generation > 4, `amd64`) that fits the pending pods, then consolidates. Pods without requests are
+invisible to it.
+
+#### Composition
+
+Idle usage, measured on 2026-10-23.
+
+| Workload | Pods | Requests (CPU / memory) | Usage (CPU / memory) |
+|---|---|---|---|
+| Argo CD | application-controller, applicationset-controller, notifications-controller, redis, repo-server, server | None (chart defaults) | 5m / 164Mi |
+| Airbyte `server` | 1 | 500m / 1Gi | 3m / 632Mi |
+| Airbyte `worker` | 1 | 500m / 1Gi | 5m / 401Mi |
+| Airbyte `workloadApiServer` | 1 | 250m / 768Mi | 10m / 417Mi |
+| Airbyte `workloadLauncher` | 1 | 250m / 768Mi | 3m / 344Mi |
+| Airbyte `cron` | 1 | 100m / 512Mi | 1m / 458Mi |
+| Airbyte `manifestServer` | 1 | 250m / 512Mi | 2m / 119Mi |
+| Airbyte `temporal` | 1 | 250m / 256Mi | 14m / 96Mi |
+| Airbyte `airbyte-db` (Postgres) | 1 | None (chart default) | 8m / 66Mi |
+| **Total** | 14 | **2100m / 4.8Gi** | **51m / 2.6Gi** |
+
+Not included: Airbyte sync job pods (01.06), created per sync, and the system pods Auto Mode manages.
+
+#### Resulting Nodes
+
+2 × `c6a.large` (2 vCPU / 4 GiB each; about 1.8 vCPU / 3.0 GiB allocatable each), chosen by Auto
+Mode. With requests only on Airbyte, one node did not fit them; without requests, all pods shared one
+node and the five Airbyte JVMs never finished starting (CPU starvation).
+
+#### Cost
+
+About **US$ 0.153/h** of EC2 for the 2 nodes (on-demand, us-east-1), plus the Auto Mode fee per
+instance. CPU is mostly idle and memory is about half the requests, so the requests can be lowered
+once sync usage (01.06) is measured.
