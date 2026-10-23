@@ -1,6 +1,6 @@
 # 01.03 — Data Storage and Access: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [01 — Ingestion: Airbyte Writing Parquet to S3](../plan.md)
 
 ## Design
@@ -47,8 +47,8 @@ AWS commands use `--profile eks-ws --region us-east-1`; `TF_VAR_operator_cidr` m
 | 7 | Automated | Policy simulation | `aws iam simulate-principal-policy` on the role: `s3:PutObject` on both buckets and on `arn:aws:s3:::other-bucket/*` | `allowed` on both buckets; `implicitDeny` on the other | Pass: `allowed`, `allowed`, `implicitDeny` |
 | 8 | Automated | IRSA in a real pod | Temporary namespace `airbyte` and SA `airbyte-admin` annotated with `eks.amazonaws.com/role-arn`; a `public.ecr.aws/aws-cli/aws-cli:2.38.1` pod runs `sts get-caller-identity`, writes, lists and deletes an object in each bucket, then `s3 ls` | Assumed role `eks-for-data-airbyte`; write, list and delete succeed; `s3 ls` → `AccessDenied` (no `ListAllMyBuckets`); namespace deleted at the end | Pass: `assumed-role/eks-for-data-airbyte`; write, list and delete ok on both buckets; `s3 ls` → `AccessDenied` (`s3:ListAllMyBuckets`); namespace deleted |
 | 9 | Automated | State outside Git | `git status --short` | Only the files listed above | Pass: clean (step files committed in `4fe1e51`) |
-| 10 | Manual | Buckets in the console | Console → **S3** → each `eks-for-data-*` bucket → **Permissions** and **Properties** tabs | **Block all public access: On**; **Default encryption: SSE-S3**; **Bucket Versioning: Disabled** | Pending |
-| 11 | Manual | User writes to bronze as Airbyte would | Commands in the phase README: create namespace `airbyte` and the annotated SA `airbyte-admin`, run the aws-cli pod that writes `test/hello.txt` to the bronze bucket, see the file in the console, then delete the file and the namespace | The file appears in the console under `test/`; `kubectl logs` shows the upload | Pending |
+| 10 | Manual | Buckets in the console | Console → **S3** → each `eks-for-data-*` bucket → **Permissions** and **Properties** tabs | **Block all public access: On**; **Default encryption: SSE-S3**; **Bucket Versioning: Disabled** | Pass: confirmed by the user |
+| 11 | Manual | User writes to bronze as Airbyte would | Commands in the phase README: create namespace `airbyte` and the annotated SA `airbyte-admin`, run the aws-cli pod that writes `test/hello.txt` to the bronze bucket, see the file in the console, then delete the file and the namespace | The file appears in the console under `test/`; `kubectl logs` shows the upload | Pass: confirmed by the user |
 
 ## Teardown
 
