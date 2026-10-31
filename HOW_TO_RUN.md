@@ -31,11 +31,35 @@ configuration is not saved ([D-021](docs/decisions/021-airbyte-connection-ui-lab
 
 ## 1. Infrastructure (both paths)
 
-One Terraform root, `infra/aws/cluster`, creates the network, the cluster, the buckets and the
-Airbyte IAM role (steps 01.01 to 01.03). Follow
-[Turn On Again](specs/01-ingestion-airbyte-s3/README.md#turn-on-again) in the phase README
-(about 15–20 minutes; cost starts running); for the manual path, stop before its
-`infra/aws/gitops` commands.
+The `infra/aws/cluster` root creates the network, the EKS cluster, the buckets and the Airbyte IAM
+role. Run in **Git Bash**, from the project folder.
+
+1. Load the `.env` variables (Bash syntax; it does not work in PowerShell):
+
+   ```bash
+   set -a; source .env; set +a
+   ```
+
+2. Check the AWS account; it must print `283429977024`:
+
+   ```bash
+   aws sts get-caller-identity --query Account --output text
+   ```
+
+3. Create the infrastructure (about 15–20 minutes; cost starts running). Terraform allows only your
+   public IP to reach the EKS API:
+
+   ```bash
+   terraform -chdir=infra/aws/cluster init
+   terraform -chdir=infra/aws/cluster plan -out=tfplan
+   terraform -chdir=infra/aws/cluster apply tfplan
+   ```
+
+4. Point `kubectl` to the cluster:
+
+   ```bash
+   aws eks update-kubeconfig --name eks-for-data --region us-east-1
+   ```
 
 What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network/spec.md#design),
 [01.02 design](specs/01-ingestion-airbyte-s3/02-eks-cluster/spec.md#design),
@@ -46,11 +70,15 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 1. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
-   ```bash
-   terraform -chdir=infra/aws/gitops init
-   terraform -chdir=infra/aws/gitops plan -out=tfplan
-   terraform -chdir=infra/aws/gitops apply tfplan
-   ```
+  ```bash
+    terraform -chdir=infra/aws/gitops init
+  ```
+  ```bash
+    terraform -chdir=infra/aws/gitops plan -out=tfplan
+  ```
+  ```bash
+    terraform -chdir=infra/aws/gitops apply tfplan
+  ```
 
 2. **Airbyte and the StorageClass:** they are manifests in `platform/aws`; Argo CD applies them after
    `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
