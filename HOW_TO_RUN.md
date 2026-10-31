@@ -51,7 +51,13 @@ role. Run in **Git Bash**, from the project folder.
 
    ```bash
    terraform -chdir=infra/aws/cluster init
+   ```
+
+   ```bash
    terraform -chdir=infra/aws/cluster plan -out=tfplan
+   ```
+
+   ```bash
    terraform -chdir=infra/aws/cluster apply tfplan
    ```
 
@@ -70,15 +76,17 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 1. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
-  ```bash
-    terraform -chdir=infra/aws/gitops init
-  ```
-  ```bash
-    terraform -chdir=infra/aws/gitops plan -out=tfplan
-  ```
-  ```bash
-    terraform -chdir=infra/aws/gitops apply tfplan
-  ```
+   ```bash
+   terraform -chdir=infra/aws/gitops init
+   ```
+
+   ```bash
+   terraform -chdir=infra/aws/gitops plan -out=tfplan
+   ```
+
+   ```bash
+   terraform -chdir=infra/aws/gitops apply tfplan
+   ```
 
 2. **Airbyte and the StorageClass:** they are manifests in `platform/aws`; Argo CD applies them after
    `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
@@ -102,10 +110,22 @@ Application, so nothing is duplicated.
 
    ```bash
    VERSION=$(yq '.spec.source.targetRevision' platform/aws/airbyte.yaml)
+   ```
+
+   ```bash
    yq '.spec.source.helm.valuesObject' platform/aws/airbyte.yaml > airbyte-values.yaml
+   ```
+
+   ```bash
    helm repo add airbyte https://airbytehq.github.io/charts
+   ```
+
+   ```bash
    helm install airbyte airbyte/airbyte --version "$VERSION" \
      --namespace airbyte --create-namespace --values airbyte-values.yaml --wait --timeout 15m
+   ```
+
+   ```bash
    rm airbyte-values.yaml
    ```
 
@@ -152,7 +172,13 @@ then destroy the infrastructure.
 
   ```bash
   helm uninstall airbyte --namespace airbyte
-  kubectl delete namespace airbyte                       # PVC → EBS volume deleted
+  ```
+
+  ```bash
+  kubectl delete namespace airbyte   # PVC → EBS volume deleted
+  ```
+
+  ```bash
   kubectl delete -f platform/aws/storageclass.yaml
   ```
 
