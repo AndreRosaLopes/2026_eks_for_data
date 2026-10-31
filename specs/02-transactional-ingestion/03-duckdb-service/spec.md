@@ -1,6 +1,6 @@
 # 02.03 — DuckDB Service: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [02 — Transactional Ingestion](../plan.md)
 
 ## Design
@@ -25,8 +25,9 @@ DuckDB 2.0 runs as one in-memory pod in the `duckdb` namespace, as its own Argo 
      - attaches Postgres as `source` through the libpq variables (`PGHOST`, `PGUSER`, `PGDATABASE`,
        `PGPASSWORD`), so the password never appears in SQL;
      - creates an S3 secret with `PROVIDER credential_chain`, region `us-east-1` (IRSA web identity);
-     - `quack_serve('quack:0.0.0.0:9494', allow_other_hostname = true, disable_ssl = true,
-       token = getenv('QUACK_TOKEN'))`;
+     - `SELECT listen_url FROM quack_serve('quack:0.0.0.0:9494', allow_other_hostname = true,
+       disable_ssl = true, token = getenv('QUACK_TOKEN'))`; only the URL is selected because
+       `CALL quack_serve(...)` prints the token to the pod logs;
      - `start_ui_server()` (UI on port 4213 inside the pod, D-033 4B).
    - Deployment `duckdb`: 1 replica, image `duckdb/duckdb:2.0.0`, args `-init /config/init.sql`,
      environment from the Secret, `HOME` on an `emptyDir` (extensions `postgres`, `httpfs`, `quack`,
@@ -57,14 +58,14 @@ attached `source` catalog.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | IRSA plan | `terraform -chdir=infra/aws/cluster plan` | Only the DuckDB role, policy and attachment added; 0 changed, 0 destroyed | Pending |
-| 2 | Automated | Manifest valid | `kubectl apply --dry-run=server -f platform/aws/duckdb/duckdb.yaml` | Every object created or configured | Pending |
-| 3 | Automated | Argo CD | `kubectl -n argocd get application duckdb` | `Synced`, `Healthy` | Pending |
-| 4 | Automated | Server stays up | `kubectl -n duckdb get pod` after 2 minutes; logs | `1/1 Running`, 0 restarts; no errors from `init.sql` | Pending |
-| 5 | Automated | Quack from a client pod | Temporary `duckdb/duckdb:2.0.0` pod attaches `quack:duckdb.duckdb.svc.cluster.local:9494` with the token and lists the `source` schemas | `oltp` and `tpch` | Pending |
-| 6 | Automated | Wrong token rejected | Same, with a wrong token | Authentication error | Pending |
-| 7 | Automated | S3 read through IRSA | Through Quack: `SELECT count(*) FROM glob('s3://<bronze>/**')` | A number (0 or more), no `AccessDenied` | Pending |
-| 8 | Manual | UI in the pod | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213`, open `http://localhost:4213`, run `FROM duckdb_databases()` and `SELECT schema_name FROM source.information_schema.schemata` | `source` listed; `oltp` and `tpch` | Pending |
+| 1 | Automated | IRSA plan | `terraform -chdir=infra/aws/cluster plan` | Only the DuckDB role, policy and attachment added; 0 changed, 0 destroyed | Pass: 3 to add (role, policy, attachment), 0 changed, 0 destroyed; applied |
+| 2 | Automated | Manifest valid | `kubectl apply --dry-run=server -f platform/aws/duckdb/duckdb.yaml` | Every object created or configured | Pass: namespace configured; ServiceAccount, ConfigMap, Service, Deployment created (server dry run) |
+| 3 | Automated | Argo CD | `kubectl -n argocd get application duckdb` | `Synced`, `Healthy` | Pass: `Synced`, `Healthy` |
+| 4 | Automated | Server stays up | `kubectl -n duckdb get pod` after 2 minutes; logs | `1/1 Running`, 0 restarts; no errors from `init.sql` | Pass: `1/1 Running`, 0 restarts after 2 min; `init.sql` ran with no errors; CLI kept open by `stdin`/`tty` |
+| 5 | Automated | Quack from a client pod | Temporary `duckdb/duckdb:2.0.0` pod attaches `quack:duckdb.duckdb.svc.cluster.local:9494` with the token and lists the `source` schemas | `oltp` and `tpch` | Pass: client sees `oltp` and `tpch` (with `CREATE SECRET (TYPE quack, TOKEN getenv(...))` and `DISABLE_SSL true`) |
+| 6 | Automated | Wrong token rejected | Same, with a wrong token | Authentication error | Pass: `Invalid Input Error: Authentication failed` |
+| 7 | Automated | S3 read through IRSA | Inside the DuckDB pod (`kubectl exec`; a `glob` sent through Quack runs on the client, which has no AWS role): `SELECT count(*) FROM glob('s3://<bronze>/**')` | A number (0 or more), no `AccessDenied` | Pass: `0` files, no error (bronze empty in this environment); the Airbyte bucket returns `AccessDenied` for role `eks-for-data-duckdb`, so IRSA is in use |
+| 8 | Manual | UI in the pod | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213`, open `http://localhost:4213`, run `FROM duckdb_databases()` and `SELECT schema_name FROM source.information_schema.schemata` | `source` listed; `oltp` and `tpch` | Pass: confirmed by the user (UI on local port 4213) |
 
 ## Teardown
 
