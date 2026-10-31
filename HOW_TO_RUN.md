@@ -111,7 +111,7 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 
 3. **Airbyte, Postgres and the StorageClass:** they are manifests in `platform/aws`; Argo CD applies
    them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
-4. **Check:** `kubectl -n argocd get applications` shows `platform` and `airbyte` `Synced` and
+4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte` and `postgres` `Synced` and
    `Healthy`.
 
 ## 3. Services without Argo CD (manual)

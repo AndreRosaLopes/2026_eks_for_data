@@ -17,7 +17,8 @@ from Git.
    - Before Argo CD syncs Postgres: `kubectl create namespace postgres` and
      `kubectl -n postgres create secret generic postgres-credentials --from-literal=password="$POSTGRES_PASSWORD"`.
    - `HOW_TO_RUN.md` section 2 gets the same two commands as its first step.
-2. **`platform/aws/postgres.yaml` (Argo CD):**
+2. **`platform/aws/postgres/postgres.yaml` (Argo CD Application `postgres`, defined in
+   `platform/aws/postgres.yaml`, [D-032](../../../docs/decisions/032-one-application-per-component.md)):**
    - Namespace `postgres`: also declared here, so Argo CD deletes it, with the Secret, at teardown.
    - ConfigMap `postgres-init`: `01-schemas.sql` with `CREATE SCHEMA tpch; CREATE SCHEMA oltp;`, run
      on the first start (empty volume).
@@ -36,7 +37,8 @@ from Git.
 |---|---|
 | `.env` | Modify (local, not versioned): `POSTGRES_PASSWORD` and the `kubectl` commands as a comment |
 | `HOW_TO_RUN.md` | Modify: section 2 starts with the password generation (`openssl rand -hex 16`) and the two `kubectl` commands |
-| `platform/aws/postgres.yaml` | Create: Namespace, ConfigMap, StatefulSet and Service |
+| `platform/aws/postgres.yaml` | Create: Application `postgres` pointing to `platform/aws/postgres/` (D-032) |
+| `platform/aws/postgres/postgres.yaml` | Create: Namespace, ConfigMap, StatefulSet and Service |
 | `specs/02-transactional-ingestion/README.md` | Modify: Access (password command) and the 02.02 section |
 | `specs/02-transactional-ingestion/plan.md` | Modify: step status |
 
@@ -55,6 +57,6 @@ from Git.
 ## Teardown
 
 Covered by phase 01 [Turn Off](../../01-ingestion-airbyte-s3/README.md#turn-off): deleting the
-`platform` Application prunes the StatefulSet (the retention policy deletes its PVC and EBS volume)
+`platform` Application cascades to the `postgres` Application, which prunes the StatefulSet (the retention policy deletes its PVC and EBS volume)
 and the `postgres` namespace, with the Secret. Before the `cluster` destroy, `kubectl get pvc -A`
 shows no `postgres` volume.

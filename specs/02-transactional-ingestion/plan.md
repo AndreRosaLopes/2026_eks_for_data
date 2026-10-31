@@ -49,6 +49,7 @@ planned once it is running.
 - [D-023 — DuckDB as a Service](../../docs/decisions/023-duckdb-service.md)
 - [D-030 — Source Postgres Password](../../docs/decisions/030-source-postgres-password.md) (superseded by D-031)
 - [D-031 — Source Postgres Password from `.env`](../../docs/decisions/031-source-postgres-password-from-env.md)
+- [D-032 — One Argo CD Application per Component](../../docs/decisions/032-one-application-per-component.md)
 
 Answered, recorded as ADRs when steps 02.04 onward are planned:
 

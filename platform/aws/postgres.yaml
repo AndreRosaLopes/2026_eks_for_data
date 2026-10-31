@@ -1,92 +1,21 @@
-# Source Postgres for the transactional ingestion (D-022). The Secret postgres-credentials is
-# created by hand from .env before the sync (D-031).
-apiVersion: v1
-kind: Namespace
+# Source Postgres (D-022) as its own Application (D-032); manifests in platform/aws/postgres.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
 metadata:
   name: postgres
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: postgres-init
-  namespace: postgres
-data:
-  # Runs only on the first start, when the volume is empty
-  01-schemas.sql: |
-    CREATE SCHEMA tpch;
-    CREATE SCHEMA oltp;
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-  namespace: postgres
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
-  selector:
-    app: postgres
-  ports:
-    - name: postgres
-      port: 5432
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: postgres
-  namespace: postgres
-spec:
-  serviceName: postgres
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres
-  # Deleting the StatefulSet also deletes its EBS volume
-  persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Delete
-    whenScaled: Retain
-  template:
-    metadata:
-      labels:
-        app: postgres
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:18.6
-          # Logical replication, required by Airbyte CDC
-          args: ["-c", "wal_level=logical"]
-          env:
-            - name: POSTGRES_DB
-              value: source
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-credentials
-                  key: password
-          ports:
-            - name: postgres
-              containerPort: 5432
-          readinessProbe:
-            exec:
-              command: ["pg_isready", "-U", "postgres"]
-            periodSeconds: 10
-          # Requests so Auto Mode sizes the node; limits after measuring (D-018)
-          resources:
-            requests:
-              cpu: 250m
-              memory: 1Gi
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/postgresql
-            - name: init
-              mountPath: /docker-entrypoint-initdb.d
-      volumes:
-        - name: init
-          configMap:
-            name: postgres-init
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 10Gi
+  project: default
+  source:
+    repoURL: https://github.com/AndreRosaLopes/2026_eks_for_data.git
+    targetRevision: main
+    path: platform/aws/postgres
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: postgres
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
