@@ -1,6 +1,6 @@
 # D-030 — Source Postgres Password
 
-Status: Accepted
+Status: Superseded by [D-031](031-source-postgres-password-from-env.md)
 Date: 2026-10-31
 Phase: specs/02-transactional-ingestion
 

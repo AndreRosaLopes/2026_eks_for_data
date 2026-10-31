@@ -6,19 +6,19 @@ Phase: [02 — Transactional Ingestion](../plan.md)
 ## Design
 
 Postgres runs as a single-replica StatefulSet in the `postgres` namespace
-([D-022](../../../docs/decisions/022-source-postgres.md)). Terraform creates the namespace and the
-password ([D-030](../../../docs/decisions/030-source-postgres-password.md)); Argo CD syncs the rest
+([D-022](../../../docs/decisions/022-source-postgres.md)). The password lives in the local `.env` and
+reaches the cluster through `kubectl`, with no Terraform
+([D-031](../../../docs/decisions/031-source-postgres-password-from-env.md)); Argo CD syncs the rest
 from Git.
 
-1. **`infra/aws/gitops` (Terraform):**
-   - `kubernetes` (~> 3.4) and `random` (~> 3.9) providers; `kubernetes` authenticates with the same
-     `aws eks get-token` exec block as `helm`.
-   - `kubernetes_namespace_v1.postgres`: namespace `postgres`.
-   - `random_password.postgres`: 32 characters, no special characters (safe in connection strings).
-   - `kubernetes_secret_v1.postgres`: Secret `postgres-credentials` with key `password`.
-   - `helm_release.argocd_apps` gets `depends_on` the Secret, so Argo CD never syncs the StatefulSet
-     before its Secret exists.
+1. **Password (`.env` and `kubectl`):**
+   - `.env` (not versioned) holds `POSTGRES_PASSWORD` (32 hexadecimal characters, safe in connection
+     strings) and, as a comment, the two commands below.
+   - Before Argo CD syncs Postgres: `kubectl create namespace postgres` and
+     `kubectl -n postgres create secret generic postgres-credentials --from-literal=password="$POSTGRES_PASSWORD"`.
+   - `HOW_TO_RUN.md` section 2 gets the same two commands as its first step.
 2. **`platform/aws/postgres.yaml` (Argo CD):**
+   - Namespace `postgres`: also declared here, so Argo CD deletes it, with the Secret, at teardown.
    - ConfigMap `postgres-init`: `01-schemas.sql` with `CREATE SCHEMA tpch; CREATE SCHEMA oltp;`, run
      on the first start (empty volume).
    - StatefulSet `postgres`: image `postgres:18.6`; `POSTGRES_PASSWORD` from the Secret;
@@ -34,11 +34,9 @@ from Git.
 
 | File | Change |
 |---|---|
-| `infra/aws/gitops/providers.tf` | Modify: `kubernetes` and `random` providers |
-| `infra/aws/gitops/postgres.tf` | Create: namespace, password and Secret |
-| `infra/aws/gitops/argocd.tf` | Modify: `depends_on` the Secret in `argocd_apps` |
-| `infra/aws/gitops/.terraform.lock.hcl` | Modify: provider locks |
-| `platform/aws/postgres.yaml` | Create: ConfigMap, StatefulSet and Service |
+| `.env` | Modify (local, not versioned): `POSTGRES_PASSWORD` and the `kubectl` commands as a comment |
+| `HOW_TO_RUN.md` | Modify: section 2 starts with the password generation (`openssl rand -hex 16`) and the two `kubectl` commands |
+| `platform/aws/postgres.yaml` | Create: Namespace, ConfigMap, StatefulSet and Service |
 | `specs/02-transactional-ingestion/README.md` | Modify: Access (password command) and the 02.02 section |
 | `specs/02-transactional-ingestion/plan.md` | Modify: step status |
 
@@ -46,8 +44,8 @@ from Git.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Terraform is valid | `terraform -chdir=infra/aws/gitops validate` and `fmt -check` | Success | Pending |
-| 2 | Automated | Plan only adds the new resources | `terraform -chdir=infra/aws/gitops plan` | 3 to add (namespace, password, Secret); `argocd_apps` unchanged or updated in place | Pending |
+| 1 | Automated | Manifest is valid | `kubectl apply --dry-run=server -f platform/aws/postgres.yaml` | Every object `created (server dry run)` or `configured` | Pass: namespace configured; ConfigMap, Service, StatefulSet created (server dry run) |
+| 2 | Automated | Secret exists before the sync | `kubectl -n postgres get secret postgres-credentials` | Secret with 1 data key | Pass: 1 data key, equal to `.env` |
 | 3 | Automated | Argo CD synced Postgres | `kubectl -n argocd get application platform` | `Synced`, `Healthy` | Pending |
 | 4 | Automated | Pod ready and volume bound | `kubectl -n postgres get pod postgres-0` and `get pvc` | `1/1 Running`; PVC `Bound`, 10Gi | Pending |
 | 5 | Automated | Logical replication enabled | `kubectl -n postgres exec postgres-0 -- psql -U postgres -d source -tAc "SHOW wal_level"` | `logical` | Pending |
@@ -57,6 +55,6 @@ from Git.
 ## Teardown
 
 Covered by phase 01 [Turn Off](../../01-ingestion-airbyte-s3/README.md#turn-off): deleting the
-`platform` Application prunes the StatefulSet, and the retention policy deletes its PVC and EBS
-volume; `terraform -chdir=infra/aws/gitops destroy` then removes the Secret, the password and the
-namespace. Before the `cluster` destroy, `kubectl get pvc -A` shows no `postgres` volume.
+`platform` Application prunes the StatefulSet (the retention policy deletes its PVC and EBS volume)
+and the `postgres` namespace, with the Secret. Before the `cluster` destroy, `kubectl get pvc -A`
+shows no `postgres` volume.

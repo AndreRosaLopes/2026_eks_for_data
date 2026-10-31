@@ -47,7 +47,8 @@ planned once it is running.
 
 - [D-022 — Source Postgres](../../docs/decisions/022-source-postgres.md)
 - [D-023 — DuckDB as a Service](../../docs/decisions/023-duckdb-service.md)
-- [D-030 — Source Postgres Password](../../docs/decisions/030-source-postgres-password.md)
+- [D-030 — Source Postgres Password](../../docs/decisions/030-source-postgres-password.md) (superseded by D-031)
+- [D-031 — Source Postgres Password from `.env`](../../docs/decisions/031-source-postgres-password-from-env.md)
 
 Answered, recorded as ADRs when steps 02.04 onward are planned:
 

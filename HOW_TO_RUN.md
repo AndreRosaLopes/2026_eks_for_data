@@ -73,7 +73,28 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 
 ## 2. Services with Argo CD
 
-1. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
+1. **Source Postgres password:** send it from `.env` to the cluster before Argo CD syncs Postgres
+   ([D-031](docs/decisions/031-source-postgres-password-from-env.md)). If `.env` has no
+   `POSTGRES_PASSWORD` yet, generate one (recommended: 32 hexadecimal characters, safe in connection
+   strings) and load `.env` again:
+
+   ```bash
+   echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
+   ```
+
+   ```bash
+   set -a; source .env; set +a
+   ```
+
+   ```bash
+   kubectl create namespace postgres
+   ```
+
+   ```bash
+   kubectl -n postgres create secret generic postgres-credentials --from-literal=password="$POSTGRES_PASSWORD"
+   ```
+
+2. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
    ```bash
@@ -88,9 +109,9 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    terraform -chdir=infra/aws/gitops apply tfplan
    ```
 
-2. **Airbyte and the StorageClass:** they are manifests in `platform/aws`; Argo CD applies them after
-   `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
-3. **Check:** `kubectl -n argocd get applications` shows `platform` and `airbyte` `Synced` and
+3. **Airbyte, Postgres and the StorageClass:** they are manifests in `platform/aws`; Argo CD applies
+   them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
+4. **Check:** `kubectl -n argocd get applications` shows `platform` and `airbyte` `Synced` and
    `Healthy`.
 
 ## 3. Services without Argo CD (manual)

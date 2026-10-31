@@ -11,6 +11,19 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 ## Access
 
 - **Repository files:** opened in the editor or on GitHub; no credentials needed.
+- **Source Postgres password:** `POSTGRES_PASSWORD` in your local `.env`, sent to the cluster as the
+  Secret `postgres-credentials` ([HOW_TO_RUN section 2](../../HOW_TO_RUN.md#2-services-with-argo-cd)).
+  Recommended generation (32 hexadecimal characters):
+
+  ```bash
+  echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
+  ```
+
+  To read it back from the cluster:
+
+  ```bash
+  kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' | base64 -d
+  ```
 
 ## Step Verification
 
