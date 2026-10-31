@@ -41,6 +41,13 @@ After creating or modifying any file:
 4. The commit message contains only the description of the change (e.g., never add
    "Co-Authored-By: ...").
 5. End with `git push`.
+6. Show the commands in one `bash` code block, one command per line, never chained with `&&`:
+
+   ```bash
+   git add AGENTS.md
+   git commit -m "Describe the change"
+   git push
+   ```
 
 ## 4. Environment
 
