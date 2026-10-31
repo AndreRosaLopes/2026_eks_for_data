@@ -3,6 +3,25 @@
 A short, practical guide. Concepts, skills and folder structure are in
 [README, section 7](../../README.md#7-development-process-sdd).
 
+```mermaid
+block-beta
+  columns 3
+  i1(["Phase idea"]) c1["/sdd-plan"] o1(["plan.md + ADRs"])
+  space:3
+  i2(["plan.md"]) c2["/sdd-spec NN.NN"] o2(["spec.md"])
+  space:3
+  i3(["spec.md"]) c3["/sdd-implement NN.NN"] o3(["Code + phase README"])
+  i1 --> c1
+  c1 --> o1
+  i2 --> c2
+  c2 --> o2
+  i3 --> c3
+  c3 --> o3
+  c1 -- "plan.md" --> c2
+  c2 -- "spec.md" --> c3
+  o3 -- "next step" --> c2
+```
+
 ## 1. Commands, in Order
 
 ```text
@@ -14,10 +33,17 @@ A short, practical guide. Concepts, skills and folder structure are in
 ...
 ```
 
-Each skill stops if its input is not approved: `/sdd-spec` needs an approved plan, and
-`/sdd-implement` needs an approved spec.
+## 2. Inputs and Outputs
 
-## 2. Statuses
+| Command | Input (you give) | Requires (must exist) | Output (written) |
+|---|---|---|---|
+| `/sdd-plan` | The phase idea, in free text | — (reads `README.md`, `docs/principles.md`, existing ADRs and plans) | `specs/NN-name/plan.md` (`Approved`); one `docs/decisions/NNN-name.md` per decision (`Accepted`) |
+| `/sdd-spec` | The step, as `NN.NN` | `plan.md` `Approved`, with the step in its "Steps" table | `specs/NN-phase/NN-step/spec.md` (`Approved`); step set to `In progress` in `plan.md` |
+| `/sdd-implement` | The step, as `NN.NN` | `spec.md` `Approved` | Files listed in the spec; "Result" column filled in and `spec.md` `Implemented`; step section in `specs/NN-phase/README.md`; step `Done` in `plan.md` (last step: end-to-end walkthrough and plan `Done`) |
+
+If the required input is not approved, the command stops.
+
+## 3. Statuses
 
 | Document | Flow |
 |---|---|
@@ -26,7 +52,7 @@ Each skill stops if its input is not approved: `/sdd-spec` needs an approved pla
 | `specs/NN-phase/NN-step/spec.md` | `Approved` → `Implemented` |
 | `docs/decisions/NNN-name.md` | `Accepted` → `Superseded by D-NNN` (never rewritten) |
 
-## 3. Your Part at Each Stage
+## 4. Your Part at Each Stage
 
 | Stage | You |
 |---|---|
