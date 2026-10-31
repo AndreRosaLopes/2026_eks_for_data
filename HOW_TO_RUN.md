@@ -73,10 +73,10 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 
 ## 2. Services with Argo CD
 
-1. **Source Postgres password:** send it from `.env` to the cluster before Argo CD syncs Postgres
-   ([D-031](docs/decisions/031-source-postgres-password-from-env.md)). If `.env` has no
-   `POSTGRES_PASSWORD` yet, generate one (recommended: 32 hexadecimal characters, safe in connection
-   strings) and load `.env` again:
+1. **Passwords:** send them from `.env` to the cluster before Argo CD syncs Postgres and DuckDB.
+   **Source Postgres password** ([D-031](docs/decisions/031-source-postgres-password-from-env.md)):
+   if `.env` has no `POSTGRES_PASSWORD` yet, generate one (recommended: 32 hexadecimal characters,
+   safe in connection strings) and load `.env` again:
 
    ```bash
    echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
@@ -94,6 +94,22 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    kubectl -n postgres create secret generic postgres-credentials --from-literal=password="$POSTGRES_PASSWORD"
    ```
 
+   **DuckDB Quack token** ([D-033](docs/decisions/033-duckdb-service-configuration.md)): if `.env` has
+   no `QUACK_TOKEN` yet, generate it the same way and load `.env` again, then send it with the
+   Postgres password:
+
+   ```bash
+   echo "QUACK_TOKEN=$(openssl rand -hex 16)" >> .env
+   ```
+
+   ```bash
+   kubectl create namespace duckdb
+   ```
+
+   ```bash
+   kubectl -n duckdb create secret generic duckdb-credentials --from-literal=quack-token="$QUACK_TOKEN" --from-literal=postgres-password="$POSTGRES_PASSWORD"
+   ```
+
 2. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
@@ -109,10 +125,10 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    terraform -chdir=infra/aws/gitops apply tfplan
    ```
 
-3. **Airbyte, Postgres and the StorageClass:** they are manifests in `platform/aws`; Argo CD applies
-   them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
-4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte` and `postgres` `Synced` and
-   `Healthy`.
+3. **Airbyte, Postgres, DuckDB and the StorageClass:** they are manifests in `platform/aws`; Argo CD
+   applies them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
+4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres` and
+   `duckdb` `Synced` and `Healthy`.
 
 ## 3. Services without Argo CD (manual)
 

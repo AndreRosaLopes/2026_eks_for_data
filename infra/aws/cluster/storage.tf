@@ -60,3 +60,33 @@ module "airbyte_irsa" {
     }
   }
 }
+
+# IRSA role for the DuckDB ServiceAccount: read-only on the bronze bucket (D-008, D-033)
+module "duckdb_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.8.2"
+
+  name            = "${local.name}-duckdb"
+  use_name_prefix = false
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["duckdb:duckdb"]
+    }
+  }
+
+  permissions = {
+    S3BronzeRead = {
+      actions = [
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+      ]
+      resources = [
+        module.s3_bronze.s3_bucket_arn,
+        "${module.s3_bronze.s3_bucket_arn}/*",
+      ]
+    }
+  }
+}

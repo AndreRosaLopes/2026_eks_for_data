@@ -1,0 +1,21 @@
+# DuckDB as a service (D-023, D-033) as its own Application (D-032); manifests in platform/aws/duckdb.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: duckdb
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/AndreRosaLopes/2026_eks_for_data.git
+    targetRevision: main
+    path: platform/aws/duckdb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: duckdb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -34,6 +34,10 @@ output "airbyte_role_arn" {
   value = module.airbyte_irsa.arn
 }
 
+output "duckdb_role_arn" {
+  value = module.duckdb_irsa.arn
+}
+
 output "configure_kubectl" {
   value = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region us-east-1"
 }

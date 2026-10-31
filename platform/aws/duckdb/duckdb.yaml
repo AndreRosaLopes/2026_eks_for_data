@@ -1,0 +1,109 @@
+# DuckDB 2.0 in memory, serving Quack and the DuckDB UI (D-023, D-033). The Secret
+# duckdb-credentials is created by hand from .env before the sync (D-033, as D-031).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: duckdb
+---
+# Read-only access to the bronze bucket through IRSA (D-008)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: duckdb
+  namespace: duckdb
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-duckdb
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: duckdb-init
+  namespace: duckdb
+data:
+  init.sql: |
+    SET memory_limit = '1536MB';
+    -- Source Postgres; connection and password from the PG* environment variables
+    ATTACH '' AS source (TYPE postgres);
+    -- Bronze bucket; credentials from IRSA (web identity)
+    CREATE SECRET bronze (TYPE s3, PROVIDER credential_chain, REGION 'us-east-1');
+    -- Quack on plain HTTP, reached only inside the cluster or by port-forward
+    CALL quack_serve('quack:0.0.0.0:9494', allow_other_hostname = true, disable_ssl = true, token = getenv('QUACK_TOKEN'));
+    -- DuckDB UI on port 4213 inside the pod, reached by port-forward
+    CALL start_ui_server();
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: duckdb
+  namespace: duckdb
+spec:
+  selector:
+    app: duckdb
+  ports:
+    - name: quack
+      port: 9494
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duckdb
+  namespace: duckdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: duckdb
+  template:
+    metadata:
+      labels:
+        app: duckdb
+    spec:
+      serviceAccountName: duckdb
+      containers:
+        - name: duckdb
+          image: duckdb/duckdb:2.0.0
+          command: ["/duckdb", "-init", "/config/init.sql"]
+          # Keeps the CLI open after init.sql, so the servers keep running
+          stdin: true
+          tty: true
+          env:
+            - name: HOME
+              value: /home/duckdb
+            - name: PGHOST
+              value: postgres.postgres.svc.cluster.local
+            - name: PGUSER
+              value: postgres
+            - name: PGDATABASE
+              value: source
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: duckdb-credentials
+                  key: postgres-password
+            - name: QUACK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: duckdb-credentials
+                  key: quack-token
+          ports:
+            - name: quack
+              containerPort: 9494
+            - name: ui
+              containerPort: 4213
+          # Requests so Auto Mode sizes the node; limits after measuring (D-018)
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: home
+              mountPath: /home/duckdb
+      volumes:
+        - name: config
+          configMap:
+            name: duckdb-init
+        # Extensions are installed here at startup
+        - name: home
+          emptyDir: {}
