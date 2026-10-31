@@ -1,6 +1,6 @@
 # 02.01 — Roadmap and Architecture: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [02 — Transactional Ingestion](../plan.md)
 
 ## Design
@@ -44,10 +44,10 @@ and D-022 already uses "Phase 02" with the new meaning.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | §2 lists the source database and DuckDB | `grep -nE "PostgreSQL\|DuckDB" README.md` | One row for each | Pending |
-| 2 | Automated | §3 has the new numbering | `grep -nE "^\| 0[1-4] \|" README.md` | 01 Ingestion, 02 Transactional ingestion, 03 Trino and dbt, 04 Airflow | Pending |
-| 3 | Automated | Relative links in the changed files resolve | Check each `](...)` link in the 3 files against the file system | No broken link | Pending |
-| 4 | Manual | The roadmap and architecture match the phase 02 plan | Open `README.md` §2 and §3 next to `specs/02-transactional-ingestion/plan.md` | §2 shows PostgreSQL and DuckDB; §3 shows phase 02 as transactional ingestion and Trino/dbt as 03 | Pending |
+| 1 | Automated | §2 lists the source database and DuckDB | `grep -nE "PostgreSQL\|DuckDB" README.md` | One row for each | Pass: §2 lines 15 and 16 |
+| 2 | Automated | §3 has the new numbering | `grep -nE "^\| 0[1-4] \|" README.md` | 01 Ingestion, 02 Transactional ingestion, 03 Trino and dbt, 04 Airflow | Pass: 01 to 04 as expected (lines 35–38) |
+| 3 | Automated | Relative links in the changed files resolve | Check each `](...)` link in the 3 files against the file system | No broken link | Pass: 10 links checked, none broken |
+| 4 | Manual | The roadmap and architecture match the phase 02 plan | Open `README.md` §2 and §3 next to `specs/02-transactional-ingestion/plan.md` | §2 shows PostgreSQL and DuckDB; §3 shows phase 02 as transactional ingestion and Trino/dbt as 03 | Pass: confirmed by the user |
 
 ## Teardown
 

@@ -68,15 +68,15 @@ To be answered when steps 02.04 onward are planned:
 5. D-029: write method (native Postgres SQL through `postgres_execute`, DuckDB SQL on the attached
    tables, or `psql`) and deletes (foreign key with `ON DELETE CASCADE` or explicit).
 
-**Divergences to resolve (principle 7):** README §3 lists phase 02 as Trino and dbt (this phase
-becomes 02; Trino/dbt 03; Airflow 04), and README §2 does not list DuckDB or a source database.
-Both updates belong to step 02.01.
+**Divergences resolved in step 02.01 (principle 7):** README §3 listed phase 02 as Trino and dbt
+(this phase became 02; Trino/dbt 03; Airflow 04), and README §2 did not list DuckDB or a source
+database.
 
 ## Steps
 
 | # | Step | Status |
 |---|---|---|
-| 02.01 | Roadmap and architecture: README §2 and §3 updated | In progress |
+| 02.01 | Roadmap and architecture: README §2 and §3 updated | Done |
 | 02.02 | Source database: Postgres StatefulSet with logical replication and schemas `tpch` and `oltp`, reachable from Airbyte and DuckDB | To do |
 | 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | To do |
 | 02.04+ | TPC-H load, day simulation, CDC preparation, labs 02 and 03 | Not planned yet |

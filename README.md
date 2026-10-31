@@ -12,6 +12,8 @@ The platform uses open-source components on Kubernetes, with each cloud's native
 | Layer | Component |
 |---|---|
 | Ingestion | Airbyte |
+| Source database (simulated OLTP) | PostgreSQL |
+| Data generation and exploration | DuckDB |
 | Storage | Cloud object storage (AWS S3, Azure Blob Storage / ADLS Gen2, Google Cloud Storage) |
 | Compute | Kubernetes (EKS, AKS, GKE) |
 | Processing engine | Trino and/or Apache Spark |
@@ -31,8 +33,9 @@ To bring up the environment and its services, see [HOW_TO_RUN.md](HOW_TO_RUN.md)
 | # | Phase | Initial idea of steps |
 |---|---|---|
 | 01 | **Ingestion:** Airbyte writing to AWS S3 | Network and core services; Kubernetes and Argo CD; Airbyte |
-| 02 | **Processing and transformation:** Trino and dbt | To be defined |
-| 03 | **Orchestration:** Airflow | To be defined |
+| 02 | **Transactional ingestion:** TPC-H in Postgres, date cursor and CDC | Source Postgres; DuckDB service; data load and day simulation; labs 02 and 03 |
+| 03 | **Processing and transformation:** Trino and dbt | To be defined |
+| 04 | **Orchestration:** Airflow | To be defined |
 | — | **Next phases** | To be decided |
 
 ## 4. Premises
