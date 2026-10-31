@@ -78,6 +78,6 @@ database.
 | # | Step | Status |
 |---|---|---|
 | 02.01 | Roadmap and architecture: README §2 and §3 updated | Done |
-| 02.02 | Source database: Postgres StatefulSet with logical replication and schemas `tpch` and `oltp`, reachable from Airbyte and DuckDB | To do |
+| 02.02 | Source database: Postgres StatefulSet with logical replication and schemas `tpch` and `oltp`, reachable from Airbyte and DuckDB | In progress |
 | 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | To do |
 | 02.04+ | TPC-H load, day simulation, CDC preparation, labs 02 and 03 | Not planned yet |
