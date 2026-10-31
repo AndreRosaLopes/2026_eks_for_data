@@ -117,8 +117,26 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
    - Expected result: `oltp` and `tpch` among the schemas.
 
+### 02.04 — TPC-H Generation
+
+1. Open the DuckDB UI (see [Access](#access)), paste the whole
+   [01-generate-tpch.sql](../../pipelines/tpch/01-generate-tpch.sql) into a cell, keep
+   `SET VARIABLE sf = 1;` and run it.
+   - Expected result: it ends without errors after about a minute, and the last query shows the row
+     counts below.
+2. Check the row counts (the last query of the script, or run it again on its own):
+
+   ```sql
+   SELECT 'orders' AS table_name, count(*) AS row_count FROM source.tpch.orders
+   UNION ALL SELECT 'lineitem', count(*) FROM source.tpch.lineitem
+   UNION ALL SELECT 'customer', count(*) FROM source.tpch.customer;
+   ```
+
+   - Expected result: orders 1,500,000; lineitem about 6,000,000; customer 150,000.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
 - [02.02](02-source-database/spec.md#teardown): covered by phase 01 Turn Off
 - [02.03](03-duckdb-service/spec.md#teardown): covered by phase 01 Turn Off
+- [02.04](04-tpch-generation/spec.md#teardown): the tables go with the Postgres volume
