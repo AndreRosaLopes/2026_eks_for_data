@@ -16,8 +16,8 @@ verification proves the phase [Done When](plan.md#done-when).
 - **AWS console:** sign in to the account of the `eks-ws` profile and select region `us-east-1`.
   Never write credentials here.
 - **Kubernetes:** `aws eks update-kubeconfig --name eks-for-data --region us-east-1`. The EKS API only
-  accepts your current public IP; if it changed, re-apply `infra/aws/cluster` with
-  `export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"`.
+  accepts your current public IP; if it changed, re-apply `infra/aws/cluster` (Terraform detects the
+  new IP).
 
 ## Step Verification
 
@@ -147,7 +147,6 @@ In Git Bash, from the repository root:
 
 ```bash
 set -a; source .env; set +a
-export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"   # required variable
 kubectl delete pod --all                     # no test pods keeping nodes alive
 kubectl delete application platform -n argocd   # waits for the cascade to its child applications
 kubectl delete namespace airbyte --ignore-not-found   # PVC → Airbyte EBS volume deleted
@@ -197,7 +196,6 @@ aws ec2 describe-vpcs --filters Name=tag:project,Values=2026_eks_for_data $P --q
 
 ```bash
 set -a; source .env; set +a
-export TF_VAR_operator_cidr="$(curl -s https://checkip.amazonaws.com)/32"
 terraform -chdir=infra/aws/cluster plan -out=tfplan
 terraform -chdir=infra/aws/cluster apply tfplan
 aws eks update-kubeconfig --name eks-for-data --region us-east-1

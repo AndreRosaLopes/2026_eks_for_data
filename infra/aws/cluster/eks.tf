@@ -1,3 +1,8 @@
+# Operator's public IP, as AWS sees it; it restricts the EKS API (D-012)
+data "http" "operator_ip" {
+  url = "https://checkip.amazonaws.com"
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "21.29.0"
@@ -14,9 +19,9 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  # Public API restricted to the operator's IP (D-012)
+  # Public API restricted to the operator's IP, detected at plan time (D-012)
   endpoint_public_access       = true
-  endpoint_public_access_cidrs = [var.operator_cidr]
+  endpoint_public_access_cidrs = ["${chomp(data.http.operator_ip.response_body)}/32"]
 
   # Access entries only; the caller of Terraform becomes cluster admin
   authentication_mode                      = "API"

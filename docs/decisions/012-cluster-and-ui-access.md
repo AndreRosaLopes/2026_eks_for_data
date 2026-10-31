@@ -25,3 +25,13 @@ The operator needs access to the Kubernetes API and to the Argo CD and Airbyte U
 ## Sources
 
 - [EKS cluster endpoint access control](https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+
+## Update — 2026-10-31: Operator IP Detected by Terraform
+
+The operator IP was a variable (`operator_cidr`) exported before every `plan`, an easy step to forget.
+
+- **Change:** the `hashicorp/http` provider reads `https://checkip.amazonaws.com` at plan time, and
+  `endpoint_public_access_cidrs` uses that IP with `/32`. The variable is removed.
+- **Effect:** no manual step; if the IP changes, a new `plan`/`apply` updates the allowed range. The
+  IP still stays out of Git.
+- **Source:** [Terraform Registry: hashicorp/http](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http)
