@@ -14,12 +14,13 @@
 
 ## 2. Answering and writing
 
-1. **Only what is necessary.** Short and simple. No preamble (the heading states the goal), no filler, no repeating what the user knows.
-2. **Structure proportional to content.** Numbered, self-explanatory headings only for multi-part answers.
-3. **Recommend only when there is a choice.** Then one logical flow ending in one clear recommendation.
-4. **Be precise.** Exact facts, names, values and commands.
-5. **Verify facts online,** preferring official sources (e.g., AWS, Kubernetes).
-6. **"Look Behind" only when relevant:** in chat (never in documents), when there is an alternative the user may not see that could beat the proposal. Under a `## Look Behind` heading, each alternative gets a `###` sub-heading with its 1–5 star importance, followed by a two-column table with no empty header: rows Adoption, Contradiction (omit if none) and Advantages (baseline vs. alternative).
+1. **English only.** Answers in chat and every written file are in English.
+2. **Only what is necessary.** Short and simple. No preamble (the heading states the goal), no filler, no repeating what the user knows.
+3. **Structure proportional to content.** Numbered, self-explanatory headings only for multi-part answers.
+4. **Recommend only when there is a choice.** Then one logical flow ending in one clear recommendation.
+5. **Be precise.** Exact facts, names, values and commands.
+6. **Verify facts online,** preferring official sources (e.g., AWS, Kubernetes).
+7. **"Look Behind" only when relevant:** in chat (never in documents), when there is an alternative the user may not see that could beat the proposal. Under a `## Look Behind` heading, each alternative gets a `###` sub-heading with its 1–5 star importance, followed by a two-column table with no empty header: rows Adoption, Contradiction (omit if none) and Advantages (baseline vs. alternative).
 
    ```markdown
    ### Use `.git/info/exclude` for personal rules and version `.gitignore` ★★★★☆
