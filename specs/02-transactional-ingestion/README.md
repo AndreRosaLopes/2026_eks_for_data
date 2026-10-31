@@ -36,6 +36,31 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
    - Expected result: 02 is **Transactional ingestion**, 03 is **Processing and transformation:**
      Trino and dbt, and 04 is **Orchestration:** Airflow.
 
+### 02.02 — Source Database
+
+1. Read the password from the cluster and compare it with `POSTGRES_PASSWORD` in your `.env`:
+
+   ```bash
+   kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' | base64 -d
+   ```
+
+   - Expected result: the same value.
+2. List the schemas of the `source` database:
+
+   ```bash
+   kubectl -n postgres exec postgres-0 -- psql -U postgres -d source -c '\dn'
+   ```
+
+   - Expected result: `oltp`, `public` and `tpch`.
+3. Check logical replication:
+
+   ```bash
+   kubectl -n postgres exec postgres-0 -- psql -U postgres -d source -c 'SHOW wal_level'
+   ```
+
+   - Expected result: `logical`.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
+- [02.02](02-source-database/spec.md#teardown): covered by phase 01 Turn Off
