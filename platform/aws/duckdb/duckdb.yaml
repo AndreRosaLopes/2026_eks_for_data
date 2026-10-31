@@ -26,8 +26,9 @@ data:
     ATTACH '' AS source (TYPE postgres);
     -- Bronze bucket; credentials from IRSA (web identity)
     CREATE SECRET bronze (TYPE s3, PROVIDER credential_chain, REGION 'us-east-1');
-    -- Quack on plain HTTP, reached only inside the cluster or by port-forward
-    CALL quack_serve('quack:0.0.0.0:9494', allow_other_hostname = true, disable_ssl = true, token = getenv('QUACK_TOKEN'));
+    -- Quack on plain HTTP, reached only inside the cluster or by port-forward;
+    -- only the URL is selected, so the token is not printed to the logs
+    SELECT listen_url FROM quack_serve('quack:0.0.0.0:9494', allow_other_hostname = true, disable_ssl = true, token = getenv('QUACK_TOKEN'));
     -- DuckDB UI on port 4213 inside the pod, reached by port-forward
     CALL start_ui_server();
 ---
