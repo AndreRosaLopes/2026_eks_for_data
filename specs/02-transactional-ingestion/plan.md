@@ -50,6 +50,7 @@ planned once it is running.
 - [D-030 — Source Postgres Password](../../docs/decisions/030-source-postgres-password.md) (superseded by D-031)
 - [D-031 — Source Postgres Password from `.env`](../../docs/decisions/031-source-postgres-password-from-env.md)
 - [D-032 — One Argo CD Application per Component](../../docs/decisions/032-one-application-per-component.md)
+- [D-033 — DuckDB Service Configuration](../../docs/decisions/033-duckdb-service-configuration.md)
 
 Answered, recorded as ADRs when steps 02.04 onward are planned:
 
@@ -81,5 +82,5 @@ database.
 |---|---|---|
 | 02.01 | Roadmap and architecture: README §2 and §3 updated | Done |
 | 02.02 | Source database: Postgres StatefulSet with logical replication and schemas `tpch` and `oltp`, reachable from Airbyte and DuckDB | Done |
-| 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | To do |
+| 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | In progress |
 | 02.04+ | TPC-H load, day simulation, CDC preparation, labs 02 and 03 | Not planned yet |
