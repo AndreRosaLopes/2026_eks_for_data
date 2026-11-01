@@ -2,7 +2,8 @@
 -- Paste and run in the DuckDB UI. Running it again resets oltp (the simulation restarts from
 -- yesterday); tpch is never changed. Each postgres_execute runs one native Postgres statement.
 
--- TPC-H date that becomes yesterday; later orders stay in tpch for the daily simulation
+-- TPC-H date that becomes yesterday; later orders stay in tpch for the daily simulation.
+-- Valid range: '1992-01-01' (first TPC-H order) to '1998-08-02' (last one, loads everything).
 SET VARIABLE cutoff = '1997-12-31';
 
 -- Already attached in the UI; needed in a new DuckDB process

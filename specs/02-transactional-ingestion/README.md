@@ -138,7 +138,8 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
 1. In the DuckDB UI, paste the whole [02-oltp-baseline.sql](../../pipelines/tpch/02-oltp-baseline.sql)
    into a cell, keep `SET VARIABLE cutoff = '1997-12-31';` and run it. Running it again resets
-   `oltp`.
+   `oltp`. The cutoff accepts any date from `'1992-01-01'` (first TPC-H order) to `'1998-08-02'`
+   (last one, which loads every order and leaves none for the daily simulation).
    - Expected result: it ends without errors after about 1.5 minutes; the last query shows 1,366,377
      orders, the first in 2020 and the last on yesterday's date, and some thousands of open orders.
 2. Check that the columns have no TPC-H prefix:
