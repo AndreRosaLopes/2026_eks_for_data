@@ -81,6 +81,6 @@ database.
 | 02.02 | Source database: Postgres StatefulSet with logical replication and schemas `tpch` and `oltp`, reachable from Airbyte and DuckDB | Done |
 | 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | Done |
 | 02.04 | TPC-H generation: DuckDB `dbgen` writes TPC-H (scale factor as a parameter) into `tpch` | Done |
-| 02.05 | OLTP baseline: `oltp` tables with keys, `updated_at` and trigger; reference tables in full; orders and line items shifted up to load day − 1 | In progress |
+| 02.05 | OLTP baseline: `oltp` tables with keys, `updated_at` and trigger; reference tables in full; orders and line items shifted up to load day − 1 | Done |
 | 02.06 | Day simulation: daily script (inserts, closings, cancellations) and customer change script, run by hand in the DuckDB UI | To do |
 | 02.07+ | CDC preparation, labs 02 and 03 | Not planned yet |

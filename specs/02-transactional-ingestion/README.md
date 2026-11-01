@@ -134,9 +134,34 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
    - Expected result: orders 1,500,000; lineitem about 6,000,000; customer 150,000.
 
+### 02.05 — OLTP Baseline
+
+1. In the DuckDB UI, paste the whole [02-oltp-baseline.sql](../../pipelines/tpch/02-oltp-baseline.sql)
+   into a cell, keep `SET VARIABLE cutoff = '1997-12-31';` and run it. Running it again resets
+   `oltp`.
+   - Expected result: it ends without errors after about 1.5 minutes; the last query shows 1,366,377
+     orders, the first in 2020 and the last on yesterday's date, and some thousands of open orders.
+2. Check that the columns have no TPC-H prefix:
+
+   ```sql
+   DESCRIBE source.oltp.orders;
+   ```
+
+   - Expected result: `orderkey`, `custkey`, `orderstatus`, …, `comment`, `updated_at`.
+3. Check the statuses: orders from the last 30 days are open (`O`), older ones closed (`F`):
+
+   ```sql
+   SELECT orderstatus, min(orderdate), max(orderdate), count(*)
+   FROM source.oltp.orders GROUP BY orderstatus;
+   ```
+
+   - Expected result: `F` up to 30 days ago; `O` from 29 days ago to yesterday.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
 - [02.02](02-source-database/spec.md#teardown): covered by phase 01 Turn Off
 - [02.03](03-duckdb-service/spec.md#teardown): covered by phase 01 Turn Off
 - [02.04](04-tpch-generation/spec.md#teardown): the tables go with the Postgres volume
+- [02.05](05-oltp-baseline/spec.md#teardown): `oltp` goes with the Postgres volume; rerunning the
+  script resets it
