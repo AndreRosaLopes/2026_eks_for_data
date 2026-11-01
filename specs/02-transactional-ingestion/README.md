@@ -158,6 +158,15 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
    - Expected result: `F` up to 30 days ago; `O` from 29 days ago to yesterday.
 
+### 02.06 — Day Simulation
+
+1. In the DuckDB UI, paste the whole [03-simulate-day.sql](../../pipelines/tpch/03-simulate-day.sql)
+   into a cell and run it. Each run advances one day (nothing to edit; the amounts of dimension
+   changes per day are the `SET VARIABLE` lines at the top).
+   - Expected result: after about 35 seconds, the summary shows `simulated_day` one day after the
+     previous run, about 600 `new_orders`, open, partial and finished orders, and `customers` +2,
+     `suppliers` +1 and `partsupp` −2 compared with the previous run.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
@@ -166,3 +175,4 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 - [02.04](04-tpch-generation/spec.md#teardown): the tables go with the Postgres volume
 - [02.05](05-oltp-baseline/spec.md#teardown): `oltp` goes with the Postgres volume; rerunning the
   script resets it
+- [02.06](06-day-simulation/spec.md#teardown): rerunning the 02.05 baseline resets the simulation
