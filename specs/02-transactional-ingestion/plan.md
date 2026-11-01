@@ -19,8 +19,8 @@ baseline and a daily simulation run by hand. CDC preparation and the labs are pl
 - DuckDB as a permanent service in the cluster (Quack), reading the source Postgres and the bronze
   bucket (IRSA)
 - TPC-H generated into `tpch`, an OLTP baseline in `oltp` (dates shifted, `updated_at` by trigger)
-  and a daily simulation (inserts, updates, deletes) plus a customer change script, as SQL scripts in
-  `pipelines/tpch/` run by hand in the DuckDB UI
+  and a daily simulation (facts: inserts and status updates; dimensions: inserts, updates and
+  deletes of rows no order uses), as SQL scripts in `pipelines/tpch/` run by hand in the DuckDB UI
 - Later steps (not planned yet): CDC preparation, lab02 and lab03, built in the Airbyte UI and not
   saved ([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md)); lab01 reused from
   [phase 01](../01-ingestion-airbyte-s3/lab01-api-ingestion.md)
@@ -56,11 +56,12 @@ baseline and a daily simulation run by hand. CDC preparation and the labs are pl
 - [D-033 — DuckDB Service Configuration](../../docs/decisions/033-duckdb-service-configuration.md)
 - [D-024 — TPC-H Dataset and Scale](../../docs/decisions/024-tpch-dataset-and-scale.md)
 - [D-025 — Event Date Control](../../docs/decisions/025-event-date-control.md)
-- [D-026 — Day Simulation Changes](../../docs/decisions/026-day-simulation-changes.md)
+- [D-026 — Day Simulation Changes](../../docs/decisions/026-day-simulation-changes.md) (superseded by D-037)
 - [D-027 — Pipeline Scripts: Location and Execution](../../docs/decisions/027-pipeline-scripts.md)
 - [D-028 — Lab02 Cursor](../../docs/decisions/028-lab02-cursor.md)
 - [D-029 — OLTP Write Method and Deletes](../../docs/decisions/029-oltp-write-method.md)
-- [D-035 — SCD Type 2 Customer Changes](../../docs/decisions/035-scd2-customer-changes.md)
+- [D-035 — SCD Type 2 Customer Changes](../../docs/decisions/035-scd2-customer-changes.md) (superseded by D-037)
+- [D-037 — Day Simulation by Table Type](../../docs/decisions/037-day-simulation-by-table-type.md)
 
 ## Open Points
 
@@ -82,5 +83,5 @@ database.
 | 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | Done |
 | 02.04 | TPC-H generation: DuckDB `dbgen` writes TPC-H (scale factor as a parameter) into `tpch` | Done |
 | 02.05 | OLTP baseline: `oltp` tables with keys, `updated_at` and trigger; reference tables in full; orders and line items shifted up to load day − 1 | Done |
-| 02.06 | Day simulation: daily script (inserts, closings, cancellations) and customer change script, run by hand in the DuckDB UI | To do |
+| 02.06 | Day simulation: one daily script (facts: inserts and status updates; dimensions: inserts, updates, deletes), run by hand in the DuckDB UI | In progress |
 | 02.07+ | CDC preparation, labs 02 and 03 | Not planned yet |

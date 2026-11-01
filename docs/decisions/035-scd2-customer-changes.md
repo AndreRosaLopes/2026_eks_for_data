@@ -1,6 +1,6 @@
 # D-035 — SCD Type 2 Customer Changes
 
-Status: Accepted
+Status: Superseded by [D-037](037-day-simulation-by-table-type.md)
 Date: 2026-10-31
 Phase: specs/02-transactional-ingestion
 
