@@ -62,6 +62,15 @@ sync first. From then on, Postgres keeps WAL for the slot until Airbyte reads it
 MSYS_NO_PATHCONV=1 kubectl -n duckdb exec -i deploy/duckdb -- /duckdb < pipelines/tpch/04-cdc-setup.sql
 ```
 
+## 5. Lab 02 — Date Cursor
+
+Follow [Lab 02 — Date Cursor Ingestion](lab02-cursor-ingestion.md): a connection created in the
+Airbyte UI reads `oltp` incrementally by `updated_at` and writes Parquet to `oltp_cursor` in the
+bronze bucket; after a simulated day, a second sync brings only that day's inserts and updates, and
+no deletes. The configuration is not saved
+([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md)): repeat the lab in every new
+environment.
+
 ## Upgrade a Running Environment for 02.08
 
 **Only once, and only for an environment brought up before step 02.08.** A new environment already

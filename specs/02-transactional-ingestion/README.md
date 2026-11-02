@@ -154,6 +154,20 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
    - Expected result: the 8 `oltp` tables.
 
+### 02.09 — Lab02: Date Cursor
+
+Follow [Lab 02 — Date Cursor Ingestion](lab02-cursor-ingestion.md):
+
+1. Sections 2 and 3 (source and destination).
+   - Expected result: both connection tests pass.
+2. Section 4 (connection and sync 1).
+   - Expected result: **Succeeded**; in DuckDB, `bronze` = `postgres` for `orders` and `customer`.
+3. Section 5 (simulate a day and sync 2) and section 6.
+   - Expected result: **Succeeded**, with far fewer records than sync 1; two lines per table, the
+     second with the day's changes only.
+4. Section 7.
+   - Expected result: `30` deleted customers still in bronze: the cursor does not capture deletes.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
@@ -165,3 +179,4 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 - [02.06](06-day-simulation/spec.md#teardown): rerunning the 02.05 baseline resets the simulation
 - [02.07](07-registration-dates/spec.md#teardown): rerunning the 02.05 baseline recreates the column
 - [02.08](08-airbyte-user-and-cdc-preparation/spec.md#teardown): drop the slot when lab03 is no longer used
+- [02.09](09-lab02-date-cursor/spec.md#teardown): delete the Airbyte objects; the files go with the bucket

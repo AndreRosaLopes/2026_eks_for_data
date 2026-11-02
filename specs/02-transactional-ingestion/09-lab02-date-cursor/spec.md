@@ -27,10 +27,11 @@ Lab flow:
    marking the delete (lab03, CDC, captures them).
 
 Verified: the Airbyte Postgres source supports `TIMESTAMP_WITH_TIMEZONE` cursors (the type of
-`updated_at`), and Airbyte recommends CDC "when you need a record of deletions". To confirm during
-implementation, in the Airbyte 2.4.0 UI: the exact label of the cursor method, that SSL mode
-`disable` is accepted on self-managed Airbyte (the docs restrict it only on Cloud), and the Parquet
-path format.
+`updated_at`), and Airbyte recommends CDC "when you need a record of deletions". The connector
+installed with Airbyte 2.4.0 is `source-postgres` 3.8.10; its spec (`spec` command) names the
+update method **Scan Changes with User Defined Cursor** and lists SSL mode `disable`. Still to
+confirm in the lab: that the connection test accepts `disable`, and the Parquet path
+`oltp_cursor/oltp/<table>/`.
 
 Side effect: the 02.08 CDC slot keeps WAL while lab02 runs (nothing reads it yet), capped at 2GB
 ([D-041](../../../docs/decisions/041-replication-slot-wal-limit.md)); lab03 recreates it with
@@ -49,7 +50,7 @@ Side effect: the 02.08 CDC slot keeps WAL while lab02 runs (nothing reads it yet
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Airbyte namespace reaches Postgres as `airbyte` | Temporary `postgres:18.6` pod in `airbyte`: `psql -h postgres.postgres.svc.cluster.local -U airbyte -d source -c 'SELECT count(*) FROM oltp.orders'` | The order count | Pending |
+| 1 | Automated | Airbyte namespace reaches Postgres as `airbyte` | Temporary `postgres:18.6` pod in `airbyte`: `psql -h postgres.postgres.svc.cluster.local -U airbyte -d source -c 'SELECT count(*) FROM oltp.orders'` | The order count | Pass: 1,367,012 |
 | 2 | Manual | Source and destination | Lab sections 2 and 3 | Both connection tests pass | Pending |
 | 3 | Manual | Sync 1 | Lab section 4 | **Succeeded**; 8 streams | Pending |
 | 4 | Automated | Sync 1 in bronze | DuckDB: row count per table under `oltp_cursor/oltp/` | Equal to the `oltp` counts at sync time | Pending |
