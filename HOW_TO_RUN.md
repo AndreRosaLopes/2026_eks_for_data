@@ -188,13 +188,13 @@ role) in Terraform.
 
 ## 4. Access
 
-| Service | Command | URL | Credential |
-|---|---|---|---|
-| [AWS console](#41-aws-and-kubernetes) | — | AWS console, region `us-east-1` | Account of the `eks-ws` profile |
-| [Argo CD UI](#43-argo-cd) | `kubectl -n argocd port-forward svc/argocd-server 8080:443 &` | `https://localhost:8080` | `admin` + Secret `argocd-initial-admin-secret` |
-| [Airbyte UI](#44-airbyte) | `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &` | `http://localhost:8001` | Your email + Secret `airbyte-auth-secrets` |
-| [Source Postgres](#45-source-postgres) | `kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source` | — | `POSTGRES_PASSWORD` in `.env` |
-| [DuckDB UI](#46-duckdb-ui) | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &` | `http://localhost:4213` | None |
+| Service | Open | URL | User | Get the password |
+|---|---|---|---|---|
+| [AWS console](#41-aws-and-kubernetes) | — | AWS console, region `us-east-1` | Account of the `eks-ws` profile | Your AWS sign-in |
+| [Argo CD UI](#43-argo-cd) | `kubectl -n argocd port-forward svc/argocd-server 8080:443 &` | `https://localhost:8080` | `admin` | `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' \| base64 -d; echo` |
+| [Airbyte UI](#44-airbyte) | `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &` | `http://localhost:8001` | Your email | `kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' \| base64 -d; echo` |
+| [Source Postgres](#45-source-postgres) | `kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source` | — | `postgres` | `POSTGRES_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' \| base64 -d; echo` |
+| [DuckDB UI](#46-duckdb-ui) | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &` | `http://localhost:4213` | — | None. Quack token (local UI only): `QUACK_TOKEN` in `.env`, or `kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' \| base64 -d; echo` |
 
 ### 4.1 AWS and Kubernetes
 
@@ -279,8 +279,13 @@ kubectl -n duckdb port-forward svc/duckdb 9494:9494 &
 duckdb -ui
 ```
 
-In the UI, attach the server with `QUACK_TOKEN` from `.env`. `localhost` uses plain HTTP, and AWS
-queries such as `glob('s3://...')` run on your computer, not on the server:
+In the UI, attach the server with `QUACK_TOKEN` from `.env`, or read it back from the cluster:
+
+```bash
+kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' | base64 -d; echo
+```
+
+`localhost` uses plain HTTP, and AWS queries such as `glob('s3://...')` run on your computer, not on the server:
 
 ```sql
 CREATE SECRET (TYPE quack, TOKEN '<QUACK_TOKEN>');
