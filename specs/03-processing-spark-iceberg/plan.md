@@ -45,6 +45,7 @@ Spark.
 - [D-046 — Catalog Metadata Database](../../docs/decisions/046-catalog-metadata-database.md)
 - [D-047 — Spark Dependencies](../../docs/decisions/047-spark-dependencies.md)
 - [D-048 — Spark Job Code Delivery](../../docs/decisions/048-spark-job-code-delivery.md)
+- [D-049 — Storage Credentials for Silver](../../docs/decisions/049-silver-storage-credentials.md)
 
 **Divergences resolved (principle 7):** README §2 listed Trino and/or Spark as processing engine and
 dbt for transformation, and §3 listed phase 03 as Trino and dbt and phase 04 as Airflow only. Updated
@@ -56,7 +57,7 @@ future tools.
 | # | Step | Status |
 |---|---|---|
 | 03.01 | Roadmap: README §2 (Spark; Iceberg and REST catalog) and §3 (phases 03 and 04) updated | Done |
-| 03.02 | Silver bucket and IRSA roles for Spark and Polaris (Terraform) | To do |
+| 03.02 | [Silver bucket and IRSA roles](02-silver-bucket-and-irsa/spec.md): silver bucket and IRSA roles for Spark and Polaris (Terraform) | In progress |
 | 03.03 | Spark image: Dockerfile and GitHub Actions workflow publishing to `ghcr.io` | To do |
 | 03.04 | Spark Operator via Argo CD; a job reads bronze `orders` and prints counts | To do |
 | 03.05 | Catalog Postgres and Polaris via Argo CD; warehouse on `silver` | To do |
