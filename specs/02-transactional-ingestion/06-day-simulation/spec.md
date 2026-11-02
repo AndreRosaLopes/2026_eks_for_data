@@ -11,7 +11,7 @@ One script, `pipelines/tpch/03-simulate-day.sql`, pasted and run in the DuckDB U
 One run = one day: the simulated day R is the day after the latest order in `oltp`; nothing is
 edited. The offset is `oltp.orderdate - tpch.o_orderdate`, read from any order (02.05).
 
-Changes by table type ([D-037](../../../docs/decisions/037-day-simulation-by-table-type.md)):
+Changes by table type ([D-038](../../../docs/decisions/038-day-simulation-with-partsupp-insert.md)):
 
 | Table | Type | Insert | Update | Delete |
 |---|---|---|---|---|
@@ -48,8 +48,8 @@ finished, so Postgres can hash it (listing all old orders made the update run fo
 |---|---|---|---|---|---|
 | 1 | Automated | Day advances; facts only grow | Run the script; `max(orderdate)` and order count before and after | One day later; orders = before + new orders of day R (no deletes) | Pass: 2026-11-02 → 2026-11-03; 1,367,390 + 586 = 1,367,976 |
 | 2 | Automated | Status updates | Partial orders; open line items whose order is 30+ days old | Partial orders appear; 0 open line items 30+ days old | Pass: partial orders 8,691 → 10,514; 0 |
-| 3 | Automated | Dimension changes | Counts before and after; rows with the newest `updated_at` | customer +50 −30; supplier +10; `partsupp` +20 −20 (first run: +0, nothing deleted yet); 100 customers, 50 suppliers and 200 pairs updated | Pending: rerun with the revised amounts (passed with the earlier 5/10/3, 1/5, 20/2) |
-| 4 | Automated | Run time | Time of one run | Under a minute | Pass: 35 seconds |
+| 3 | Automated | Dimension changes | Counts before and after; rows with the newest `updated_at` | customer +50 −30; supplier +10; `partsupp` +20 −20 (first run: +0, nothing deleted yet); 100 customers, 50 suppliers and 200 pairs updated | Pass: 150,000 → 150,020 → 150,040; 10,000 → 10,010 → 10,020; 800,000 → 799,980 → 799,980; 50 customers inserted and 100 updated, 10 suppliers inserted and 50 updated, 200 pairs updated |
+| 4 | Automated | Run time | Time of one run | Under 2 minutes | Pass: 48 s and 69 s |
 | 5 | Manual | Through the UI | Run the script once and read its summary | `simulated_day` one day later, about 600 new orders, open/partial/finished orders, and the changed dimension counts | Pending |
 
 ## Teardown
