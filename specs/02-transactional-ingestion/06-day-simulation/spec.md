@@ -18,12 +18,13 @@ Changes by table type ([D-037](../../../docs/decisions/037-day-simulation-by-tab
 | `region`, `nation` | Domain | No | No | No |
 | `orders` | Fact | Orders of day R from `tpch`, open | `orderstatus` O → P → F, from its line items | No |
 | `lineitem` | Fact | Line items of day R, open | `linestatus` O → F: 10% chance per day, always once the order is 30 days old relative to R | No |
-| `customer` | Dimension | 5 new customers | 10 customers that never bought: address, phone, segment | 3 customers with no order in `oltp` or `tpch` |
-| `supplier` | Dimension | 1 new supplier | 5 suppliers: address, phone, balance | No (every TPC-H supplier is in use) |
-| `partsupp` | Dimension | No | 20 pairs: `availqty`, `supplycost` | 2 pairs no line item uses in `oltp` or `tpch` |
+| `customer` | Dimension | 50 new customers | 100 customers that never bought: address, phone, segment | 30 customers with no order in `oltp` or `tpch` |
+| `supplier` | Dimension | 10 new suppliers | 50 suppliers: address, phone, balance | No (every TPC-H supplier is in use) |
+| `partsupp` | Dimension | 20 pairs deleted on earlier days, back from `tpch` (runs before the delete) | 200 pairs: `availqty`, `supplycost` | 20 pairs no line item uses in `oltp` or `tpch` |
 | `part` | Dimension | No | No | No |
 
-The amounts per day are `SET VARIABLE` lines at the top of the script. Deletes only reach rows that no
+The amounts per day are `SET VARIABLE` lines at the top of the script; at SF1 each stays under
+1% of its table per day. The `partsupp` insert keeps the 459 deletable pairs from running out. Deletes only reach rows that no
 order uses, now or in the future (`tpch`), so the foreign keys always hold. The trigger updates
 `updated_at` on every update ([D-028](../../../docs/decisions/028-lab02-cursor.md)). The run ends with
 a summary: R, new orders, orders per status, and the customer, supplier and `partsupp` counts.
@@ -37,6 +38,7 @@ finished, so Postgres can hash it (listing all old orders made the update run fo
 | File | Change |
 |---|---|
 | `pipelines/tpch/03-simulate-day.sql` | Create: the daily simulation |
+| `platform/aws/postgres/postgres.yaml` | Modify: 512Mi memory-backed `/dev/shm`, so parallel queries do not fail |
 | `specs/02-transactional-ingestion/README.md` | Modify: the 02.06 section |
 | `specs/02-transactional-ingestion/plan.md` | Modify: step status |
 
@@ -46,7 +48,7 @@ finished, so Postgres can hash it (listing all old orders made the update run fo
 |---|---|---|---|---|---|
 | 1 | Automated | Day advances; facts only grow | Run the script; `max(orderdate)` and order count before and after | One day later; orders = before + new orders of day R (no deletes) | Pass: 2026-11-02 → 2026-11-03; 1,367,390 + 586 = 1,367,976 |
 | 2 | Automated | Status updates | Partial orders; open line items whose order is 30+ days old | Partial orders appear; 0 open line items 30+ days old | Pass: partial orders 8,691 → 10,514; 0 |
-| 3 | Automated | Dimension changes | Counts before and after; rows with the newest `updated_at` | customer +5 −3; supplier +1; `partsupp` −2; 10 customers, 5 suppliers and 20 pairs updated | Pass: 150,000 → 150,002; 10,000 → 10,001; 800,000 → 799,998; 10, 5 and 20 updated |
+| 3 | Automated | Dimension changes | Counts before and after; rows with the newest `updated_at` | customer +50 −30; supplier +10; `partsupp` +20 −20 (first run: +0, nothing deleted yet); 100 customers, 50 suppliers and 200 pairs updated | Pending: rerun with the revised amounts (passed with the earlier 5/10/3, 1/5, 20/2) |
 | 4 | Automated | Run time | Time of one run | Under a minute | Pass: 35 seconds |
 | 5 | Manual | Through the UI | Run the script once and read its summary | `simulated_day` one day later, about 600 new orders, open/partial/finished orders, and the changed dimension counts | Pending |
 

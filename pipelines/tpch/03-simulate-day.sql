@@ -2,18 +2,19 @@
 -- One run = one day: the simulated day R is the day after the latest order in oltp.
 -- Facts (orders, lineitem): inserts and status updates, never deletes.
 -- Dimensions: customer (insert, update, delete), supplier (insert, update),
--- partsupp (update, delete). Domains (region, nation) and part never change.
+-- partsupp (insert, update, delete). Domains (region, nation) and part never change.
 -- Only rows that no order uses, now or in the future (tpch), are deleted.
 -- Each postgres_execute runs one native Postgres statement.
 
 -- Changes per day
-SET VARIABLE new_customers = 5;
-SET VARIABLE changed_customers = 10;
-SET VARIABLE deleted_customers = 3;
-SET VARIABLE new_suppliers = 1;
-SET VARIABLE changed_suppliers = 5;
-SET VARIABLE changed_partsupp = 20;
-SET VARIABLE deleted_partsupp = 2;
+SET VARIABLE new_customers = 50;
+SET VARIABLE changed_customers = 100;
+SET VARIABLE deleted_customers = 30;
+SET VARIABLE new_suppliers = 10;
+SET VARIABLE changed_suppliers = 50;
+SET VARIABLE new_partsupp = 20;
+SET VARIABLE changed_partsupp = 200;
+SET VARIABLE deleted_partsupp = 20;
 
 -- Already attached in the UI; needed in a new DuckDB process
 ATTACH IF NOT EXISTS '' AS source (TYPE postgres);
@@ -145,7 +146,18 @@ SET address = substr(md5(random()::text), 1, 20),
 WHERE suppkey IN (SELECT suppkey FROM oltp.supplier ORDER BY random() LIMIT {n})
 $sql$, '{n}', getvariable('changed_suppliers')::VARCHAR));
 
--- 9. Part-supplier update: new stock and cost
+-- 9. Part-supplier insert: pairs deleted on earlier days come back from tpch, with their original
+--    values (runs before the delete, so a pair never leaves and returns on the same day)
+CALL postgres_execute('source', replace($sql$
+INSERT INTO oltp.partsupp (partkey, suppkey, availqty, supplycost, comment)
+SELECT t.ps_partkey, t.ps_suppkey, t.ps_availqty, t.ps_supplycost, t.ps_comment
+FROM tpch.partsupp t
+WHERE NOT EXISTS (SELECT 1 FROM oltp.partsupp ps
+                  WHERE ps.partkey = t.ps_partkey AND ps.suppkey = t.ps_suppkey)
+ORDER BY random() LIMIT {n}
+$sql$, '{n}', getvariable('new_partsupp')::VARCHAR));
+
+-- 10. Part-supplier update: new stock and cost
 CALL postgres_execute('source', replace($sql$
 UPDATE oltp.partsupp
 SET availqty = 1 + floor(random() * 9999)::int,
@@ -155,7 +167,7 @@ WHERE (partkey, suppkey) IN (
 )
 $sql$, '{n}', getvariable('changed_partsupp')::VARCHAR));
 
--- 10. Part-supplier delete: only pairs no line item uses, now or in the future (tpch)
+-- 11. Part-supplier delete: only pairs no line item uses, now or in the future (tpch)
 CALL postgres_execute('source', replace($sql$
 DELETE FROM oltp.partsupp
 WHERE (partkey, suppkey) IN (
@@ -166,7 +178,7 @@ WHERE (partkey, suppkey) IN (
 )
 $sql$, '{n}', getvariable('deleted_partsupp')::VARCHAR));
 
--- 11. Summary
+-- 12. Summary
 SELECT max(orderdate) AS simulated_day,
        count(*) FILTER (WHERE orderdate = (SELECT max(orderdate) FROM source.oltp.orders)) AS new_orders,
        count(*) FILTER (WHERE orderstatus = 'O') AS open_orders,

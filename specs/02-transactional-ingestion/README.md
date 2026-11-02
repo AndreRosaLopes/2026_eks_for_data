@@ -164,8 +164,9 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
    into a cell and run it. Each run advances one day (nothing to edit; the amounts of dimension
    changes per day are the `SET VARIABLE` lines at the top).
    - Expected result: after about 35 seconds, the summary shows `simulated_day` one day after the
-     previous run, about 600 `new_orders`, open, partial and finished orders, and `customers` +2,
-     `suppliers` +1 and `partsupp` −2 compared with the previous run.
+     previous run, about 600 `new_orders`, open, partial and finished orders, and `customers` +20
+     and `suppliers` +10 compared with the previous run; `partsupp` stays the same from the second
+     run on (20 pairs back, 20 deleted).
 
 ## Teardown
 
