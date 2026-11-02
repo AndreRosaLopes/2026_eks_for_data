@@ -38,6 +38,22 @@ output "duckdb_role_arn" {
   value = module.duckdb_irsa.arn
 }
 
+output "silver_bucket" {
+  value = module.s3_silver.s3_bucket_id
+}
+
+output "spark_role_arn" {
+  value = module.spark_irsa.arn
+}
+
+output "polaris_role_arn" {
+  value = module.polaris_irsa.arn
+}
+
+output "silver_data_role_arn" {
+  value = aws_iam_role.silver_data.arn
+}
+
 output "configure_kubectl" {
   value = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region us-east-1"
 }

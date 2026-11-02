@@ -18,6 +18,7 @@ There are two ways to deploy the services on the cluster:
 |---|---|---|---|
 | 01 — Ingestion: Airbyte writing Parquet to S3 | Done | [Run](specs/01-ingestion-airbyte-s3/HOW_TO_RUN.md) | [Verify](specs/01-ingestion-airbyte-s3/README.md) |
 | 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
+| 03 — Processing: Spark and Iceberg | In progress (03.01 done) | [Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md) | [Verify](specs/03-processing-spark-iceberg/README.md) |
 
 ## 2. Prerequisites
 
@@ -352,7 +353,7 @@ deleting the cluster and the NAT Gateways.
 | EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
 | 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
 | VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
-| Bronze and Airbyte buckets, emptied first (**bronze data is lost**); IAM roles and policies | Cents (S3 storage) |
+| Bronze, silver and Airbyte buckets, emptied first (**bronze and silver data is lost**); IAM roles and policies (Airbyte, DuckDB, Spark, Polaris, silver data) | Cents (S3 storage) |
 | Argo CD, Airbyte, Postgres, DuckDB and their EBS volumes | Extra Auto Mode node(s) + volumes |
 
 What stays, at no cost:

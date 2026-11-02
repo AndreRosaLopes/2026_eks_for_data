@@ -90,3 +90,108 @@ module "duckdb_irsa" {
     }
   }
 }
+
+# Cleaned data layer: Iceberg tables written by Spark, registered in Polaris (D-015, D-044)
+module "s3_silver" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "5.17.0"
+
+  bucket        = "${local.name}-silver-${data.aws_caller_identity.current.account_id}"
+  force_destroy = true
+
+  attach_deny_insecure_transport_policy = true
+}
+
+# IRSA role for the Spark jobs: read-only on the bronze bucket; silver access is vended by Polaris
+# (D-008, D-049)
+module "spark_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.8.2"
+
+  name            = "${local.name}-spark"
+  use_name_prefix = false
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["spark:spark"]
+    }
+  }
+
+  permissions = {
+    S3BronzeRead = {
+      actions = [
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+      ]
+      resources = [
+        module.s3_bronze.s3_bucket_arn,
+        "${module.s3_bronze.s3_bucket_arn}/*",
+      ]
+    }
+  }
+}
+
+# IRSA role for Polaris: it only assumes the silver data role, to write table metadata and to vend
+# per-table credentials (D-049). The ARN is built from the name to avoid a dependency cycle.
+module "polaris_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.8.2"
+
+  name            = "${local.name}-polaris"
+  use_name_prefix = false
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["polaris:polaris"]
+    }
+  }
+
+  permissions = {
+    AssumeSilverData = {
+      actions   = ["sts:AssumeRole"]
+      resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.name}-silver-data"]
+    }
+  }
+}
+
+# Read and write on the silver bucket, assumable only by Polaris (D-049)
+resource "aws_iam_role" "silver_data" {
+  name = "${local.name}-silver-data"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { AWS = module.polaris_irsa.arn }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "silver_data" {
+  name = "S3SilverReadWrite"
+  role = aws_iam_role.silver_data.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:AbortMultipartUpload",
+        "s3:ListBucketMultipartUploads",
+      ]
+      Resource = [
+        module.s3_silver.s3_bucket_arn,
+        "${module.s3_silver.s3_bucket_arn}/*",
+      ]
+    }]
+  })
+}

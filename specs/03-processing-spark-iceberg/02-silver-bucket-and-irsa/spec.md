@@ -29,18 +29,18 @@ Cost: an empty bucket and IAM roles cost nothing; silver data costs cents in S3.
 | `infra/aws/cluster/outputs.tf` | Modify: the 4 outputs |
 | `HOW_TO_RUN.md` | Modify: §5.1 Turn Off table (silver bucket and the new roles); phase 03 row in "1. Phases" |
 | `specs/03-processing-spark-iceberg/HOW_TO_RUN.md` | Create from the template (nothing to run yet; links to Bring Up) |
-| `specs/03-processing-spark-iceberg/README.md` | Create with the 03.02 section |
+| `specs/03-processing-spark-iceberg/README.md` | Create with the 03.02 section: every check as separate commands, one per block, with its expected result |
 | `specs/03-processing-spark-iceberg/plan.md` | Modify: step status |
 
 ## Verification Plan
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Plan adds only | `terraform -chdir=infra/aws/cluster plan` | Only creates: the silver bucket (with its policy and public access block), 3 roles and their policies; 0 to change, 0 to destroy | Pending |
-| 2 | Automated | Apply and bucket | `terraform apply` (after the user confirms); `aws s3api get-bucket-versioning` and `get-bucket-policy` on silver | Bucket exists; versioning not enabled; policy denies `aws:SecureTransport = false` | Pending |
-| 3 | Automated | Spark role | Temporary `aws-cli` pod in namespace `spark`, ServiceAccount `spark` annotated with the role: `aws s3 ls` on bronze, then `aws s3 cp` to silver | Bronze listed; silver write `AccessDenied` | Pending |
-| 4 | Automated | Role chain | Temporary `aws-cli` pod in namespace `polaris`, ServiceAccount `polaris`: `aws sts assume-role` into the silver data role, then put and delete a test object in silver | Assume succeeds; put and delete succeed | Pending |
-| 5 | Manual | AWS console | S3: bucket `eks-for-data-silver-283429977024`. IAM → Roles: `eks-for-data-spark`, `eks-for-data-polaris`, `eks-for-data-silver-data`; the data role's **Trust relationships** name only `eks-for-data-polaris` | All present; trust as described | Pending |
+| 1 | Manual | Plan adds only | [README 03.02](../README.md#0302--silver-bucket-and-irsa-roles), step 1: `terraform plan` | `Plan: 11 to add, 0 to change, 0 to destroy` | Pending |
+| 2 | Manual | Apply and bucket | README 03.02, steps 2 and 3: `terraform apply`, then `get-bucket-versioning` and `get-bucket-policy` on silver | Apply adds 11; versioning prints nothing (never enabled); policy denies `aws:SecureTransport` `false` | Pending |
+| 3 | Manual | Spark role | README 03.02, step 4: temporary `aws-cli` pod in namespace `spark`, ServiceAccount `spark`: list bronze, then write to silver | Bronze listed; silver write `AccessDenied` | Pending |
+| 4 | Manual | Role chain | README 03.02, step 5: temporary `aws-cli` pod in namespace `polaris`, ServiceAccount `polaris`: assume the silver data role, put and delete a test object in silver | `put ok`, `delete ok` | Pending |
+| 5 | Manual | AWS console | README 03.02, step 6: S3 bucket `eks-for-data-silver-283429977024`; IAM roles `eks-for-data-spark`, `eks-for-data-polaris`, `eks-for-data-silver-data`; the data role's **Trust relationships** name only `eks-for-data-polaris` | All present; trust as described | Pending |
 
 ## Teardown
 
