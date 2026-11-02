@@ -24,7 +24,7 @@ DuckDB 2.0 runs as one in-memory pod in the `duckdb` namespace, as its own Argo 
      - `SET memory_limit = '1536MB'`;
      - attaches Postgres as `source` through the libpq variables (`PGHOST`, `PGUSER`, `PGDATABASE`,
        `PGPASSWORD`), so the password never appears in SQL;
-     - creates an S3 secret with `PROVIDER credential_chain`, region `us-east-1` (IRSA web identity);
+     - creates an S3 secret with `PROVIDER credential_chain`, region `us-east-1`, `REFRESH auto` (IRSA web identity; without it the credentials expire after about 1 hour);
      - `SELECT listen_url FROM quack_serve('quack:0.0.0.0:9494', allow_other_hostname = true,
        disable_ssl = true, token = getenv('QUACK_TOKEN'))`; only the URL is selected because
        `CALL quack_serve(...)` prints the token to the pod logs;
