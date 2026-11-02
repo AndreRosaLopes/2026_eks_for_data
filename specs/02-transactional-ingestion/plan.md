@@ -89,7 +89,7 @@ database.
 | 02.04 | TPC-H generation: DuckDB `dbgen` writes TPC-H (scale factor as a parameter) into `tpch` | Done |
 | 02.05 | OLTP baseline: `oltp` tables with keys, `updated_at` and trigger; reference tables in full; orders and line items shifted up to load day − 1 | Done |
 | 02.06 | Day simulation: one daily script (facts: inserts and status updates; dimensions: inserts, updates, deletes), run by hand with the DuckDB CLI | Done |
-| 02.07 | Registration dates: `created_at` on `customer` and `supplier` in the baseline and the day simulation | To do |
+| 02.07 | [Registration dates](07-registration-dates/spec.md): `created_at` on `customer` and `supplier` in the baseline and the day simulation | In progress |
 | 02.08 | Airbyte user and CDC preparation: `AIRBYTE_PG_PASSWORD` from `.env` to the Secret, user created on Postgres' first start, slot WAL limit, `04-cdc-setup.sql` (publication and slot) | To do |
 | 02.09 | Lab02 — date cursor: sync, simulate a day, sync; DuckDB shows that day's changes, and no deletes, in `oltp_cursor` | To do |
 | 02.10 | Lab03 — CDC: sync, simulate a day, sync; DuckDB shows inserts, updates and deletes in `oltp_cdc`; phase end-to-end walkthrough | To do |
