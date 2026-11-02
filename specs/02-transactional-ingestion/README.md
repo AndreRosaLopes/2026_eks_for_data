@@ -168,6 +168,52 @@ Follow [Lab 02 — Date Cursor Ingestion](lab02-cursor-ingestion.md):
 4. Section 7.
    - Expected result: `30` deleted customers still in bronze: the cursor does not capture deletes.
 
+### 02.10 — Lab03: CDC
+
+Follow [Lab 03 — CDC Ingestion](lab03-cdc-ingestion.md):
+
+1. Section 1 (CDC setup and the slot query).
+   - Expected result: 8 `oltp` tables; `airbyte_slot`, `pgoutput`, `active` = `false`, a few
+     kilobytes held.
+2. Sections 2 and 3 (source and destination).
+   - Expected result: both connection tests pass.
+3. Section 4 (connection and sync 1).
+   - Expected result: **Succeeded**; 8 streams; in DuckDB, `bronze` = `postgres` for the 8 tables.
+4. Section 5 (simulate a day once and sync 2).
+   - Expected result: **Succeeded**, with thousands of records, not millions.
+5. Section 6.
+   - Expected result: `missing` = 0 for every table; `sync2_rows` ≥ `changed`.
+6. Section 7.
+   - Expected result: `30` deleted customers, with `_ab_cdc_deleted_at` filled: CDC captures deletes.
+
+## End-to-End Verification
+
+Proves the phase [Done When](plan.md#done-when), from a new environment.
+
+1. Bring the environment up: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up).
+   - Expected result: Argo CD shows `airbyte`, `postgres` and `duckdb` **Synced** and **Healthy**.
+2. In the [DuckDB UI](../../HOW_TO_RUN.md#46-duckdb-ui), run `FROM duckdb_databases()`.
+   - Expected result: `source` listed: DuckDB reads the source Postgres.
+3. Run [1. Generate TPC-H](HOW_TO_RUN.md#1-generate-tpc-h), [2. OLTP Baseline](HOW_TO_RUN.md#2-oltp-baseline)
+   and [4. CDC Setup](HOW_TO_RUN.md#4-cdc-setup), in this order.
+   - Expected result: each summary as in the 02.04, 02.05 and 02.08 sections above.
+4. Follow [Lab 02 — Date Cursor](lab02-cursor-ingestion.md) (02.09 section above).
+   - Expected result: DuckDB reads the Parquet files in bronze; sync 2 brings the day's changes; the
+     deleted customers are still in bronze.
+5. Follow [Lab 03 — CDC](lab03-cdc-ingestion.md) (02.10 section above).
+   - Expected result: sync 2 brings the day's inserts, updates and deletes.
+6. Check that no secret is in the repository (Git Bash, repository root):
+
+   ```bash
+   set -a; source .env; set +a
+   found=0; for k in POSTGRES_PASSWORD QUACK_TOKEN AIRBYTE_PG_PASSWORD; do if git grep -qF -- "${!k}"; then echo "Found: $k"; found=1; fi; done; [ $found = 0 ] && echo "No secrets found"
+   ```
+
+   - Expected result: `No secrets found` (a match prints only the variable name, never the value).
+7. Tear down: [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off), then
+   [5.2 Check Nothing Is Left](../../HOW_TO_RUN.md#52-check-nothing-is-left).
+   - Expected result: every command returns empty; nothing that costs is left.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
@@ -180,3 +226,4 @@ Follow [Lab 02 — Date Cursor Ingestion](lab02-cursor-ingestion.md):
 - [02.07](07-registration-dates/spec.md#teardown): rerunning the 02.05 baseline recreates the column
 - [02.08](08-airbyte-user-and-cdc-preparation/spec.md#teardown): drop the slot when lab03 is no longer used
 - [02.09](09-lab02-date-cursor/spec.md#teardown): delete the Airbyte objects; the files go with the bucket
+- [02.10](10-lab03-cdc/spec.md#teardown): Airbyte objects kept; drop the slot when CDC is no longer used; the files go with the bucket

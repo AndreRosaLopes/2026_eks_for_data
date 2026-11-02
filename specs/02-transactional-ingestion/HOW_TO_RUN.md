@@ -71,6 +71,15 @@ no deletes. The configuration is not saved
 ([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md)): repeat the lab in every new
 environment.
 
+## 6. Lab 03 — CDC
+
+Follow [Lab 03 — CDC Ingestion](lab03-cdc-ingestion.md): after [4. CDC Setup](#4-cdc-setup), a
+connection created in the Airbyte UI reads `oltp` by CDC through the slot `airbyte_slot` and writes
+Parquet to `oltp_cdc` in the bronze bucket; after a simulated day, a second sync brings that day's
+inserts, updates and deletes. The configuration is not saved
+([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md)): repeat the lab in every new
+environment.
+
 ## Upgrade a Running Environment for 02.08
 
 **Only once, and only for an environment brought up before step 02.08.** A new environment already

@@ -124,7 +124,7 @@ WHERE NOT EXISTS (FROM source.oltp.customer c WHERE c.custkey = b.custkey);
 ```
 
 Expected: `30`. They are still in bronze, with nothing marking them as deleted: a cursor only sees
-rows that exist. [Lab 03 — CDC](HOW_TO_RUN.md) captures them.
+rows that exist. [Lab 03 — CDC](lab03-cdc-ingestion.md) captures them.
 
 ## 8. Clean Up
 
