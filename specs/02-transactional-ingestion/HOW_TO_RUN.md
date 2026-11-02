@@ -106,6 +106,9 @@ Expected: `["-c","wal_level=logical","-c","max_slot_wal_keep_size=2GB"]`. If it 
 `wal_level=logical`, the commit is not on `main` yet, or Argo CD has not synced: open the
 [Argo CD UI](../../HOW_TO_RUN.md#43-argo-cd) → `postgres` → **Refresh**.
 
+In the Argo CD UI: `postgres` → click the **StatefulSet** `postgres` → **Live Manifest** tab → find
+`args`. Expected: `max_slot_wal_keep_size=2GB`.
+
 **Step 4 — Recreate Postgres with an empty volume (deletes the data).**
 
 ```bash
@@ -129,7 +132,16 @@ Expected: `persistentvolumeclaim "data-postgres-0" deleted`, `pod "postgres-0" d
 kubectl -n postgres exec postgres-0 -- psql -U postgres -d source -c '\du airbyte'
 ```
 
-Expected: `airbyte` with `Replication`, member of `{pg_read_all_data}`.
+```bash
+kubectl -n postgres exec postgres-0 -- psql -U postgres -d source -c '\drg airbyte'
+```
+
+Expected: `airbyte` with `Replication`; then `airbyte` member of `pg_read_all_data` (since Postgres
+16, `\du` no longer lists memberships, `\drg` does).
+
+In the Argo CD UI: `postgres` → click the pod `postgres-0` → **Logs** tab → search for
+`02-airbyte-user.sh`. Expected: `running /docker-entrypoint-initdb.d/02-airbyte-user.sh`, then
+`CREATE ROLE` and `GRANT ROLE`.
 
 **Step 6 — Reload the data and set up CDC:** run sections [1](#1-generate-tpc-h),
 [2](#2-oltp-baseline), [3](#3-simulate-a-day) and [4](#4-cdc-setup) above, in order (about 6

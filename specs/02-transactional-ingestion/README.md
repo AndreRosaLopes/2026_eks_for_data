@@ -135,12 +135,13 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
    ```sql
    \du airbyte
+   \drg airbyte
    SELECT slot_name, plugin FROM pg_replication_slots;
    SELECT tablename FROM pg_publication_tables;
    ```
 
-   - Expected result: `airbyte` with `Replication`; `airbyte_slot` / `pgoutput`; the 8 `oltp`
-     tables.
+   - Expected result: `airbyte` with `Replication`; `airbyte` member of `pg_read_all_data`;
+     `airbyte_slot` / `pgoutput`; the 8 `oltp` tables.
 
 ## Teardown
 

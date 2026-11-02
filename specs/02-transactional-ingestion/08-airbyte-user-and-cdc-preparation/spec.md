@@ -74,13 +74,13 @@ Phase: [02 — Transactional Ingestion](../plan.md)
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Secret key | Keys of `postgres-credentials` (no values) | `password` and `airbyte-password` | Pending |
-| 2 | Automated | Postgres settings | `SHOW wal_level; SHOW max_slot_wal_keep_size;` | `logical`; `2GB` | Pending |
-| 3 | Automated | Airbyte user | `\du airbyte`; membership in `pg_read_all_data` | `Replication`; member of `pg_read_all_data` | Pending |
-| 4 | Automated | Login and read-only | As `airbyte`, over TCP with the `.env` password: `SELECT count(*) FROM oltp.orders`, then an `INSERT` | Count returned; `INSERT` fails with `permission denied` | Pending |
-| 5 | Automated | Publication and slot | Run `04-cdc-setup.sql`; `pg_publication_tables`, `pg_replication_slots` | 8 `oltp` tables; `airbyte_slot`, `pgoutput`, logical | Pending |
-| 6 | Automated | Rerunnable | Run `04-cdc-setup.sql` again | Same result, still 1 slot | Pending |
-| 7 | Automated | Replica identity | `relreplident` of the 8 tables | `d` for all 8 | Pending |
+| 1 | Automated | Secret key | Keys of `postgres-credentials` (no values) | `password` and `airbyte-password` | Pass: `airbyte-password`, `password` |
+| 2 | Automated | Postgres settings | `SHOW wal_level; SHOW max_slot_wal_keep_size;` | `logical`; `2GB` | Pass: `logical`; `2GB` |
+| 3 | Automated | Airbyte user | `\du airbyte`; membership in `pg_read_all_data` | `Replication`; member of `pg_read_all_data` | Pass: login, replication, member of `pg_read_all_data` (`\drg`; `\du` no longer lists memberships since Postgres 16) |
+| 4 | Automated | Login and read-only | As `airbyte`, over TCP with the `.env` password: `SELECT count(*) FROM oltp.orders`, then an `INSERT` | Count returned; `INSERT` fails with `permission denied` | Pass: 1,367,012 orders; `permission denied for table region` |
+| 5 | Automated | Publication and slot | Run `04-cdc-setup.sql`; `pg_publication_tables`, `pg_replication_slots` | 8 `oltp` tables; `airbyte_slot`, `pgoutput`, logical | Pass: 8 tables; `airbyte_slot`, `pgoutput, logical` |
+| 6 | Automated | Rerunnable | Run `04-cdc-setup.sql` again | Same result, still 1 slot | Pass: 1 slot, 8 tables |
+| 7 | Automated | Replica identity | `relreplident` of the 8 tables | `d` for all 8 | Pass: `d` for all 8 |
 | 8 | Manual | CDC objects | Run [4. CDC Setup](../HOW_TO_RUN.md#4-cdc-setup), then in [`psql`](../../../HOW_TO_RUN.md#45-source-postgres): `\du airbyte`, `SELECT slot_name, plugin FROM pg_replication_slots;`, `SELECT tablename FROM pg_publication_tables;` | `airbyte` with `Replication`; `airbyte_slot` / `pgoutput`; the 8 `oltp` tables | Pending |
 
 ## Teardown
