@@ -1,6 +1,6 @@
 # 02.08 — Airbyte User and CDC Preparation: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [02 — Transactional Ingestion](../plan.md)
 
 ## Design
@@ -81,7 +81,7 @@ Phase: [02 — Transactional Ingestion](../plan.md)
 | 5 | Automated | Publication and slot | Run `04-cdc-setup.sql`; `pg_publication_tables`, `pg_replication_slots` | 8 `oltp` tables; `airbyte_slot`, `pgoutput`, logical | Pass: 8 tables; `airbyte_slot`, `pgoutput, logical` |
 | 6 | Automated | Rerunnable | Run `04-cdc-setup.sql` again | Same result, still 1 slot | Pass: 1 slot, 8 tables |
 | 7 | Automated | Replica identity | `relreplident` of the 8 tables | `d` for all 8 | Pass: `d` for all 8 |
-| 8 | Manual | CDC objects | Run [4. CDC Setup](../HOW_TO_RUN.md#4-cdc-setup), then in [`psql`](../../../HOW_TO_RUN.md#45-source-postgres): `\du airbyte`, `SELECT slot_name, plugin FROM pg_replication_slots;`, `SELECT tablename FROM pg_publication_tables;` | `airbyte` with `Replication`; `airbyte_slot` / `pgoutput`; the 8 `oltp` tables | Pending |
+| 8 | Manual | CDC objects | Run [4. CDC Setup](../HOW_TO_RUN.md#4-cdc-setup), then in the [DuckDB UI](../../../HOW_TO_RUN.md#46-duckdb-ui), with `postgres_query('source', ...)`: `airbyte` in `pg_roles` (replication, member of `pg_read_all_data`), `pg_replication_slots`, `pg_publication_tables` | `airbyte`, `true`, `true`; `airbyte_slot` / `pgoutput`; the 8 `oltp` tables | Pass: confirmed by the user |
 
 ## Teardown
 

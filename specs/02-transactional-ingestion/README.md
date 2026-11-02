@@ -131,17 +131,28 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 1. Run [4. CDC Setup](HOW_TO_RUN.md#4-cdc-setup).
    - Expected result: the summary lists `airbyte_slot` (`pgoutput, logical`) and the 8 `oltp`
      tables in `airbyte_publication`.
-2. Open [`psql`](../../HOW_TO_RUN.md#45-source-postgres) and run:
+2. Open the [DuckDB UI](../../HOW_TO_RUN.md#46-duckdb-ui) and run each query in its own cell:
 
    ```sql
-   \du airbyte
-   \drg airbyte
-   SELECT slot_name, plugin FROM pg_replication_slots;
-   SELECT tablename FROM pg_publication_tables;
+   FROM postgres_query('source', $$
+   SELECT rolname, rolreplication, pg_has_role('airbyte', 'pg_read_all_data', 'MEMBER') AS reads_all
+   FROM pg_roles WHERE rolname = 'airbyte'
+   $$);
    ```
 
-   - Expected result: `airbyte` with `Replication`; `airbyte` member of `pg_read_all_data`;
-     `airbyte_slot` / `pgoutput`; the 8 `oltp` tables.
+   - Expected result: `airbyte`, `true`, `true`.
+
+   ```sql
+   FROM postgres_query('source', 'SELECT slot_name, plugin FROM pg_replication_slots');
+   ```
+
+   - Expected result: `airbyte_slot`, `pgoutput`.
+
+   ```sql
+   FROM postgres_query('source', 'SELECT tablename FROM pg_publication_tables');
+   ```
+
+   - Expected result: the 8 `oltp` tables.
 
 ## Teardown
 
