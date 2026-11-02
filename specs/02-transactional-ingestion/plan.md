@@ -1,6 +1,6 @@
 # 02 — Transactional Ingestion: TPC-H in Postgres, Cursor and CDC: Plan
 
-Status: Approved (steps 02.01 to 02.06; steps 02.07 onward are planned later)
+Status: Approved
 
 ## Objective
 
@@ -10,7 +10,8 @@ DuckDB generates the data and reads both the source Postgres and the Parquet fil
 phase is delivered as three labs: lab01 (API, from phase 01), lab02 (date cursor) and lab03 (CDC).
 
 The infrastructure (source Postgres and DuckDB service) comes first, then the data: TPC-H, the OLTP
-baseline and a daily simulation run by hand. CDC preparation and the labs are planned later.
+baseline and a daily simulation run by hand. Then registration dates, the Airbyte user and the CDC
+preparation, and finally the two labs.
 
 ## Scope
 
@@ -21,9 +22,12 @@ baseline and a daily simulation run by hand. CDC preparation and the labs are pl
 - TPC-H generated into `tpch`, an OLTP baseline in `oltp` (dates shifted, `updated_at` by trigger)
   and a daily simulation (facts: inserts and status updates; dimensions: inserts, updates and
   deletes of rows no order uses), as SQL scripts in `pipelines/tpch/` run by hand in the DuckDB UI
-- Later steps (not planned yet): CDC preparation, lab02 and lab03, built in the Airbyte UI and not
-  saved ([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md)); lab01 reused from
-  [phase 01](../01-ingestion-airbyte-s3/lab01-api-ingestion.md)
+- Registration dates (`created_at`) on `customer` and `supplier`
+- A dedicated Airbyte user created by Postgres on first start, and a CDC script (publication and
+  replication slot) with a WAL limit on the slot
+- lab02 (date cursor) and lab03 (CDC), built in the Airbyte UI and not saved
+  ([D-021](../../docs/decisions/021-airbyte-connection-ui-lab.md)), each writing to its own bronze
+  path; lab01 reused from [phase 01](../01-ingestion-airbyte-s3/lab01-api-ingestion.md)
 
 ## Out of Scope
 
@@ -61,14 +65,14 @@ baseline and a daily simulation run by hand. CDC preparation and the labs are pl
 - [D-028 — Lab02 Cursor](../../docs/decisions/028-lab02-cursor.md)
 - [D-029 — OLTP Write Method and Deletes](../../docs/decisions/029-oltp-write-method.md)
 - [D-035 — SCD Type 2 Customer Changes](../../docs/decisions/035-scd2-customer-changes.md) (superseded by D-037)
-- [D-037 — Day Simulation by Table Type](../../docs/decisions/037-day-simulation-by-table-type.md)
-
-## Open Points
-
-To be answered when steps 02.07 onward are planned:
-
-1. D-034: customer start date (ingestion date as the start date, compared against a baseline).
-2. D-036: database user for Airbyte (dedicated user with `REPLICATION`, or `postgres`).
+- [D-037 — Day Simulation by Table Type](../../docs/decisions/037-day-simulation-by-table-type.md) (superseded by D-038)
+- [D-038 — Day Simulation with Part-Supplier Insert](../../docs/decisions/038-day-simulation-with-partsupp-insert.md)
+- [D-034 — Registration Dates](../../docs/decisions/034-registration-dates.md)
+- [D-036 — Airbyte Database User](../../docs/decisions/036-airbyte-database-user.md)
+- [D-039 — CDC Publication and Slot Script](../../docs/decisions/039-cdc-publication-and-slot-script.md)
+- [D-040 — CDC Publication and Replica Identity](../../docs/decisions/040-cdc-publication-and-replica-identity.md)
+- [D-041 — Replication Slot WAL Limit](../../docs/decisions/041-replication-slot-wal-limit.md)
+- [D-042 — Lab Bronze Layout](../../docs/decisions/042-lab-bronze-layout.md)
 
 **Divergences resolved in step 02.01 (principle 7):** README §3 listed phase 02 as Trino and dbt
 (this phase became 02; Trino/dbt 03; Airflow 04), and README §2 did not list DuckDB or a source
@@ -84,4 +88,7 @@ database.
 | 02.04 | TPC-H generation: DuckDB `dbgen` writes TPC-H (scale factor as a parameter) into `tpch` | Done |
 | 02.05 | OLTP baseline: `oltp` tables with keys, `updated_at` and trigger; reference tables in full; orders and line items shifted up to load day − 1 | Done |
 | 02.06 | Day simulation: one daily script (facts: inserts and status updates; dimensions: inserts, updates, deletes), run by hand in the DuckDB UI | In progress |
-| 02.07+ | CDC preparation, labs 02 and 03 | Not planned yet |
+| 02.07 | Registration dates: `created_at` on `customer` and `supplier` in the baseline and the day simulation | To do |
+| 02.08 | Airbyte user and CDC preparation: `AIRBYTE_PG_PASSWORD` from `.env` to the Secret, user created on Postgres' first start, slot WAL limit, `04-cdc-setup.sql` (publication and slot) | To do |
+| 02.09 | Lab02 — date cursor: sync, simulate a day, sync; DuckDB shows that day's changes, and no deletes, in `oltp_cursor` | To do |
+| 02.10 | Lab03 — CDC: sync, simulate a day, sync; DuckDB shows inserts, updates and deletes in `oltp_cdc`; phase end-to-end walkthrough | To do |
