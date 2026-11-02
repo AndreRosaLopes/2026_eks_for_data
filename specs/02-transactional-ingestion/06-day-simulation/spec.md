@@ -1,12 +1,12 @@
 # 02.06 — Day Simulation: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [02 — Transactional Ingestion](../plan.md)
 
 ## Design
 
-One script, `pipelines/tpch/03-simulate-day.sql`, pasted and run in the DuckDB UI
-([D-027](../../../docs/decisions/027-pipeline-scripts.md) C), with native Postgres SQL through
+One script, `pipelines/tpch/03-simulate-day.sql`, run with the DuckDB CLI in the pod
+([D-043](../../../docs/decisions/043-pipeline-script-execution.md)), with native Postgres SQL through
 `postgres_execute`, one statement per call ([D-029](../../../docs/decisions/029-oltp-write-method.md)).
 One run = one day: the simulated day R is the day after the latest order in `oltp`; nothing is
 edited. The offset is `oltp.orderdate - tpch.o_orderdate`, read from any order (02.05).
@@ -50,7 +50,7 @@ finished, so Postgres can hash it (listing all old orders made the update run fo
 | 2 | Automated | Status updates | Partial orders; open line items whose order is 30+ days old | Partial orders appear; 0 open line items 30+ days old | Pass: partial orders 8,691 → 10,514; 0 |
 | 3 | Automated | Dimension changes | Counts before and after; rows with the newest `updated_at` | customer +50 −30; supplier +10; `partsupp` +20 −20 (first run: +0, nothing deleted yet); 100 customers, 50 suppliers and 200 pairs updated | Pass: 150,000 → 150,020 → 150,040; 10,000 → 10,010 → 10,020; 800,000 → 799,980 → 799,980; 50 customers inserted and 100 updated, 10 suppliers inserted and 50 updated, 200 pairs updated |
 | 4 | Automated | Run time | Time of one run | Under 2 minutes | Pass: 48 s and 69 s |
-| 5 | Manual | Through the UI | Run the script once and read its summary | `simulated_day` one day later, about 600 new orders, open/partial/finished orders, and the changed dimension counts | Pending |
+| 5 | Manual | Through the DuckDB CLI | Run the script once and read its summary | `simulated_day` one day later, about 600 new orders, open/partial/finished orders, and the changed dimension counts | Pass: 2026-11-05, 621 orders; 150,060 customers, 10,030 suppliers, 799,940 `partsupp` |
 
 ## Teardown
 

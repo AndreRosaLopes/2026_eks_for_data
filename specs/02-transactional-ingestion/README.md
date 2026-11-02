@@ -119,12 +119,18 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
 ### 02.04 — TPC-H Generation
 
-1. Open the DuckDB UI (see [Access](#access)), paste the whole
-   [01-generate-tpch.sql](../../pipelines/tpch/01-generate-tpch.sql) into a cell, keep
-   `SET VARIABLE sf = 1;` and run it.
+1. Run [01-generate-tpch.sql](../../pipelines/tpch/01-generate-tpch.sql) with the DuckDB CLI in the
+   pod ([D-043](../../docs/decisions/043-pipeline-script-execution.md); `MSYS_NO_PATHCONV=1` stops
+   Git Bash from rewriting `/duckdb`), keeping `SET VARIABLE sf = 1;` in the file:
+
+   ```bash
+   MSYS_NO_PATHCONV=1 kubectl -n duckdb exec -i deploy/duckdb -- /duckdb < pipelines/tpch/01-generate-tpch.sql
+   ```
+
    - Expected result: it ends without errors after about a minute, and the last query shows the row
      counts below.
-2. Check the row counts (the last query of the script, or run it again on its own):
+2. Check the row counts (the last query of the script, or run it on its own in the DuckDB UI, see
+   [Access](#access)):
 
    ```sql
    SELECT 'orders' AS table_name, count(*) AS row_count FROM source.tpch.orders
@@ -136,13 +142,18 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
 ### 02.05 — OLTP Baseline
 
-1. In the DuckDB UI, paste the whole [02-oltp-baseline.sql](../../pipelines/tpch/02-oltp-baseline.sql)
-   into a cell, keep `SET VARIABLE cutoff = '1997-12-31';` and run it. Running it again resets
-   `oltp`. The cutoff accepts any date from `'1992-01-01'` (first TPC-H order) to `'1998-08-02'`
+1. Run [02-oltp-baseline.sql](../../pipelines/tpch/02-oltp-baseline.sql) with the DuckDB CLI,
+   keeping `SET VARIABLE cutoff = '1997-12-31';` in the file. Running it again resets `oltp`.
+
+   ```bash
+   MSYS_NO_PATHCONV=1 kubectl -n duckdb exec -i deploy/duckdb -- /duckdb < pipelines/tpch/02-oltp-baseline.sql
+   ```
+
+   The cutoff accepts any date from `'1992-01-01'` (first TPC-H order) to `'1998-08-02'`
    (last one, which loads every order and leaves none for the daily simulation).
    - Expected result: it ends without errors after about 1.5 minutes; the last query shows 1,366,377
      orders, the first in 2020 and the last on yesterday's date, and some thousands of open orders.
-2. Check that the columns have no TPC-H prefix:
+2. In the DuckDB UI, check that the columns have no TPC-H prefix:
 
    ```sql
    DESCRIBE source.oltp.orders;
@@ -160,9 +171,14 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
 ### 02.06 — Day Simulation
 
-1. In the DuckDB UI, paste the whole [03-simulate-day.sql](../../pipelines/tpch/03-simulate-day.sql)
-   into a cell and run it. Each run advances one day (nothing to edit; the amounts of dimension
-   changes per day are the `SET VARIABLE` lines at the top).
+1. Run [03-simulate-day.sql](../../pipelines/tpch/03-simulate-day.sql) with the DuckDB CLI. Each
+   run advances one day (nothing to edit; the amounts of dimension
+   changes per day are the `SET VARIABLE` lines at the top):
+
+   ```bash
+   MSYS_NO_PATHCONV=1 kubectl -n duckdb exec -i deploy/duckdb -- /duckdb < pipelines/tpch/03-simulate-day.sql
+   ```
+
    - Expected result: after about 1 minute, the summary shows `simulated_day` one day after the
      previous run, about 600 `new_orders`, open, partial and finished orders, and `customers` +20
      and `suppliers` +10 compared with the previous run; `partsupp` stays the same from the second

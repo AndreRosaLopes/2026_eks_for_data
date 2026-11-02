@@ -21,7 +21,7 @@ preparation, and finally the two labs.
   bucket (IRSA)
 - TPC-H generated into `tpch`, an OLTP baseline in `oltp` (dates shifted, `updated_at` by trigger)
   and a daily simulation (facts: inserts and status updates; dimensions: inserts, updates and
-  deletes of rows no order uses), as SQL scripts in `pipelines/tpch/` run by hand in the DuckDB UI
+  deletes of rows no order uses), as SQL scripts in `pipelines/tpch/` run by hand with the DuckDB CLI in the pod
 - Registration dates (`created_at`) on `customer` and `supplier`
 - A dedicated Airbyte user created by Postgres on first start, and a CDC script (publication and
   replication slot) with a WAL limit on the slot
@@ -61,7 +61,7 @@ preparation, and finally the two labs.
 - [D-024 — TPC-H Dataset and Scale](../../docs/decisions/024-tpch-dataset-and-scale.md)
 - [D-025 — Event Date Control](../../docs/decisions/025-event-date-control.md)
 - [D-026 — Day Simulation Changes](../../docs/decisions/026-day-simulation-changes.md) (superseded by D-037)
-- [D-027 — Pipeline Scripts: Location and Execution](../../docs/decisions/027-pipeline-scripts.md)
+- [D-027 — Pipeline Scripts: Location and Execution](../../docs/decisions/027-pipeline-scripts.md) (superseded by D-043)
 - [D-028 — Lab02 Cursor](../../docs/decisions/028-lab02-cursor.md)
 - [D-029 — OLTP Write Method and Deletes](../../docs/decisions/029-oltp-write-method.md)
 - [D-035 — SCD Type 2 Customer Changes](../../docs/decisions/035-scd2-customer-changes.md) (superseded by D-037)
@@ -73,6 +73,7 @@ preparation, and finally the two labs.
 - [D-040 — CDC Publication and Replica Identity](../../docs/decisions/040-cdc-publication-and-replica-identity.md)
 - [D-041 — Replication Slot WAL Limit](../../docs/decisions/041-replication-slot-wal-limit.md)
 - [D-042 — Lab Bronze Layout](../../docs/decisions/042-lab-bronze-layout.md)
+- [D-043 — Pipeline Script Execution](../../docs/decisions/043-pipeline-script-execution.md)
 
 **Divergences resolved in step 02.01 (principle 7):** README §3 listed phase 02 as Trino and dbt
 (this phase became 02; Trino/dbt 03; Airflow 04), and README §2 did not list DuckDB or a source
@@ -87,7 +88,7 @@ database.
 | 02.03 | DuckDB service: Quack via Argo CD; IRSA to read bronze; attaches the source Postgres | Done |
 | 02.04 | TPC-H generation: DuckDB `dbgen` writes TPC-H (scale factor as a parameter) into `tpch` | Done |
 | 02.05 | OLTP baseline: `oltp` tables with keys, `updated_at` and trigger; reference tables in full; orders and line items shifted up to load day − 1 | Done |
-| 02.06 | Day simulation: one daily script (facts: inserts and status updates; dimensions: inserts, updates, deletes), run by hand in the DuckDB UI | In progress |
+| 02.06 | Day simulation: one daily script (facts: inserts and status updates; dimensions: inserts, updates, deletes), run by hand with the DuckDB CLI | Done |
 | 02.07 | Registration dates: `created_at` on `customer` and `supplier` in the baseline and the day simulation | To do |
 | 02.08 | Airbyte user and CDC preparation: `AIRBYTE_PG_PASSWORD` from `.env` to the Secret, user created on Postgres' first start, slot WAL limit, `04-cdc-setup.sql` (publication and slot) | To do |
 | 02.09 | Lab02 — date cursor: sync, simulate a day, sync; DuckDB shows that day's changes, and no deletes, in `oltp_cursor` | To do |

@@ -1,6 +1,6 @@
 # D-027 — Pipeline Scripts: Location and Execution
 
-Status: Accepted
+Status: Superseded by [D-043](043-pipeline-script-execution.md)
 Date: 2026-10-31
 Phase: specs/02-transactional-ingestion
 

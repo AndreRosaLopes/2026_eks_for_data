@@ -1,5 +1,5 @@
 -- 02.05 — OLTP baseline in the source Postgres, schema oltp (D-025, D-026, D-028, D-029).
--- Paste and run in the DuckDB UI. Running it again resets oltp (the simulation restarts from
+-- Run with the DuckDB CLI in the pod (D-043). Running it again resets oltp (the simulation restarts from
 -- yesterday); tpch is never changed. Each postgres_execute runs one native Postgres statement.
 
 -- TPC-H date that becomes yesterday; later orders stay in tpch for the daily simulation.

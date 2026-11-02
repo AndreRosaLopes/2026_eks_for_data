@@ -1,5 +1,5 @@
--- 02.04 — TPC-H generation into the source Postgres, schema tpch (D-024, D-027).
--- Paste and run in the DuckDB UI. Safe to run again: it replaces the tables.
+-- 02.04 — TPC-H generation into the source Postgres, schema tpch (D-024, D-043).
+-- Run with the DuckDB CLI in the pod (D-043). Safe to run again: it replaces the tables.
 
 -- Scale factor: 1 (about 1.4 GB in Postgres) or 0.1
 SET VARIABLE sf = 1;
