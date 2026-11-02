@@ -17,7 +17,7 @@ There are two ways to deploy the services on the cluster:
 | Phase | Status | Run | Verify |
 |---|---|---|---|
 | 01 — Ingestion: Airbyte writing Parquet to S3 | Done | [Run](specs/01-ingestion-airbyte-s3/HOW_TO_RUN.md) | [Verify](specs/01-ingestion-airbyte-s3/README.md) |
-| 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.08 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
+| 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 
 ## 2. Prerequisites
 
@@ -203,11 +203,11 @@ role) in Terraform.
 | Service | Open | URL | User | Get the password |
 |---|---|---|---|---|
 | [AWS console](#41-aws-and-kubernetes) | — | AWS console, region `us-east-1` | Account of the `eks-ws` profile | Your AWS sign-in |
-| [Argo CD UI](#43-argo-cd) | `kubectl -n argocd port-forward svc/argocd-server 8080:443 &` | `https://localhost:8080` | `admin` | `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' \| base64 -d; echo` |
-| [Airbyte UI](#44-airbyte) | `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &` | `http://localhost:8001` | Your email | `kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' \| base64 -d; echo` |
+| [Argo CD UI](#43-argo-cd) | `kubectl -n argocd port-forward svc/argocd-server 8080:443` | `https://localhost:8080` | `admin` | `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' \| base64 -d; echo` |
+| [Airbyte UI](#44-airbyte) | `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001` | `http://localhost:8001` | Your email | `kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' \| base64 -d; echo` |
 | [Source Postgres](#45-source-postgres) | `kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source` | — | `postgres` | `POSTGRES_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' \| base64 -d; echo` |
 | [Source Postgres for Airbyte](#45-source-postgres) | Host `postgres.postgres.svc.cluster.local`, port `5432`, database `source` | — | `airbyte` | `AIRBYTE_PG_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.airbyte-password}' \| base64 -d; echo` |
-| [DuckDB UI](#46-duckdb-ui) | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &` | `http://localhost:4213` | — | None. Quack token (local UI only): `QUACK_TOKEN` in `.env`, or `kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' \| base64 -d; echo` |
+| [DuckDB UI](#46-duckdb-ui) | `while true; do kubectl -n duckdb port-forward deploy/duckdb 4213:4213; sleep 1; done` | `http://localhost:4213` | — | None. Quack token (local UI only): `QUACK_TOKEN` in `.env`, or `kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' \| base64 -d; echo` |
 
 ### 4.1 AWS and Kubernetes
 
@@ -219,13 +219,11 @@ role) in Terraform.
 
 ### 4.2 Port-Forwards
 
-The port-forwards below run in the background (`&`), so the terminal stays free. Lines like
-`Handling connection for 8080` may appear while you type; they are harmless.
+Run each port-forward below in its own Git Bash terminal and leave it open while you use the UI.
+Lines like `Handling connection for 8080` are harmless.
 
-```bash
-jobs        # lists the background port-forwards, e.g. [1]+ Running kubectl ... &
-kill %1     # stops one, by the number shown by jobs
-```
+- **Stop it:** `Ctrl+C` in its terminal.
+- **`lost connection to pod`:** run the same command again, then reload the page.
 
 ### 4.3 Argo CD
 
@@ -234,7 +232,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.pas
 ```
 
 ```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:443 &
+kubectl -n argocd port-forward svc/argocd-server 8080:443
 ```
 
 Open `https://localhost:8080`, accept the self-signed certificate warning, and log in with user
@@ -247,7 +245,7 @@ kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-
 ```
 
 ```bash
-kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &
+kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001
 ```
 
 Open `http://localhost:8001`, enter your email, and sign in with the password printed above.
@@ -282,8 +280,12 @@ readable. Use it to explore; the pipeline scripts run with the DuckDB CLI
 ([D-043](docs/decisions/043-pipeline-script-execution.md)).
 
 ```bash
-kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &
+while true; do kubectl -n duckdb port-forward deploy/duckdb 4213:4213; sleep 1; done
 ```
+
+The loop reconnects by itself: the UI often drops the tunnel (`lost connection to pod`); reload the
+page after it. Stop it with `Ctrl+C` twice. Lines like `Error creating error stream ... Timeout
+occurred` are harmless while the UI keeps working.
 
 Open `http://localhost:4213`. The local port must be 4213: the UI accepts only requests from
 `http://localhost:4213`, and any other port fails with "Offset is outside the bounds of the
@@ -293,7 +295,7 @@ DataView" (reload with Ctrl+Shift+R after fixing it).
 [DuckDB 2.0 CLI](https://duckdb.org/install/), forward the Quack port, and start the UI:
 
 ```bash
-kubectl -n duckdb port-forward svc/duckdb 9494:9494 &
+kubectl -n duckdb port-forward svc/duckdb 9494:9494
 ```
 
 ```bash

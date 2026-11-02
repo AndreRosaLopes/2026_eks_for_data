@@ -80,7 +80,7 @@ verification proves the phase [Done When](plan.md#done-when).
    - Expected result: repository `https://github.com/AndreRosaLopes/2026_eks_for_data.git`,
      revision `main`, path `platform/aws`; **Sync Policy** automated, with prune and self heal.
 3. Stop the port-forward ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)).
-   - Expected result: `jobs` no longer lists it, and `https://localhost:8080` stops loading.
+   - Expected result: the terminal returns to the prompt, and `https://localhost:8080` stops loading.
 
 ### 01.05 — Airbyte
 
@@ -92,7 +92,7 @@ verification proves the phase [Done When](plan.md#done-when).
 2. Open the Airbyte UI and sign in ([How to Run, 4.4 Airbyte](../../HOW_TO_RUN.md#44-airbyte)).
    - Expected result: the Airbyte home page.
 3. Stop the port-forwards ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)).
-   - Expected result: `jobs` lists nothing.
+   - Expected result: both terminals return to the prompt.
 
 ## End-to-End Verification
 
