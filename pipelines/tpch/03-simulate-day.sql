@@ -1,4 +1,4 @@
--- 02.06 — Day simulation in oltp (D-038, D-029). Paste and run in the DuckDB UI.
+-- 02.06 — Day simulation in oltp (D-038, D-029). Run with the DuckDB CLI in the pod (D-043).
 -- One run = one day: the simulated day R is the day after the latest order in oltp.
 -- Facts (orders, lineitem): inserts and status updates, never deletes.
 -- Dimensions: customer (insert, update, delete), supplier (insert, update),
@@ -49,26 +49,22 @@ FROM (
 WHERE s.orderkey = o.orderkey AND o.orderstatus <> s.status
 $sql$);
 
--- 3. New orders: the tpch orders of day R, dates shifted like the baseline, all open
+-- 3. New orders and their line items: the tpch orders of day R, dates shifted like the baseline,
+--    all open. One statement, so line items are inserted only for the orders it inserts.
 CALL postgres_execute('source', $sql$
 WITH p AS (
   SELECT (SELECT max(orderdate) + 1 FROM oltp.orders) AS r,
          (SELECT o.orderdate - t.o_orderdate
           FROM oltp.orders o JOIN tpch.orders t ON t.o_orderkey = o.orderkey LIMIT 1) AS shift_days
-)
-INSERT INTO oltp.orders (orderkey, custkey, orderstatus, totalprice, orderdate, orderpriority,
-                         clerk, shippriority, comment)
-SELECT o_orderkey, o_custkey, 'O', o_totalprice, o_orderdate + p.shift_days, o_orderpriority,
-       o_clerk, o_shippriority, o_comment
-FROM tpch.orders, p
-WHERE o_orderdate + p.shift_days = p.r
-$sql$);
-
-CALL postgres_execute('source', $sql$
-WITH p AS (
-  SELECT (SELECT max(orderdate) FROM oltp.orders) AS r,
-         (SELECT o.orderdate - t.o_orderdate
-          FROM oltp.orders o JOIN tpch.orders t ON t.o_orderkey = o.orderkey LIMIT 1) AS shift_days
+),
+new_orders AS (
+  INSERT INTO oltp.orders (orderkey, custkey, orderstatus, totalprice, orderdate, orderpriority,
+                           clerk, shippriority, comment)
+  SELECT o_orderkey, o_custkey, 'O', o_totalprice, o_orderdate + p.shift_days, o_orderpriority,
+         o_clerk, o_shippriority, o_comment
+  FROM tpch.orders, p
+  WHERE o_orderdate + p.shift_days = p.r
+  RETURNING orderkey
 )
 INSERT INTO oltp.lineitem (orderkey, partkey, suppkey, linenumber, quantity, extendedprice,
                            discount, tax, returnflag, linestatus, shipdate, commitdate,
@@ -78,9 +74,8 @@ SELECT l_orderkey, l_partkey, l_suppkey, l_linenumber, l_quantity, l_extendedpri
        l_commitdate + p.shift_days, l_receiptdate + p.shift_days, l_shipinstruct, l_shipmode,
        l_comment
 FROM tpch.lineitem
-JOIN oltp.orders o ON o.orderkey = l_orderkey
+JOIN new_orders n ON n.orderkey = l_orderkey
 CROSS JOIN p
-WHERE o.orderdate = p.r
 $sql$);
 
 -- DIMENSIONS ----------------------------------------------------------------------------------
