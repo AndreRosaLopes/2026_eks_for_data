@@ -111,6 +111,21 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
      and `suppliers` +10 compared with the previous run; `partsupp` stays the same from the second
      run on (20 pairs back, 20 deleted).
 
+### 02.07 — Registration Dates
+
+1. After [2. OLTP Baseline](HOW_TO_RUN.md#2-oltp-baseline) and one
+   [3. Simulate a Day](HOW_TO_RUN.md#3-simulate-a-day), open the
+   [DuckDB UI](../../HOW_TO_RUN.md#46-duckdb-ui) and run:
+
+   ```sql
+   SELECT 'customer' AS t, min(created_at), max(created_at), count(*) FROM source.oltp.customer
+   UNION ALL
+   SELECT 'supplier', min(created_at), max(created_at), count(*) FROM source.oltp.supplier;
+   ```
+
+   - Expected result: for both, `min` near 2020-11 and `max` = the latest simulated day; 150,020
+     customers and 10,010 suppliers after one simulated day.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
@@ -120,3 +135,4 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 - [02.05](05-oltp-baseline/spec.md#teardown): `oltp` goes with the Postgres volume; rerunning the
   script resets it
 - [02.06](06-day-simulation/spec.md#teardown): rerunning the 02.05 baseline resets the simulation
+- [02.07](07-registration-dates/spec.md#teardown): rerunning the 02.05 baseline recreates the column

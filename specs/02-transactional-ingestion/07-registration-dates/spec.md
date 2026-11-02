@@ -1,6 +1,6 @@
 # 02.07 — Registration Dates: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [02 — Transactional Ingestion](../plan.md)
 
 ## Design
@@ -22,7 +22,8 @@ Phase: [02 — Transactional Ingestion](../plan.md)
    | Both, without any order up to the cutoff | The baseline date: `current_date - 1`, the last loaded day | `coalesce(...)` |
 
    A customer whose first order is still in `tpch` (a future day) gets the baseline date, which is
-   still before that order. The CTAS sets the `NOT NULL` constraint.
+   still before that order. `NOT NULL` is set with `ALTER TABLE` right after the CTAS (a CTAS
+   cannot declare constraints).
 
 2. **Day simulation** (`03-simulate-day.sql`): steps 4 (new customers) and 7 (new suppliers) set
    `created_at` to the simulated day R (`max(orderdate)` in `oltp.orders`, after step 3). Updates
@@ -44,13 +45,13 @@ Phase: [02 — Transactional Ingestion](../plan.md)
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Column exists | `\d oltp.customer` and `\d oltp.supplier` in `psql` | `created_at date not null`, before `updated_at` | Pending |
-| 2 | Automated | Customers who bought | Customers whose `created_at` ≠ `min(orderdate)` of their `oltp` orders | 0 | Pending |
-| 3 | Automated | Never registered after buying | Orders with `orderdate < customer.created_at`; line items whose order date is before `supplier.created_at` | 0 and 0 | Pending |
-| 4 | Automated | Others get the baseline date | Customers and suppliers without orders up to the cutoff, and their `created_at` | All on the baseline date | Pending |
-| 5 | Automated | Simulation | Run `03-simulate-day.sql` once; rows whose `created_at` = R | 50 customers and 10 suppliers | Pending |
-| 6 | Automated | Run time | Time of the baseline | Under 3 minutes | Pending |
-| 7 | Manual | Registration dates in the DuckDB UI | `SELECT min(created_at), max(created_at), count(*) FROM source.oltp.customer;` and the same for `supplier` | `min` near 2020-11, `max` = the latest simulated day; 150,020 customers and 10,010 suppliers after one simulated day | Pending |
+| 1 | Automated | Column exists | `\d oltp.customer` and `\d oltp.supplier` in `psql` | `created_at date not null`, before `updated_at` | Pass: position 9 of 10 (customer), 8 of 9 (supplier), `NO` nullable |
+| 2 | Automated | Customers who bought | Customers whose `created_at` ≠ `min(orderdate)` of their `oltp` orders | 0 | Pass: 0 |
+| 3 | Automated | Never registered after buying | Orders with `orderdate < customer.created_at`; line items whose order date is before `supplier.created_at` | 0 and 0 | Pass: 0 and 0; suppliers' `created_at` also equals their first line item's order date (0 mismatches) |
+| 4 | Automated | Others get the baseline date | Customers and suppliers without orders up to the cutoff, and their `created_at` | All on the baseline date | Pass: 50,008 customers, all on 2026-11-01; every supplier has line items (0) |
+| 5 | Automated | Simulation | Run `03-simulate-day.sql` once; rows whose `created_at` = R | 50 customers and 10 suppliers | Pass: R = 2026-11-02; 50 and 10 |
+| 6 | Automated | Run time | Time of the baseline | Under 3 minutes | Pass: 100 seconds |
+| 7 | Manual | Registration dates in the DuckDB UI | `SELECT min(created_at), max(created_at), count(*) FROM source.oltp.customer;` and the same for `supplier` | `min` near 2020-11, `max` = the latest simulated day; 150,020 customers and 10,010 suppliers after one simulated day | Pass: 2020-11-01 to 2026-11-02; 150,020 and 10,010 |
 
 ## Teardown
 

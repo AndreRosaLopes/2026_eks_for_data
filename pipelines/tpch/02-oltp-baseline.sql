@@ -26,19 +26,36 @@ SELECT n_nationkey AS nationkey, n_name AS name, n_regionkey AS regionkey, n_com
 FROM tpch.nation
 $sql$);
 
-CALL postgres_execute('source', $sql$
+-- Registration dates (D-034): first line item (supplier) or first order (customer) up to the
+-- cutoff, shifted; without one, the last loaded day (yesterday)
+CALL postgres_execute('source', replace($sql$
 CREATE TABLE oltp.supplier AS
 SELECT s_suppkey AS suppkey, s_name AS name, s_address AS address, s_nationkey AS nationkey,
-       s_phone AS phone, s_acctbal AS acctbal, s_comment AS comment
+       s_phone AS phone, s_acctbal AS acctbal, s_comment AS comment,
+       coalesce(f.first_date + ((current_date - 1) - DATE '{cutoff}'), current_date - 1)
+         AS created_at
 FROM tpch.supplier
-$sql$);
+LEFT JOIN (SELECT l_suppkey, min(o_orderdate) AS first_date
+           FROM tpch.lineitem JOIN tpch.orders ON o_orderkey = l_orderkey
+           WHERE o_orderdate <= DATE '{cutoff}'
+           GROUP BY l_suppkey) f ON f.l_suppkey = s_suppkey
+$sql$, '{cutoff}', getvariable('cutoff')));
 
-CALL postgres_execute('source', $sql$
+CALL postgres_execute('source', replace($sql$
 CREATE TABLE oltp.customer AS
 SELECT c_custkey AS custkey, c_name AS name, c_address AS address, c_nationkey AS nationkey,
-       c_phone AS phone, c_acctbal AS acctbal, c_mktsegment AS mktsegment, c_comment AS comment
+       c_phone AS phone, c_acctbal AS acctbal, c_mktsegment AS mktsegment, c_comment AS comment,
+       coalesce(f.first_date + ((current_date - 1) - DATE '{cutoff}'), current_date - 1)
+         AS created_at
 FROM tpch.customer
-$sql$);
+LEFT JOIN (SELECT o_custkey, min(o_orderdate) AS first_date
+           FROM tpch.orders
+           WHERE o_orderdate <= DATE '{cutoff}'
+           GROUP BY o_custkey) f ON f.o_custkey = c_custkey
+$sql$, '{cutoff}', getvariable('cutoff')));
+
+CALL postgres_execute('source', 'ALTER TABLE oltp.supplier ALTER COLUMN created_at SET NOT NULL');
+CALL postgres_execute('source', 'ALTER TABLE oltp.customer ALTER COLUMN created_at SET NOT NULL');
 
 CALL postgres_execute('source', $sql$
 CREATE TABLE oltp.part AS

@@ -17,7 +17,7 @@ There are two ways to deploy the services on the cluster:
 | Phase | Status | Run | Verify |
 |---|---|---|---|
 | 01 — Ingestion: Airbyte writing Parquet to S3 | Done | [Run](specs/01-ingestion-airbyte-s3/HOW_TO_RUN.md) | [Verify](specs/01-ingestion-airbyte-s3/README.md) |
-| 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.06 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
+| 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.07 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 
 ## 2. Prerequisites
 

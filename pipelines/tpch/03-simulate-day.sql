@@ -80,16 +80,17 @@ $sql$);
 
 -- DIMENSIONS ----------------------------------------------------------------------------------
 
--- 4. Customer insert: new customers (no order will reference them)
+-- 4. Customer insert: new customers (no order will reference them), registered on day R
 CALL postgres_execute('source', replace($sql$
-INSERT INTO oltp.customer (custkey, name, address, nationkey, phone, acctbal, mktsegment, comment)
+INSERT INTO oltp.customer (custkey, name, address, nationkey, phone, acctbal, mktsegment, comment,
+                           created_at)
 SELECT k, 'Customer#' || lpad(k::text, 9, '0'), substr(md5(random()::text), 1, 20), nk,
        (10 + nk) || '-' || (100 + floor(random() * 900))::int || '-'
          || (100 + floor(random() * 900))::int || '-' || (1000 + floor(random() * 9000))::int,
        round((random() * 10998.99 - 999.99)::numeric, 2),
        (ARRAY['AUTOMOBILE', 'BUILDING', 'FURNITURE', 'HOUSEHOLD', 'MACHINERY'])
          [1 + floor(random() * 5)::int],
-       'new customer'
+       'new customer', (SELECT max(orderdate) FROM oltp.orders)
 FROM (SELECT (SELECT max(custkey) FROM oltp.customer) + g AS k, floor(random() * 25)::int AS nk
       FROM generate_series(1, {n}) g) x
 $sql$, '{n}', getvariable('new_customers')::VARCHAR));
@@ -118,14 +119,14 @@ WHERE custkey IN (
 )
 $sql$, '{n}', getvariable('deleted_customers')::VARCHAR));
 
--- 7. Supplier insert: new suppliers (outside the supply chain)
+-- 7. Supplier insert: new suppliers (outside the supply chain), registered on day R
 CALL postgres_execute('source', replace($sql$
-INSERT INTO oltp.supplier (suppkey, name, address, nationkey, phone, acctbal, comment)
+INSERT INTO oltp.supplier (suppkey, name, address, nationkey, phone, acctbal, comment, created_at)
 SELECT k, 'Supplier#' || lpad(k::text, 9, '0'), substr(md5(random()::text), 1, 20), nk,
        (10 + nk) || '-' || (100 + floor(random() * 900))::int || '-'
          || (100 + floor(random() * 900))::int || '-' || (1000 + floor(random() * 9000))::int,
        round((random() * 10998.99 - 999.99)::numeric, 2),
-       'new supplier'
+       'new supplier', (SELECT max(orderdate) FROM oltp.orders)
 FROM (SELECT (SELECT max(suppkey) FROM oltp.supplier) + g AS k, floor(random() * 25)::int AS nk
       FROM generate_series(1, {n}) g) x
 $sql$, '{n}', getvariable('new_suppliers')::VARCHAR));
