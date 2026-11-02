@@ -126,6 +126,22 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
    - Expected result: for both, `min` near 2020-11 and `max` = the latest simulated day; 150,020
      customers and 10,010 suppliers after one simulated day.
 
+### 02.08 — Airbyte User and CDC Preparation
+
+1. Run [4. CDC Setup](HOW_TO_RUN.md#4-cdc-setup).
+   - Expected result: the summary lists `airbyte_slot` (`pgoutput, logical`) and the 8 `oltp`
+     tables in `airbyte_publication`.
+2. Open [`psql`](../../HOW_TO_RUN.md#45-source-postgres) and run:
+
+   ```sql
+   \du airbyte
+   SELECT slot_name, plugin FROM pg_replication_slots;
+   SELECT tablename FROM pg_publication_tables;
+   ```
+
+   - Expected result: `airbyte` with `Replication`; `airbyte_slot` / `pgoutput`; the 8 `oltp`
+     tables.
+
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
@@ -136,3 +152,4 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
   script resets it
 - [02.06](06-day-simulation/spec.md#teardown): rerunning the 02.05 baseline resets the simulation
 - [02.07](07-registration-dates/spec.md#teardown): rerunning the 02.05 baseline recreates the column
+- [02.08](08-airbyte-user-and-cdc-preparation/spec.md#teardown): drop the slot when lab03 is no longer used

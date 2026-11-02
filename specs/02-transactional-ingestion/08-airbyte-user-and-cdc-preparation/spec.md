@@ -22,10 +22,10 @@ Phase: [02 — Transactional Ingestion](../plan.md)
      only when the volume is empty, with the image's documented heredoc pattern:
 
      ```bash
-     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-'EOSQL'
-     	\getenv pw AIRBYTE_PG_PASSWORD
-     	CREATE USER airbyte WITH LOGIN REPLICATION PASSWORD :'pw';
-     	GRANT pg_read_all_data TO airbyte;
+     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<'EOSQL'
+     \getenv pw AIRBYTE_PG_PASSWORD
+     CREATE USER airbyte WITH LOGIN REPLICATION PASSWORD :'pw';
+     GRANT pg_read_all_data TO airbyte;
      EOSQL
      ```
 
@@ -49,10 +49,11 @@ Phase: [02 — Transactional Ingestion](../plan.md)
 
    A rerun fails while Airbyte is connected to the slot (an active slot cannot be dropped).
 
-4. **Applying it on the running environment:** the init script needs an empty volume: add
-   `AIRBYTE_PG_PASSWORD` to `.env` (with the user's confirmation), recreate the Secret with the new
-   key, push the manifest, delete the StatefulSet's PVC and pod (Argo CD recreates them empty), rerun
-   scripts 01–03 (about 4 minutes), then run 04.
+4. **Applying it on the running environment** (one-time upgrade): the init script needs an empty
+   volume, so the Postgres data is reloaded. Runbook: phase How to Run,
+   [Upgrade a Running Environment for 02.08](../HOW_TO_RUN.md#upgrade-a-running-environment-for-0208).
+   A new environment does not need it: home HOW_TO_RUN §3.2 creates the Secret with both keys, and
+   the volume starts empty.
 
 5. **Pages:** home `HOW_TO_RUN.md` §3.2 (generate `AIRBYTE_PG_PASSWORD`, `--from-literal=airbyte-password=...`)
    and §4 Access (user `airbyte` and its password command); phase `HOW_TO_RUN.md` section

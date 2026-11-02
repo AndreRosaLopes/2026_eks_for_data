@@ -91,8 +91,20 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    kubectl create namespace postgres
    ```
 
+   **Airbyte database user** ([D-036](docs/decisions/036-airbyte-database-user.md)): if `.env` has
+   no `AIRBYTE_PG_PASSWORD` yet, generate it the same way and load `.env` again. Postgres creates the
+   `airbyte` user with it on its first start, so it goes in the same Secret:
+
    ```bash
-   kubectl -n postgres create secret generic postgres-credentials --from-literal=password="$POSTGRES_PASSWORD"
+   echo "AIRBYTE_PG_PASSWORD=$(openssl rand -hex 16)" >> .env
+   ```
+
+   ```bash
+   set -a; source .env; set +a
+   ```
+
+   ```bash
+   kubectl -n postgres create secret generic postgres-credentials --from-literal=password="$POSTGRES_PASSWORD" --from-literal=airbyte-password="$AIRBYTE_PG_PASSWORD"
    ```
 
    **DuckDB Quack token** ([D-033](docs/decisions/033-duckdb-service-configuration.md)): if `.env` has
@@ -194,6 +206,7 @@ role) in Terraform.
 | [Argo CD UI](#43-argo-cd) | `kubectl -n argocd port-forward svc/argocd-server 8080:443 &` | `https://localhost:8080` | `admin` | `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' \| base64 -d; echo` |
 | [Airbyte UI](#44-airbyte) | `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &` | `http://localhost:8001` | Your email | `kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' \| base64 -d; echo` |
 | [Source Postgres](#45-source-postgres) | `kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source` | — | `postgres` | `POSTGRES_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' \| base64 -d; echo` |
+| [Source Postgres for Airbyte](#45-source-postgres) | Host `postgres.postgres.svc.cluster.local`, port `5432`, database `source` | — | `airbyte` | `AIRBYTE_PG_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.airbyte-password}' \| base64 -d; echo` |
 | [DuckDB UI](#46-duckdb-ui) | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &` | `http://localhost:4213` | — | None. Quack token (local UI only): `QUACK_TOKEN` in `.env`, or `kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' \| base64 -d; echo` |
 
 ### 4.1 AWS and Kubernetes
@@ -251,6 +264,14 @@ The password is `POSTGRES_PASSWORD` in `.env`. To read it back from the cluster:
 
 ```bash
 kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' | base64 -d; echo
+```
+
+Airbyte connects as `airbyte` (read-only on every schema, plus `REPLICATION` for CDC,
+[D-036](docs/decisions/036-airbyte-database-user.md)) to host `postgres.postgres.svc.cluster.local`,
+port `5432`, database `source`. Its password is `AIRBYTE_PG_PASSWORD` in `.env`, or:
+
+```bash
+kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.airbyte-password}' | base64 -d; echo
 ```
 
 ### 4.6 DuckDB UI

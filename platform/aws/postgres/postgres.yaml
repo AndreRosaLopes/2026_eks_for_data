@@ -1,5 +1,5 @@
 # Source Postgres for the transactional ingestion (D-022). The Secret postgres-credentials is
-# created by hand from .env before the sync (D-031).
+# created by hand from .env before the sync (D-031, D-036).
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -15,6 +15,14 @@ data:
   01-schemas.sql: |
     CREATE SCHEMA tpch;
     CREATE SCHEMA oltp;
+  # Airbyte user (D-036): read-only on every schema, plus REPLICATION for CDC. The password comes
+  # from the environment (\getenv), so it is never in a command line or a file.
+  02-airbyte-user.sh: |
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<'EOSQL'
+    \getenv pw AIRBYTE_PG_PASSWORD
+    CREATE USER airbyte WITH LOGIN REPLICATION PASSWORD :'pw';
+    GRANT pg_read_all_data TO airbyte;
+    EOSQL
 ---
 apiVersion: v1
 kind: Service
@@ -51,8 +59,8 @@ spec:
       containers:
         - name: postgres
           image: postgres:18.6
-          # Logical replication, required by Airbyte CDC
-          args: ["-c", "wal_level=logical"]
+          # Logical replication, required by Airbyte CDC; a slot keeps at most 2GB of WAL (D-041)
+          args: ["-c", "wal_level=logical", "-c", "max_slot_wal_keep_size=2GB"]
           env:
             - name: POSTGRES_DB
               value: source
@@ -61,6 +69,11 @@ spec:
                 secretKeyRef:
                   name: postgres-credentials
                   key: password
+            - name: AIRBYTE_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: airbyte-password
           ports:
             - name: postgres
               containerPort: 5432
