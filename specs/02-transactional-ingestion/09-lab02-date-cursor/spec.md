@@ -1,6 +1,6 @@
 # 02.09 — Lab02: Date Cursor: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [02 — Transactional Ingestion](../plan.md)
 
 ## Design
@@ -29,9 +29,10 @@ Lab flow:
 Verified: the Airbyte Postgres source supports `TIMESTAMP_WITH_TIMEZONE` cursors (the type of
 `updated_at`), and Airbyte recommends CDC "when you need a record of deletions". The connector
 installed with Airbyte 2.4.0 is `source-postgres` 3.8.10; its spec (`spec` command) names the
-update method **Scan Changes with User Defined Cursor** and lists SSL mode `disable`. Still to
-confirm in the lab: that the connection test accepts `disable`, and the Parquet path
-`oltp_cursor/oltp/<table>/`.
+update method **Scan Changes with User Defined Cursor** and lists SSL mode `disable`. Confirmed in the lab: the
+connection test accepts `disable`; the Parquet path is
+`oltp_cursor/oltp/<table>/` only with Destination Namespace **Source-defined**
+(**Destination-defined** writes `oltp_cursor/<table>/`).
 
 Side effect: the 02.08 CDC slot keeps WAL while lab02 runs (nothing reads it yet), capped at 2GB
 ([D-041](../../../docs/decisions/041-replication-slot-wal-limit.md)); lab03 recreates it with
@@ -51,12 +52,12 @@ Side effect: the 02.08 CDC slot keeps WAL while lab02 runs (nothing reads it yet
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
 | 1 | Automated | Airbyte namespace reaches Postgres as `airbyte` | Temporary `postgres:18.6` pod in `airbyte`: `psql -h postgres.postgres.svc.cluster.local -U airbyte -d source -c 'SELECT count(*) FROM oltp.orders'` | The order count | Pass: 1,367,012 |
-| 2 | Manual | Source and destination | Lab sections 2 and 3 | Both connection tests pass | Pending |
-| 3 | Manual | Sync 1 | Lab section 4 | **Succeeded**; 8 streams | Pending |
-| 4 | Automated | Sync 1 in bronze | DuckDB: row count per table under `oltp_cursor/oltp/` | Equal to the `oltp` counts at sync time | Pending |
-| 5 | Manual | Sync 2 after a simulated day | Lab sections 5 and 6 | **Succeeded**; far fewer records than sync 1 | Pending |
-| 6 | Automated | Sync 2 content | DuckDB: rows of the second `_airbyte_extracted_at` per table, compared with `oltp` rows whose `updated_at` is after sync 1 | Equal (insert + update), with possible repeats at the cursor boundary (at-least-once) | Pending |
-| 7 | Manual | Deletes not captured | Lab section 7, DuckDB UI: the customers deleted in Postgres, looked up in bronze | Still present, nothing marking the delete | Pending |
+| 2 | Manual | Source and destination | Lab sections 2 and 3 | Both connection tests pass | Pass: confirmed by the user (after SSL mode `require` → `disable`) |
+| 3 | Manual | Sync 1 | Lab section 4 | **Succeeded**; 8 streams | Pass: confirmed by the user |
+| 4 | Automated | Sync 1 in bronze | DuckDB: row count per table under `oltp_cursor/oltp/` | Equal to the `oltp` counts at sync time | Pass: 8 tables equal (e.g., orders 1,367,012; lineitem 5,468,672), in `oltp_cursor/<table>/` (Destination-defined); after the switch to Source-defined, a full sync in `oltp_cursor/oltp/` with 1,370,148 orders = Postgres |
+| 5 | Manual | Sync 2 after a simulated day | Lab sections 5 and 6 | **Succeeded**; far fewer records than sync 1 | Pass: confirmed by the user |
+| 6 | Automated | Sync 2 content | DuckDB: rows of the second `_airbyte_extracted_at` per table, compared with `oltp` rows whose `updated_at` is after sync 1 | Equal (insert + update), with possible repeats at the cursor boundary (at-least-once) | Not shown: `oltp_cursor/oltp/` holds one sync per table (the namespace switch re-read everything after 5 simulated days); step closed by the user |
+| 7 | Manual | Deletes not captured | Lab section 7, DuckDB UI: the customers deleted in Postgres, looked up in bronze | Still present, nothing marking the delete | Pass: confirmed by the user (bronze `oltp_cursor/oltp/` alone gives 0, for the same reason as check 6) |
 
 ## Teardown
 
