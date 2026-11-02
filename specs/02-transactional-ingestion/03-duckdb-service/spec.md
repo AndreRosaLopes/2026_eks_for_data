@@ -69,6 +69,6 @@ attached `source` catalog.
 
 ## Teardown
 
-Covered by phase 01 [Turn Off](../../01-ingestion-airbyte-s3/README.md#turn-off): deleting the
+Covered by phase 01 [Turn Off](../../../HOW_TO_RUN.md#51-turn-off): deleting the
 `platform` Application cascades to `duckdb`, which prunes the Namespace (with the Secret); there is
 no volume. `terraform -chdir=infra/aws/cluster destroy` removes the IRSA role.

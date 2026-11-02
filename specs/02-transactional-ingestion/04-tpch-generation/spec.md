@@ -50,5 +50,5 @@ factor is one `SET VARIABLE` line at the top; SF0.1 takes about 6 seconds.
 ## Teardown
 
 Not applicable on its own: the tables live in the Postgres volume and go with it in phase 01
-[Turn Off](../../01-ingestion-airbyte-s3/README.md#turn-off). To empty them, `DROP TABLE` the 8
+[Turn Off](../../../HOW_TO_RUN.md#51-turn-off). To empty them, `DROP TABLE` the 8
 tables in `source.tpch`.

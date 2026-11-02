@@ -56,7 +56,7 @@ from Git.
 
 ## Teardown
 
-Covered by phase 01 [Turn Off](../../01-ingestion-airbyte-s3/README.md#turn-off): deleting the
+Covered by phase 01 [Turn Off](../../../HOW_TO_RUN.md#51-turn-off): deleting the
 `platform` Application cascades to the `postgres` Application, which prunes the StatefulSet (the retention policy deletes its PVC and EBS volume)
 and the `postgres` namespace, with the Secret. Before the `cluster` destroy, `kubectl get pvc -A`
 shows no `postgres` volume.

@@ -1,6 +1,9 @@
 # How to Run
 
-How to bring up the AWS environment and its services, pointing to the specs that hold each detail.
+The home page for operating the platform: bring the environment up, open each service, run each
+phase and tear everything down. Each phase has its own **Run** page (what to execute) and
+**Verify** page (the checks and expected results).
+
 There are two ways to deploy the services on the cluster:
 
 - **With Argo CD (GitOps):** the way the project is planned ([D-007](docs/decisions/007-argo-cd-installation.md)).
@@ -9,32 +12,30 @@ There are two ways to deploy the services on the cluster:
   terminal. It is **not part of the plan**: it does not meet the phase "Done When" ("Argo CD shows
   Airbyte `Synced` and `Healthy`") and is not verified by the specs.
 
-## Status
+## 1. Phases
 
-Phase 01 is **done**: every step is implemented, and the Airbyte pipeline is a lab in the UI whose
-configuration is not saved ([D-021](docs/decisions/021-airbyte-connection-ui-lab.md)).
+| Phase | Status | Run | Verify |
+|---|---|---|---|
+| 01 — Ingestion: Airbyte writing Parquet to S3 | Done | [Run](specs/01-ingestion-airbyte-s3/HOW_TO_RUN.md) | [Verify](specs/01-ingestion-airbyte-s3/README.md) |
+| 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.06 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 
-| Step | What it brings up | Status |
-|---|---|---|
-| [01.01 — Network](specs/01-ingestion-airbyte-s3/01-network/spec.md) | VPC, subnets, NAT Gateways, S3 endpoint | Implemented |
-| [01.02 — EKS cluster](specs/01-ingestion-airbyte-s3/02-eks-cluster/spec.md) | EKS Auto Mode cluster, Kubernetes 1.36 | Implemented |
-| [01.03 — Data storage and access](specs/01-ingestion-airbyte-s3/03-data-storage/spec.md) | Bronze and Airbyte buckets, Airbyte IRSA role | Implemented |
-| [01.04 — Argo CD](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md) | Argo CD and the root Application | Implemented |
-| [01.05 — Airbyte](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md) | StorageClass and Airbyte (with resource requests) | Implemented |
-| [Lab 01 — API ingestion](specs/01-ingestion-airbyte-s3/lab01-api-ingestion.md) | PokeAPI → Parquet in the bronze bucket, created in the Airbyte UI | Lab (not saved) |
+## 2. Prerequisites
 
-## Prerequisites
-
-- The tools and access in the [phase README prerequisites](specs/01-ingestion-airbyte-s3/README.md#prerequisites).
+- AWS account access through the `eks-ws` profile (see `.env`)
+- AWS console access to the same account, region `us-east-1`
+- Git Bash in the repository root, with the `.env` variables loaded (Bash syntax; it does not work
+  in PowerShell): `set -a; source .env; set +a`
+- kubectl 1.35 to 1.37 (`kubectl version --client`)
 - Manual path only: [Helm](https://helm.sh/docs/intro/install/) 3 and
-  [yq](https://github.com/mikefarah/yq) 4, to read the chart values from the Argo CD manifests.
+  [yq](https://github.com/mikefarah/yq) 4, to read the chart values from the Argo CD manifests
 
-## 1. Infrastructure (both paths)
+## 3. Bring Up
 
-The `infra/aws/cluster` root creates the network, the EKS cluster, the buckets and the Airbyte IAM
-role. Run in **Git Bash**, from the project folder.
+### 3.1 Infrastructure (both paths)
 
-1. Load the `.env` variables (Bash syntax; it does not work in PowerShell):
+The `infra/aws/cluster` root creates the network, the EKS cluster, the buckets and the IAM roles.
+
+1. Load the `.env` variables:
 
    ```bash
    set -a; source .env; set +a
@@ -71,7 +72,7 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 [01.02 design](specs/01-ingestion-airbyte-s3/02-eks-cluster/spec.md#design),
 [01.03 design](specs/01-ingestion-airbyte-s3/03-data-storage/spec.md#design).
 
-## 2. Services with Argo CD
+### 3.2 Services with Argo CD
 
 1. **Passwords:** send them from `.env` to the cluster before Argo CD syncs Postgres and DuckDB.
    **Source Postgres password** ([D-031](docs/decisions/031-source-postgres-password-from-env.md)):
@@ -128,9 +129,9 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
 3. **Airbyte, Postgres, DuckDB and the StorageClass:** they are manifests in `platform/aws`; Argo CD
    applies them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
 4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres` and
-   `duckdb` `Synced` and `Healthy`.
+   `duckdb` `Synced` and `Healthy`, or open the [Argo CD UI](#43-argo-cd).
 
-## 3. Services without Argo CD (manual)
+### 3.3 Services without Argo CD (manual)
 
 Skip the `infra/aws/gitops` root. The manifests in `platform/aws` are still the source of the
 configuration: plain manifests go through `kubectl`, and the chart values are read from the Argo CD
@@ -187,37 +188,168 @@ role) in Terraform.
 
 ## 4. Access
 
-- **Argo CD UI** (Argo CD path): [01.04 section](specs/01-ingestion-airbyte-s3/README.md#0104--argo-cd)
-  of the phase README.
-- **Airbyte UI** (both paths): [01.05 section](specs/01-ingestion-airbyte-s3/README.md#0105--airbyte)
-  of the phase README.
+| Service | Command | URL | Credential |
+|---|---|---|---|
+| [AWS console](#41-aws-and-kubernetes) | — | AWS console, region `us-east-1` | Account of the `eks-ws` profile |
+| [Argo CD UI](#43-argo-cd) | `kubectl -n argocd port-forward svc/argocd-server 8080:443 &` | `https://localhost:8080` | `admin` + Secret `argocd-initial-admin-secret` |
+| [Airbyte UI](#44-airbyte) | `kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &` | `http://localhost:8001` | Your email + Secret `airbyte-auth-secrets` |
+| [Source Postgres](#45-source-postgres) | `kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source` | — | `POSTGRES_PASSWORD` in `.env` |
+| [DuckDB UI](#46-duckdb-ui) | `kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &` | `http://localhost:4213` | None |
 
-## 5. Pipeline (both paths)
+### 4.1 AWS and Kubernetes
 
-Follow [Lab 01 — API ingestion](specs/01-ingestion-airbyte-s3/lab01-api-ingestion.md): source,
-destination and connection created in the Airbyte UI, a sync, and the Parquet files checked in the
-bronze bucket. Repeat it in every new environment.
+- **AWS console:** sign in to the account of the `eks-ws` profile and select region `us-east-1`.
+  Never write credentials here.
+- **Kubernetes:** `aws eks update-kubeconfig --name eks-for-data --region us-east-1`. The EKS API only
+  accepts your current public IP; if it changed, re-apply `infra/aws/cluster` (Terraform detects the
+  new IP).
 
-## 6. Teardown
+### 4.2 Port-Forwards
 
-Delete the services **while the cluster is up**, so the Airbyte EBS volume is deleted with them;
-then destroy the infrastructure.
+The port-forwards below run in the background (`&`), so the terminal stays free. Lines like
+`Handling connection for 8080` may appear while you type; they are harmless.
 
-- **With Argo CD:** [Turn Off](specs/01-ingestion-airbyte-s3/README.md#turn-off) in the phase README
-  (applications, `airbyte` namespace, `gitops` root, then `cluster` root, in that order).
-- **Without Argo CD:**
+```bash
+jobs        # lists the background port-forwards, e.g. [1]+ Running kubectl ... &
+kill %1     # stops one, by the number shown by jobs
+```
 
-  ```bash
-  helm uninstall airbyte --namespace airbyte
-  ```
+### 4.3 Argo CD
 
-  ```bash
-  kubectl delete namespace airbyte   # PVC → EBS volume deleted
-  ```
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
+```
 
-  ```bash
-  kubectl delete -f platform/aws/storageclass.yaml
-  ```
+```bash
+kubectl -n argocd port-forward svc/argocd-server 8080:443 &
+```
 
-  Then [Turn Off](specs/01-ingestion-airbyte-s3/README.md#turn-off) in the phase README, skipping its
-  Argo CD lines (`kubectl delete application`, `terraform -chdir=infra/aws/gitops destroy`).
+Open `https://localhost:8080`, accept the self-signed certificate warning, and log in with user
+`admin` and the password printed above.
+
+### 4.4 Airbyte
+
+```bash
+kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' | base64 -d; echo
+```
+
+```bash
+kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &
+```
+
+Open `http://localhost:8001`, enter your email, and sign in with the password printed above.
+
+### 4.5 Source Postgres
+
+`psql` inside the Postgres pod; nothing to install:
+
+```bash
+kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source
+```
+
+The password is `POSTGRES_PASSWORD` in `.env`. To read it back from the cluster:
+
+```bash
+kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' | base64 -d; echo
+```
+
+### 4.6 DuckDB UI
+
+**Inside the DuckDB pod** (main path, [D-033](docs/decisions/033-duckdb-service-configuration.md)):
+nothing to install; the source Postgres is already attached as `source` and the bronze bucket is
+readable. Use it to explore; the pipeline scripts run with the DuckDB CLI
+([D-043](docs/decisions/043-pipeline-script-execution.md)).
+
+```bash
+kubectl -n duckdb port-forward deploy/duckdb 4213:4213 &
+```
+
+Open `http://localhost:4213`. The local port must be 4213: the UI accepts only requests from
+`http://localhost:4213`, and any other port fails with "Offset is outside the bounds of the
+DataView" (reload with Ctrl+Shift+R after fixing it).
+
+**On your computer** (alternative, not verified): install the
+[DuckDB 2.0 CLI](https://duckdb.org/install/), forward the Quack port, and start the UI:
+
+```bash
+kubectl -n duckdb port-forward svc/duckdb 9494:9494 &
+```
+
+```bash
+duckdb -ui
+```
+
+In the UI, attach the server with `QUACK_TOKEN` from `.env`. `localhost` uses plain HTTP, and AWS
+queries such as `glob('s3://...')` run on your computer, not on the server:
+
+```sql
+CREATE SECRET (TYPE quack, TOKEN '<QUACK_TOKEN>');
+ATTACH 'quack:localhost:9494' AS remote;
+```
+
+## 5. Teardown
+
+### 5.1 Turn Off
+
+Delete the services **while the cluster is up**, so their EBS volumes are deleted with them; then
+destroy the infrastructure. In Git Bash, from the repository root:
+
+**With Argo CD:**
+
+```bash
+set -a; source .env; set +a
+kubectl delete pod --all                     # no test pods keeping nodes alive
+kubectl delete application platform -n argocd   # waits for the cascade to its child applications
+kubectl delete namespace airbyte --ignore-not-found   # PVC → Airbyte EBS volume deleted
+terraform -chdir=infra/aws/gitops destroy    # Argo CD; asks for "yes"
+terraform -chdir=infra/aws/cluster destroy   # shows the plan and asks for "yes"
+```
+
+**Without Argo CD:** remove what you installed by hand, then destroy only the `cluster` root:
+
+```bash
+helm uninstall airbyte --namespace airbyte
+kubectl delete namespace airbyte   # PVC → EBS volume deleted
+kubectl delete -f platform/aws/storageclass.yaml
+terraform -chdir=infra/aws/cluster destroy
+```
+
+The order matters: Argo CD must delete its applications before it is removed, the namespaces with
+volumes must go while the cluster is up (otherwise their EBS volumes are left behind and keep
+costing), and the `gitops` root needs the cluster to exist. It takes about 10–15 minutes, mostly
+deleting the cluster and the NAT Gateways.
+
+| Removed | Cost that stops |
+|---|---|
+| EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
+| 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
+| VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
+| Bronze and Airbyte buckets, emptied first (**bronze data is lost**); IAM roles and policies | Cents (S3 storage) |
+| Argo CD, Airbyte, Postgres, DuckDB and their EBS volumes | Extra Auto Mode node(s) + volumes |
+
+What stays, at no cost:
+
+- The code and `.terraform.lock.hcl` in Git.
+- The local `terraform.tfstate`, now empty; the next `apply` recreates everything from it
+  ([3. Bring Up](#3-bring-up)).
+- The `eks-for-data` context in `~/.kube/config`, pointing to a cluster that no longer exists.
+  Remove it with `kubectl config delete-context eks-for-data`.
+- The `aws:eks:cluster-name` cost allocation tag activation in Billing.
+- Your `.env`, with the passwords used by the next environment.
+
+### 5.2 Check Nothing Is Left
+
+```bash
+P="--profile eks-ws --region us-east-1 --output text"
+aws eks list-clusters $P
+aws ec2 describe-nat-gateways $P --query 'NatGateways[?State!=`deleted`].NatGatewayId'
+aws ec2 describe-addresses $P --query 'Addresses[].PublicIp'
+aws ec2 describe-vpcs --filters Name=tag:project,Values=2026_eks_for_data $P --query 'Vpcs[].VpcId'
+```
+
+- Expected result: every command returns empty (NAT Gateways may show `deleting` for a few minutes).
+- EKS may recreate the `/aws/eks/eks-for-data/cluster` log group right after the destroy with
+  in-flight logs. It costs cents, but the next `apply` fails because the log group already exists.
+  Check with `MSYS_NO_PATHCONV=1 aws logs describe-log-groups --log-group-name-prefix /aws/eks/eks-for-data $P`
+  and, if it is there, delete it with
+  `MSYS_NO_PATHCONV=1 aws logs delete-log-group --log-group-name /aws/eks/eks-for-data/cluster --profile eks-ws --region us-east-1`.

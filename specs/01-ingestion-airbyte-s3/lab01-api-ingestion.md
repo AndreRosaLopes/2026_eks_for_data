@@ -1,3 +1,5 @@
+[How to Run](../../HOW_TO_RUN.md) › 01 — Ingestion: [Run](HOW_TO_RUN.md) | [Verify](README.md)
+
 # Lab 01 — API Ingestion
 
 Create, in the Airbyte UI, a connection that reads the PokeAPI and writes Parquet files to the S3
@@ -13,12 +15,7 @@ environment.
 
 ## 1. Open the Airbyte UI
 
-```bash
-kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' | base64 -d; echo
-kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &
-```
-
-Open `http://localhost:8001` and sign in with your email and the password above.
+Follow [How to Run, 4.4 Airbyte](../../HOW_TO_RUN.md#44-airbyte).
 
 ## 2. Source: PokeAPI
 
@@ -81,6 +78,6 @@ Expected: columns including `id`, `name` and Airbyte's `_airbyte_*` metadata; `1
 
 ## 6. Clean Up
 
-Stop the port-forward: `jobs`, then `kill %N`. Nothing else: the source, destination and connection
+Stop the port-forward ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)). Nothing else: the source, destination and connection
 disappear with Airbyte's database, and the Parquet files with the bronze bucket, at
-[Turn Off](README.md#turn-off).
+[Turn Off](../../HOW_TO_RUN.md#51-turn-off).

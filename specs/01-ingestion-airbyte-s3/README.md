@@ -1,23 +1,15 @@
+[How to Run](../../HOW_TO_RUN.md) › 01 — Ingestion: [Run](HOW_TO_RUN.md) | **Verify**
+
 # 01 — Ingestion: Airbyte Writing Parquet to S3: How to Verify
 
 An EKS cluster running Airbyte reads a public API and writes Parquet files to the S3 bronze bucket,
 all deployed with Terraform and Argo CD. Each step below is verified on its own; the end-to-end
 verification proves the phase [Done When](plan.md#done-when).
 
-## Prerequisites
+## Prerequisites and Access
 
-- AWS account access through the `eks-ws` profile (see `.env`)
-- AWS console access to the same account, region `us-east-1`
-- Git Bash with the `.env` variables loaded: `set -a; source .env; set +a`
-- kubectl 1.35 to 1.37 (`kubectl version --client`)
-
-## Access
-
-- **AWS console:** sign in to the account of the `eks-ws` profile and select region `us-east-1`.
-  Never write credentials here.
-- **Kubernetes:** `aws eks update-kubeconfig --name eks-for-data --region us-east-1`. The EKS API only
-  accepts your current public IP; if it changed, re-apply `infra/aws/cluster` (Terraform detects the
-  new IP).
+- [How to Run, 2. Prerequisites](../../HOW_TO_RUN.md#2-prerequisites)
+- [How to Run, 4. Access](../../HOW_TO_RUN.md#4-access): AWS console, Kubernetes, Argo CD and Airbyte
 
 ## Step Verification
 
@@ -82,131 +74,45 @@ verification proves the phase [Done When](plan.md#done-when).
 
 ### 01.04 — Argo CD
 
-1. Get the `admin` password and open the UI by port-forward, in the background (`&`) so the
-   terminal stays free:
-   ```bash
-   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
-   kubectl -n argocd port-forward svc/argocd-server 8080:443 &
-   ```
-   - Expected result: a password printed, then `Forwarding from 127.0.0.1:8080 -> 8080`. Lines like
-     `Handling connection for 8080` may appear while you type; they are harmless.
-   - `jobs` lists the background processes of this terminal, e.g. `[1]+ Running kubectl ... &`;
-     the number in brackets identifies each one.
-2. Open `https://localhost:8080`, accept the self-signed certificate warning, and log in with user
-   `admin` and the password from step 1.
+1. Open the Argo CD UI and log in ([How to Run, 4.3 Argo CD](../../HOW_TO_RUN.md#43-argo-cd)).
    - Expected result: the **Applications** page shows `platform`, **Synced** and **Healthy**.
-3. Open `platform` → **App Details**.
+2. Open `platform` → **App Details**.
    - Expected result: repository `https://github.com/AndreRosaLopes/2026_eks_for_data.git`,
      revision `main`, path `platform/aws`; **Sync Policy** automated, with prune and self heal.
-4. Stop the port-forward, from the same terminal:
-   ```bash
-   jobs        # find the port-forward number, e.g. [1]
-   kill %1     # use that number
-   ```
+3. Stop the port-forward ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)).
    - Expected result: `jobs` no longer lists it, and `https://localhost:8080` stops loading.
 
 ### 01.05 — Airbyte
 
-1. Open the Argo CD UI (01.04, steps 1–2) → application `airbyte`.
+1. Open the Argo CD UI ([How to Run, 4.3 Argo CD](../../HOW_TO_RUN.md#43-argo-cd)) → application
+   `airbyte`.
    - Expected result: **Synced** and **Healthy**; the resource tree shows the Airbyte pods
      (server, worker, workload-launcher, workload-api-server, temporal, cron, manifest-server,
      `airbyte-db`).
-2. Get the Airbyte password and open the UI by port-forward, in the background:
-   ```bash
-   kubectl -n airbyte get secret airbyte-auth-secrets -o jsonpath='{.data.instance-admin-password}' | base64 -d; echo
-   kubectl -n airbyte port-forward svc/airbyte-airbyte-server-svc 8001:8001 &
-   ```
-   - Expected result: a password printed, then `Forwarding from 127.0.0.1:8001 -> 8001`.
-3. Open `http://localhost:8001`, enter your email, and sign in with the password from step 2.
+2. Open the Airbyte UI and sign in ([How to Run, 4.4 Airbyte](../../HOW_TO_RUN.md#44-airbyte)).
    - Expected result: the Airbyte home page.
-4. Stop the port-forwards (Airbyte and, if open, Argo CD): `jobs`, then `kill %N` for each one.
+3. Stop the port-forwards ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)).
    - Expected result: `jobs` lists nothing.
 
 ## End-to-End Verification
 
 Proves the phase [Done When](plan.md#done-when).
 
-1. Bring the environment up: [Turn On Again](#turn-on-again) (skip it if the environment is already
-   up).
+1. Bring the environment up: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up) (skip it if
+   the environment is already up).
    - Expected result: `terraform apply` completes for `cluster` and `gitops`; Argo CD shows
      `platform` and `airbyte` **Synced** and **Healthy** (01.04 and 01.05 sections above).
-2. Follow [Lab 01 — API Ingestion](lab01-api-ingestion.md).
+2. Run [Lab 01 — API Ingestion](HOW_TO_RUN.md#1-lab-01--api-ingestion).
    - Expected result: the sync **Succeeded**, and the Parquet file in the bronze bucket is readable,
      with `ditto`.
-3. Tear down: [Turn Off](#turn-off), then [Check Nothing Is Left](#check-nothing-is-left).
+3. Tear down: [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off), then
+   [5.2 Check Nothing Is Left](../../HOW_TO_RUN.md#52-check-nothing-is-left).
    - Expected result: every command returns empty; nothing that costs is left.
 
 ## Teardown
 
-The environment has two Terraform roots (`infra/aws/cluster` and `infra/aws/gitops`) plus what Argo
-CD deploys, removed in the order below. Each step's own teardown is in its spec (links below).
-
-### Turn Off
-
-In Git Bash, from the repository root:
-
-```bash
-set -a; source .env; set +a
-kubectl delete pod --all                     # no test pods keeping nodes alive
-kubectl delete application platform -n argocd   # waits for the cascade to its child applications
-kubectl delete namespace airbyte --ignore-not-found   # PVC → Airbyte EBS volume deleted
-terraform -chdir=infra/aws/gitops destroy    # Argo CD; asks for "yes"
-terraform -chdir=infra/aws/cluster destroy   # shows the plan and asks for "yes"
-```
-
-The order matters: Argo CD must delete its applications before it is removed, the `airbyte`
-namespace must go while the cluster is up (otherwise its EBS volume is left behind and keeps
-costing), and the `gitops` root needs the cluster to exist. It takes about 10–15 minutes, mostly deleting the cluster and the NAT
-Gateways.
-
-| Removed | Cost that stops |
-|---|---|
-| EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
-| 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
-| VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
-| Bronze and Airbyte buckets, emptied first (**bronze data is lost**); Airbyte IAM role and policy | Cents (S3 storage) |
-| Argo CD, Airbyte and the Airbyte EBS volume (1 GiB gp3) | Extra Auto Mode node(s) + ~US$ 0.08/month |
-
-What stays, at no cost:
-
-- The code and `.terraform.lock.hcl` in Git.
-- The local `terraform.tfstate`, now empty; the next `apply` recreates everything from it.
-- The `eks-for-data` context in `~/.kube/config`, pointing to a cluster that no longer exists.
-  Remove it with `kubectl config delete-context eks-for-data`.
-- The `aws:eks:cluster-name` cost allocation tag activation in Billing.
-
-### Check Nothing Is Left
-
-```bash
-P="--profile eks-ws --region us-east-1 --output text"
-aws eks list-clusters $P
-aws ec2 describe-nat-gateways $P --query 'NatGateways[?State!=`deleted`].NatGatewayId'
-aws ec2 describe-addresses $P --query 'Addresses[].PublicIp'
-aws ec2 describe-vpcs --filters Name=tag:project,Values=2026_eks_for_data $P --query 'Vpcs[].VpcId'
-```
-
-- Expected result: every command returns empty (NAT Gateways may show `deleting` for a few minutes).
-- EKS may recreate the `/aws/eks/eks-for-data/cluster` log group right after the destroy with
-  in-flight logs. It costs cents, but the next `apply` fails because the log group already exists.
-  Check with `MSYS_NO_PATHCONV=1 aws logs describe-log-groups --log-group-name-prefix /aws/eks/eks-for-data $P`
-  and, if it is there, delete it with
-  `MSYS_NO_PATHCONV=1 aws logs delete-log-group --log-group-name /aws/eks/eks-for-data/cluster --profile eks-ws --region us-east-1`.
-
-### Turn On Again
-
-```bash
-set -a; source .env; set +a
-terraform -chdir=infra/aws/cluster plan -out=tfplan
-terraform -chdir=infra/aws/cluster apply tfplan
-aws eks update-kubeconfig --name eks-for-data --region us-east-1
-terraform -chdir=infra/aws/gitops plan -out=tfplan
-terraform -chdir=infra/aws/gitops apply tfplan
-```
-
-It takes about 20–25 minutes and recreates the same environment (resource IDs change). Argo CD then
-deploys what is in `platform/aws` on `main`.
-
-### Step Teardowns
+The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown). Each step's own
+teardown is in its spec:
 
 - [01.01 — Network](01-network/spec.md#teardown)
 - [01.02 — EKS Cluster](02-eks-cluster/spec.md#teardown)
