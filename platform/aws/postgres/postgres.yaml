@@ -78,10 +78,17 @@ spec:
               mountPath: /var/lib/postgresql
             - name: init
               mountPath: /docker-entrypoint-initdb.d
+            # Parallel queries need more than the 64 MB default /dev/shm
+            - name: shm
+              mountPath: /dev/shm
       volumes:
         - name: init
           configMap:
             name: postgres-init
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 512Mi
   volumeClaimTemplates:
     - metadata:
         name: data
