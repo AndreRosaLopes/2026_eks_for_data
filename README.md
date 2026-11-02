@@ -16,8 +16,8 @@ The platform uses open-source components on Kubernetes, with each cloud's native
 | Data generation and exploration | DuckDB |
 | Storage | Cloud object storage (AWS S3, Azure Blob Storage / ADLS Gen2, Google Cloud Storage) |
 | Compute | Kubernetes (EKS, AKS, GKE) |
-| Processing engine | Trino and/or Apache Spark |
-| Transformation | dbt |
+| Processing and transformation | Apache Spark |
+| Table format and catalog | Apache Iceberg, Iceberg REST catalog (self-hosted) |
 | Orchestration | Apache Airflow |
 | Continuous delivery (GitOps) | Argo CD |
 | Observability | Prometheus + Grafana |
@@ -34,8 +34,8 @@ To bring up the environment and its services, see [HOW_TO_RUN.md](HOW_TO_RUN.md)
 |---|---|---|
 | 01 | **Ingestion:** Airbyte writing to AWS S3 | Network and core services; Kubernetes and Argo CD; Airbyte |
 | 02 | **Transactional ingestion:** TPC-H in Postgres, date cursor and CDC | Source Postgres; DuckDB service; data load and day simulation; labs 02 and 03 |
-| 03 | **Processing and transformation:** Trino and dbt | To be defined |
-| 04 | **Orchestration:** Airflow | To be defined |
+| 03 | **Processing:** Spark writing Iceberg tables to silver, with a REST catalog | Silver bucket and IRSA; Spark; REST catalog; dedup job bronze → silver |
+| 04 | **Orchestration:** Airflow triggering Airbyte and Spark | To be defined |
 | — | **Next phases** | To be decided |
 
 ## 4. Premises
