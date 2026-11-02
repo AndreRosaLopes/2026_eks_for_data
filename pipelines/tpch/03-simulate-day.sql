@@ -1,4 +1,4 @@
--- 02.06 — Day simulation in oltp (D-037, D-029). Paste and run in the DuckDB UI.
+-- 02.06 — Day simulation in oltp (D-038, D-029). Paste and run in the DuckDB UI.
 -- One run = one day: the simulated day R is the day after the latest order in oltp.
 -- Facts (orders, lineitem): inserts and status updates, never deletes.
 -- Dimensions: customer (insert, update, delete), supplier (insert, update),
