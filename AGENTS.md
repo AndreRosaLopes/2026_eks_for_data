@@ -65,3 +65,9 @@ After creating or modifying any file:
 
 - **OS:** Windows 11.
 - **Shell:** Git Bash (preferred).
+
+## 5. Project principles
+
+Read [docs/principles.md](docs/principles.md) before proposing or comparing any technical solution
+(tool, version, design or configuration): its principles 1 to 3 are the decision criteria, and 4 to 7
+say how to verify, compare and recommend.
