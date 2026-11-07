@@ -29,6 +29,18 @@
    | **Advantages** | Baseline: a single file. Alternative: security rules apply to every clone |
    ```
 
+8. **SDD templates.** In a chat about a phase plan or a step spec (`/sdd-plan`, `/sdd-spec`,
+   `/sdd-implement`), every answer that presents a plan, a spec or a decision reproduces the
+   matching template of that skill.
+9. **Complete answers.** When correcting or expanding an answer, repeat it whole and corrected;
+   never send only the difference or refer back to the earlier answer.
+10. **Context and plain language.** Name the document, section and item behind every reference,
+    and explain each component, term and acronym at first use, so a layperson can follow.
+11. **One topic per answer.** Answer only the current request; mention anything else in one line at
+    the end.
+12. **Cite only what you read.** State a fact or cite a source only after reading it; label
+    anything not verified as "not verified".
+
 ## 3. Git versioning
 
 After creating or modifying any file:
