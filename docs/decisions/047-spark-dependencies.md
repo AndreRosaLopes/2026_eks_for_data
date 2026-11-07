@@ -6,7 +6,7 @@ Phase: specs/03-processing-spark-iceberg
 
 ## Context
 
-The official Spark 4.0.4 image lacks the jars this phase needs: `hadoop-aws` (to read bronze through
+The official Spark image ([D-050](050-spark-version.md)) lacks the jars this phase needs: `hadoop-aws` (to read bronze through
 `s3a://`), the Iceberg runtime for Spark 4.0 and the Iceberg AWS bundle. The choice is how they reach
 the driver and executor pods.
 

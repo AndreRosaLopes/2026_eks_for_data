@@ -46,6 +46,7 @@ Spark.
 - [D-047 — Spark Dependencies](../../docs/decisions/047-spark-dependencies.md)
 - [D-048 — Spark Job Code Delivery](../../docs/decisions/048-spark-job-code-delivery.md)
 - [D-049 — Storage Credentials for Silver](../../docs/decisions/049-silver-storage-credentials.md)
+- [D-050 — Spark Version](../../docs/decisions/050-spark-version.md)
 
 **Divergences resolved (principle 7):** README §2 listed Trino and/or Spark as processing engine and
 dbt for transformation, and §3 listed phase 03 as Trino and dbt and phase 04 as Airflow only. Updated
