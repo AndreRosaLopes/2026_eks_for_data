@@ -7,6 +7,7 @@ configMapGenerator:
   - name: spark-jobs
     files:
       - read_bronze_orders.py
+      - dedup_orders.py
 # Fixed name, so the SparkApplication files can reference it
 generatorOptions:
   disableNameSuffixHash: true

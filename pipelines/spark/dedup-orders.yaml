@@ -1,0 +1,57 @@
+# Deduplicates bronze orders into an Iceberg table in Polaris (step 03.06). Applied by the user with
+# kubectl (D-057), after setting the arguments chosen in the lab:
+#   kubectl apply -f pipelines/spark/dedup-orders.yaml
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: dedup-orders
+  namespace: spark
+spec:
+  type: Python
+  mode: cluster
+  sparkVersion: 4.0.5
+  image: ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0
+  # A rebuilt image keeps the same tag (D-054), so nodes must not reuse a cached copy
+  imagePullPolicy: Always
+  # Script from ConfigMap spark-jobs (D-048)
+  mainApplicationFile: local:///opt/spark/jobs/dedup_orders.py
+  # Catalog, namespace and table, chosen in the lab
+  arguments:
+    - "<catalog>"
+    - "<namespace>"
+    - "<table>"
+  restartPolicy:
+    type: Never
+  sparkConf:
+    # Bronze through S3A with IRSA only (D-058)
+    spark.hadoop.fs.s3a.aws.credentials.provider: software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+    spark.hadoop.fs.s3a.endpoint.region: us-east-1
+    # Polaris as the Iceberg REST catalog "lake" (D-044); warehouse and credential set by the script
+    spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+    spark.sql.catalog.lake: org.apache.iceberg.spark.SparkCatalog
+    spark.sql.catalog.lake.type: rest
+    spark.sql.catalog.lake.uri: http://polaris.polaris.svc.cluster.local:8181/api/catalog
+    spark.sql.catalog.lake.scope: PRINCIPAL_ROLE:ALL
+    spark.sql.catalog.lake.token-refresh-enabled: "true"
+    spark.sql.catalog.lake.client.region: us-east-1
+    # Silver through credentials vended by Polaris (D-049)
+    spark.sql.catalog.lake.header.X-Iceberg-Access-Delegation: vended-credentials
+    # Keeps the Polaris credential out of the Spark UI and logs
+    spark.redaction.regex: (?i)secret|password|token|access[.]?key|credential
+  volumes:
+    - name: jobs
+      configMap:
+        name: spark-jobs
+  # Spark defaults for cores and memory (D-018): 1 core and 1g per pod, 2 executors
+  driver:
+    serviceAccount: spark
+    volumeMounts:
+      - name: jobs
+        mountPath: /opt/spark/jobs
+    # Engines' principal (D-062), from Secret polaris-credentials (D-031)
+    envFrom:
+      - secretRef:
+          name: polaris-credentials
+  executor:
+    instances: 2
+    serviceAccount: spark
