@@ -1,6 +1,6 @@
 # 03.02 — Silver Bucket and IRSA Roles: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 ## Design
@@ -39,8 +39,8 @@ Cost: an empty bucket and IAM roles cost nothing; silver data costs cents in S3.
 | 1 | Manual | Plan adds only | [README 03.02](../README.md#0302--silver-bucket-and-irsa-roles), step 1: `terraform plan` | `Plan: 11 to add, 0 to change, 0 to destroy` | Pass: confirmed by the user |
 | 2 | Manual | Apply and bucket | README 03.02, steps 2 and 3: `terraform apply`, then `get-bucket-versioning` and `get-bucket-policy` on silver | Apply adds 11; versioning prints nothing (never enabled); policy denies `aws:SecureTransport` `false` | Pass: confirmed by the user (`Deny` with `"Condition":{"Bool":{"aws:SecureTransport":"false"}}`) |
 | 3 | Manual | Spark role | README 03.02, step 4: temporary `aws-cli` pod in namespace `spark`, ServiceAccount `spark`: list bronze, then write to silver | Bronze listed; silver write `AccessDenied` | Pass: confirmed by the user; bronze listed `PRE oltp_cursor/` (the pod finished before `kubectl` attached, so the listing was read from the pod log) |
-| 4 | Manual | Role chain | README 03.02, step 5: temporary `aws-cli` pod in namespace `polaris`, ServiceAccount `polaris`: assume the silver data role, put and delete a test object in silver | `put ok`, `delete ok` | Not run: environment turned off before this check |
-| 5 | Manual | AWS console | README 03.02, step 6: S3 bucket `eks-for-data-silver-283429977024`; IAM roles `eks-for-data-spark`, `eks-for-data-polaris`, `eks-for-data-silver-data`; the data role's **Trust relationships** name only `eks-for-data-polaris` | All present; trust as described | Not run: environment turned off before this check |
+| 4 | Manual | Role chain | README 03.02, step 5: temporary `aws-cli` pod in namespace `polaris`, ServiceAccount `polaris`: assume the silver data role, put and delete a test object in silver | `put ok`, `delete ok` | Pass: run by the agent on 2026-11-09 (`put ok`, `delete ok`); namespace `polaris` deleted |
+| 5 | Manual | AWS console | README 03.02, step 6: S3 bucket `eks-for-data-silver-283429977024`; IAM roles `eks-for-data-spark`, `eks-for-data-polaris`, `eks-for-data-silver-data`; the data role's **Trust relationships** name only `eks-for-data-polaris` | All present; trust as described | Pass: confirmed by the user on 2026-11-09 |
 
 ## Teardown
 
