@@ -1,0 +1,21 @@
+# Airflow metadata Postgres (D-065) as its own Application (D-032); manifests in platform/aws/airflow-postgres.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: airflow-postgres
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/AndreRosaLopes/2026_eks_for_data.git
+    targetRevision: main
+    path: platform/aws/airflow-postgres
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: airflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

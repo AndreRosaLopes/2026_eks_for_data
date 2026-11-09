@@ -1,0 +1,111 @@
+# Apache Airflow 3.4.0 (D-063) from the official chart. The Secrets airflow-metadata,
+# airflow-fernet-key, airflow-api-secret-key, airflow-jwt-secret and airflow-admin are created by hand
+# from .env before the sync (D-031).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: airflow
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://airflow.apache.org
+    chart: airflow
+    targetRevision: 1.22.0
+    helm:
+      valuesObject:
+        # Custom image: Airflow 3.4.0 plus the Airbyte provider (D-066, D-068 to D-070)
+        images:
+          airflow:
+            repository: ghcr.io/andrerosalopes/airflow
+            tag: 3.4.0-airbyte6.2.0
+        airflowVersion: 3.4.0
+        # One pod per task (D-064); the chart deploys Redis only with Celery
+        executor: KubernetesExecutor
+
+        # Metadata database in its own Postgres (D-065); the chart's bundled Postgres is off
+        postgresql:
+          enabled: false
+        data:
+          metadataSecretName: airflow-metadata
+
+        # Static keys from Secrets, as the chart production guide advises (D-031)
+        fernetKeySecretName: airflow-fernet-key
+        apiSecretKeySecretName: airflow-api-secret-key
+        jwtSecretName: airflow-jwt-secret
+
+        # Argo CD: plain Jobs instead of Helm hooks, as the chart docs require; migrations on every sync
+        migrateDatabaseJob:
+          useHelmHooks: false
+          applyCustomEnv: false
+          jobAnnotations:
+            argocd.argoproj.io/hook: Sync
+        # Admin user with the password from Secret airflow-admin, never in Git (D-071)
+        createUserJob:
+          useHelmHooks: false
+          applyCustomEnv: false
+          env:
+            - name: AIRFLOW_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-admin
+                  key: password
+          args:
+            - "bash"
+            - "-c"
+            - |-
+              exec \
+              airflow users create "$@"
+            - --
+            - "-r"
+            - "Admin"
+            - "-u"
+            - "admin"
+            - "-e"
+            - "admin@example.com"
+            - "-f"
+            - "admin"
+            - "-l"
+            - "user"
+            - "-p"
+            - "$(AIRFLOW_ADMIN_PASSWORD)"
+
+        # IRSA role for the task logs bucket (D-008, D-072): task pods, API server and triggerer
+        workers:
+          kubernetes:
+            serviceAccount:
+              create: true
+              annotations:
+                eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-airflow
+        apiServer:
+          serviceAccount:
+            annotations:
+              eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-airflow
+        triggerer:
+          serviceAccount:
+            annotations:
+              eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-airflow
+
+        # AWS connection for the logs, with no keys: credentials come from IRSA
+        env:
+          - name: AIRFLOW_CONN_AWS_LOGS
+            value: '{"conn_type": "aws", "extra": {"region_name": "us-east-1"}}'
+
+        config:
+          # DAGs read from this public repository with versioning (D-067)
+          dag_processor:
+            dag_bundle_config_list: '[{"name": "pipelines", "classpath": "airflow.providers.git.bundles.git.GitDagBundle", "kwargs": {"repo_url": "https://github.com/AndreRosaLopes/2026_eks_for_data.git", "tracking_ref": "main", "subdir": "pipelines/airflow/dags"}}]'
+          # Task logs in S3 (D-072)
+          logging:
+            remote_logging: "True"
+            remote_base_log_folder: s3://eks-for-data-airflow-283429977024/logs
+            remote_log_conn_id: aws_logs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: airflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

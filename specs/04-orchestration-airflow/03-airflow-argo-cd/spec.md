@@ -21,7 +21,7 @@ Phase: [04 — Orchestration: Airflow for Airbyte and Spark](../plan.md)
 | DAGs | `GitDagBundle`: this public repository, folder `pipelines/airflow/dags`, branch `main` | [D-067](../../../docs/decisions/067-dag-delivery.md) |
 | Task logs | Remote logging to `s3://eks-for-data-airflow-283429977024/logs` | [D-072](../../../docs/decisions/072-airflow-task-log-location.md) |
 | Logs bucket | `eks-for-data-airflow-283429977024` in `infra/aws/cluster`, `force_destroy`, like silver | [D-072](../../../docs/decisions/072-airflow-task-log-location.md) |
-| Logs IAM role | `eks-for-data-airflow`, read and write on that bucket only; trusts ServiceAccounts `airflow-worker`, `airflow-api-server` and `airflow-triggerer` in `airflow` | [D-008](../../../docs/decisions/008-pod-aws-identity.md) |
+| Logs IAM role | `eks-for-data-airflow`, read and write on that bucket only; trusts ServiceAccounts `airflow-worker-kubernetes` (task pods, the chart's KubernetesExecutor option), `airflow-api-server` and `airflow-triggerer` in `airflow` | [D-008](../../../docs/decisions/008-pod-aws-identity.md) |
 | Resources | Chart defaults, measured first | [D-018](../../../docs/decisions/018-workload-resource-requests.md) |
 | Test DAG | `smoke_test`: one task that prints a line, to check scheduling and logs | — |
 | UI access | `kubectl port-forward` to Service `airflow-api-server`, port 8080 | [D-012](../../../docs/decisions/012-cluster-and-ui-access.md) |
@@ -48,7 +48,7 @@ the user's confirmation, because it creates AWS resources.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Terraform adds only the bucket and role | `terraform plan`; after the user confirms, `terraform apply` in `infra/aws/cluster` | Only additions, no change or destroy; apply succeeds | Pending |
+| 1 | Automated | Terraform adds only the bucket and role | `terraform plan`; after the user confirms, `terraform apply` in `infra/aws/cluster` | Only additions, no change or destroy; apply succeeds | Pass: `Plan: 6 to add, 0 to change, 0 to destroy`; applied after the user's confirmation (2026-11-09) |
 | 2 | Automated | Applications synced | `kubectl -n argocd get applications`; `kubectl -n airflow get pods` | `airflow-postgres` and `airflow` Synced and Healthy; scheduler, API server, DAG processor and triggerer Running | Pending |
 | 3 | Automated | Database migrated and admin created | Migration and user Job status; `airflow users list` | Both Jobs completed; user `admin` listed | Pending |
 | 4 | Automated | Admin Job safe to rerun | Run the user Job again | It completes without error; still one `admin` | Pending |

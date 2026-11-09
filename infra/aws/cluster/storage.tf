@@ -195,3 +195,52 @@ resource "aws_iam_role_policy" "silver_data" {
     }]
   })
 }
+
+# Airflow task logs (remote logging), one bucket per platform component (D-064, D-072)
+module "s3_airflow" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "5.17.0"
+
+  bucket        = "${local.name}-airflow-${data.aws_caller_identity.current.account_id}"
+  force_destroy = true
+
+  attach_deny_insecure_transport_policy = true
+}
+
+# IRSA role for the Airflow components that write or read task logs: task pods (KubernetesExecutor
+# worker), the API
+# server and the triggerer; read and write on the logs bucket only (D-008, D-072)
+module "airflow_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.8.2"
+
+  name            = "${local.name}-airflow"
+  use_name_prefix = false
+
+  oidc_providers = {
+    main = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "airflow:airflow-worker-kubernetes",
+        "airflow:airflow-api-server",
+        "airflow:airflow-triggerer",
+      ]
+    }
+  }
+
+  permissions = {
+    S3AirflowLogsReadWrite = {
+      actions = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+      ]
+      resources = [
+        module.s3_airflow.s3_bucket_arn,
+        "${module.s3_airflow.s3_bucket_arn}/*",
+      ]
+    }
+  }
+}
