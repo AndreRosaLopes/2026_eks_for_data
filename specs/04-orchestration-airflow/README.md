@@ -19,6 +19,14 @@ step below is verified on its own; the end-to-end verification proves the phase
 No manual check: this step only updates the roadmap in [README §3](../../README.md#3-phases)
 ([spec](01-roadmap/spec.md)).
 
+### 04.02 — Airflow Image
+
+No manual check: the agent ran every check of the [spec](02-airflow-image/spec.md#verification-plan),
+including making the package public. To repeat it, follow
+[Run, 1. Build and Push the Airflow Image](HOW_TO_RUN.md#1-build-and-push-the-airflow-image).
+- Expected result: the push ends with a line `3.4.0-airbyte6.2.0: digest: sha256:...`, and after
+  `docker logout ghcr.io` the `docker pull` of the image succeeds without login.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -29,3 +37,4 @@ The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown)
 teardown is in its spec:
 
 - [04.01 — Roadmap](01-roadmap/spec.md#teardown)
+- [04.02 — Airflow Image](02-airflow-image/spec.md#teardown)

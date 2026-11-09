@@ -1,6 +1,6 @@
 # 04.02 — Airflow Image: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [04 — Orchestration: Airflow for Airbyte and Spark](../plan.md)
 
 ## Design
@@ -29,14 +29,17 @@ Phase: [04 — Orchestration: Airflow for Airbyte and Spark](../plan.md)
 
 ## Verification Plan
 
+No manual check: by the user's decision, check 5 is done by the agent through browser automation,
+because GitHub has no API to change a package's visibility.
+
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Image builds | `docker build` | Build succeeds | Pending |
-| 2 | Automated | Versions fixed | `docker run` listing Airflow and its providers | Airflow 3.4.0; Airbyte provider 6.2.0; `airbyte-api` 1.0.1; the five base providers unchanged | Pending |
-| 3 | Automated | Airbyte operator loads | `docker run` importing `AirbyteTriggerSyncOperator` | The import succeeds | Pending |
-| 4 | Automated | Push | `docker push` with the `gh` token | Push ends with the image digest | Pending |
-| 5 | Manual | Public package | GitHub → Your profile → Packages → `airflow` → Package settings → Change visibility → Public | The package shows as Public | Pending |
-| 6 | Automated | Pull without login | `docker logout ghcr.io`, then `docker pull` | The pull succeeds | Pending |
+| 1 | Automated | Image builds | `docker build` | Build succeeds | Pass: built on 2026-11-09 with Docker 29.3.1 (amd64) |
+| 2 | Automated | Versions fixed | `docker run` listing Airflow and its providers | Airflow 3.4.0; Airbyte provider 6.2.0; `airbyte-api` 1.0.1; the five base providers unchanged | Pass: Airflow 3.4.0; `apache-airflow-providers-airbyte` 6.2.0; `airbyte-api` 1.0.1; `cncf-kubernetes` 10.25.0, `amazon` 9.39.0, `git` 1.0.1, `postgres` 7.1.1, `fab` 3.10.2 |
+| 3 | Automated | Airbyte operator loads | `docker run` importing `AirbyteTriggerSyncOperator` | The import succeeds | Pass: `AirbyteTriggerSyncOperator` imported |
+| 4 | Automated | Push | `docker push` with the `gh` token | Push ends with the image digest | Pass: pushed with the `gh` token; digest `sha256:7f8f69c24302569784da95e5e84302271209b373df43c12fcf288eed9541163b` |
+| 5 | Automated | Public package | Browser automation (Chrome extension, in the user's logged-in GitHub session): Packages → `airflow` → Package settings → Change visibility → Public | The package shows as Public | Pass: set to Public by the agent through the Chrome extension; the settings page shows "This package is currently public." |
+| 6 | Automated | Pull without login | `docker logout ghcr.io`, then `docker pull` | The pull succeeds | Pass: after `docker logout ghcr.io` and removing the local copy, `docker pull` downloaded the image |
 
 ## Teardown
 
