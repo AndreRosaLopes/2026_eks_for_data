@@ -198,9 +198,65 @@ Run every command in Git Bash, from the repository root, one block at a time.
    - Expected result: a test table folder with a `metadata/` file ending in `.metadata.json`; the
      agent then removes the test table and namespace.
 
+### 03.06 — Dedup Job and DuckDB Read-Back
+
+1. Create the engines' principal with the names you choose:
+   [Run, 5. Create the Engines' Principal](HOW_TO_RUN.md#5-create-the-engines-principal).
+   - Expected result: `principals list` (same CLI options as in step 1 of Run 5) shows your
+     principal; `kubectl -n spark get secret polaris-credentials` and
+     `kubectl -n duckdb get secret polaris-credentials` both find the Secret.
+
+2. Run the dedup job: [Run, 6. Run the Dedup Job](HOW_TO_RUN.md#6-run-the-dedup-job).
+   - Expected result: state `COMPLETED`; the driver log shows
+     `silver <namespace>.<table>: rows=<n> distinct_orderkey=<n>`, both numbers equal.
+
+3. Read the table in DuckDB: [Run, 7. Read the Table with DuckDB](HOW_TO_RUN.md#7-read-the-table-with-duckdb).
+   - Expected result: `silver_rows` equals `bronze_orderkeys`.
+
 ## End-to-End Verification
 
-Written on the last step: walkthrough proving the phase "Done When".
+Proves the phase [Done When](plan.md#done-when), in a fresh environment, in this order:
+
+1. Bring up the environment and the Polaris realm:
+   [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up), items 1 to 5.
+   - Expected result: Argo CD shows every Application **Synced** and **Healthy**; the bootstrap
+     prints `Realm 'POLARIS' successfully bootstrapped.`
+
+2. Load the source and fill bronze:
+   [Lab 00 — TPC-H Generation](../02-transactional-ingestion/lab00-tpch-generation.md), then
+   [Lab 02 — Date Cursor Ingestion](../02-transactional-ingestion/lab02-cursor-ingestion.md),
+   sections 1 to 4.
+   - Expected result: bronze `orders` equals Postgres `oltp.orders` (lab02, section 4).
+
+3. **A Spark job on the cluster reads the bronze Parquet files:**
+   [Run, 2. Run the Bronze Read Job](HOW_TO_RUN.md#2-run-the-bronze-read-job).
+   - Expected result: `COMPLETED`; `bronze orders: rows=<n>` with `<n>` equal to bronze in step 2.
+
+4. **The table exists in the REST catalog, one row per `orderkey`:**
+   [Run, 4. Create a Catalog](HOW_TO_RUN.md#4-create-a-catalog),
+   [5. Create the Engines' Principal](HOW_TO_RUN.md#5-create-the-engines-principal) and
+   [6. Run the Dedup Job](HOW_TO_RUN.md#6-run-the-dedup-job).
+   - Expected result: `COMPLETED`; `rows` equals `distinct_orderkey` in the driver log.
+
+5. **DuckDB reads the table through the catalog; its count equals the distinct `orderkey` in
+   bronze:** [Run, 7. Read the Table with DuckDB](HOW_TO_RUN.md#7-read-the-table-with-duckdb).
+   - Expected result: `silver_rows` = `bronze_orderkeys`.
+
+6. **No secrets in the repository:** search the repository for the value of every `.env` variable
+   whose name has `PASSWORD`, `SECRET` or `TOKEN` (the others, such as the account ID, are not
+   secrets, [D-020](../../docs/decisions/020-aws-account-id-in-git.md)):
+
+   ```bash
+   while IFS='=' read -r k v; do [ -n "$v" ] && git grep -q -F "$v" && echo "FOUND: $k"; done < <(grep -E '^[A-Z_]*(PASSWORD|SECRET|TOKEN)[A-Z_]*=' .env); echo "search done"
+   ```
+
+   - Expected result: only `search done`, with no `FOUND:` line.
+
+7. **The teardown removes every resource that incurs cost:**
+   [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off), then
+   [5.2 Check Nothing Is Left](../../HOW_TO_RUN.md#52-check-nothing-is-left).
+   - Expected result: no EKS cluster, EC2 instance, EBS volume, NAT Gateway, load balancer or
+     bucket of the project remains.
 
 ## Teardown
 
@@ -211,3 +267,4 @@ teardown is in its spec:
 - [03.03 — Spark Image](03-spark-image/spec.md#teardown)
 - [03.04 — Spark Operator and Bronze Read Job](04-spark-operator/spec.md#teardown)
 - [03.05 — Catalog Postgres and Polaris](05-catalog-postgres-and-polaris/spec.md#teardown)
+- [03.06 — Dedup Job and DuckDB Read-Back](06-dedup-job-and-duckdb/spec.md#teardown)

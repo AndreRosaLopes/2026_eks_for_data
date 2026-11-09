@@ -28,7 +28,7 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 | `pipelines/spark/dedup-orders.yaml` | Create: `SparkApplication` with the Polaris connection and job arguments |
 | `pipelines/spark/kustomization.yaml` | Modify: add the new script to ConfigMap `spark-jobs` |
 | `platform/aws/duckdb/duckdb.yaml` | Modify: Polaris credentials as environment variables |
-| `HOW_TO_RUN.md` | Modify: §3.2 Secret `polaris-credentials` in `spark` and `duckdb` |
+| `specs/03-processing-spark-iceberg/HOW_TO_RUN.md` §5 | Secret `polaris-credentials` in `spark` and `duckdb` (moved from home §3.2: the principal is created in the lab, after Polaris is up, so its Secret cannot exist at bring-up) |
 | `specs/03-processing-spark-iceberg/HOW_TO_RUN.md` | Modify: principal setup, job run, DuckDB attach |
 | `specs/03-processing-spark-iceberg/README.md` | Modify: 03.06 section and the end-to-end verification |
 | `specs/03-processing-spark-iceberg/plan.md` | Modify: step and phase status |
@@ -42,7 +42,7 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 | 3 | Automated | Table in the catalog (Done When 2) | Iceberg REST API: list the lab namespace's tables | The table is listed | Pending |
 | 4 | Automated | One row per `orderkey`, latest version (Done When 2) | DuckDB: table row count vs. distinct `orderkey`; rows whose `updated_at` differs from bronze's latest per `orderkey` | Counts equal; 0 rows differ | Pending |
 | 5 | Manual | DuckDB reads through the catalog (Done When 3) | DuckDB UI: `ATTACH` the lab catalog, count rows; count distinct `orderkey` in bronze | Both counts equal | Pending |
-| 6 | Automated | No secrets in the repository (Done When 5) | `git grep` for every `.env` value | No match | Pending |
+| 6 | Automated | No secrets in the repository (Done When 5) | `git grep` for every `.env` value | No match | Pass (2026-11-09, before the lab principal exists): no match for the 6 secret values (`PASSWORD`, `SECRET`, `TOKEN`); the non-secret values (profile, region, account ID per D-020, repository, Git user) are excluded. Repeat after the lab |
 | 7 | Manual | Teardown removes every resource with cost (Done When 4) | [Turn Off](../../../HOW_TO_RUN.md#51-turn-off), then the AWS console: EKS, EC2 (instances, volumes, NAT gateways, load balancers), S3 | No cluster, instance, volume, NAT gateway, load balancer or bucket of the project remains | Pending |
 
 ## Teardown
