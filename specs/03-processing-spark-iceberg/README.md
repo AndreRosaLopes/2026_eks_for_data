@@ -164,6 +164,23 @@ Run every command in Git Bash, from the repository root, one block at a time.
      `Status: Image is up to date for ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0` (or
      `Downloaded newer image`), with no `unauthorized` error.
 
+### 03.04 — Spark Operator and Bronze Read Job
+
+1. In the Argo CD UI ([How to Run, 4.3 Argo CD](../../HOW_TO_RUN.md#43-argo-cd)), open
+   **Applications**.
+   - Expected result: `spark-operator` and `spark-jobs` are **Synced** and **Healthy**.
+
+2. Make sure bronze has orders (the lab02 sync in
+   [phase 02](../02-transactional-ingestion/lab02-cursor-ingestion.md)), then run the job:
+   [Run, 2. Run the Bronze Read Job](HOW_TO_RUN.md#2-run-the-bronze-read-job), steps 1 to 3.
+   - Expected result: the state ends as `COMPLETED`.
+
+3. Read the counts: [Run, 2. Run the Bronze Read Job](HOW_TO_RUN.md#2-run-the-bronze-read-job),
+   step 4, and compare `rows` with the DuckDB count of bronze `orders` (lab02 query in
+   [lab02-cursor-ingestion.md](../02-transactional-ingestion/lab02-cursor-ingestion.md)).
+   - Expected result: a line `bronze orders: rows=<n> distinct_orderkey=<m>`, with `<n>` equal to
+     DuckDB's bronze count.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -175,3 +192,4 @@ teardown is in its spec:
 
 - [03.02 — Silver Bucket and IRSA Roles](02-silver-bucket-and-irsa/spec.md#teardown)
 - [03.03 — Spark Image](03-spark-image/spec.md#teardown)
+- [03.04 — Spark Operator and Bronze Read Job](04-spark-operator/spec.md#teardown)

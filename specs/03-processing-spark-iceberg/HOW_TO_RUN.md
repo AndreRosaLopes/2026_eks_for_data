@@ -45,3 +45,34 @@ GitHub CLI (`gh`) logged in with the `write:packages` scope; no token is stored 
 5. Only after the first push: make the package public on GitHub (**Your profile** → **Packages** →
    `spark` → **Package settings** → **Change visibility** → **Public**), so the cluster pulls it
    without credentials ([D-047](../../docs/decisions/047-spark-dependencies.md)).
+
+## 2. Run the Bronze Read Job
+
+Reads the bronze `orders` written by lab02 and prints the row count and the distinct `orderkey`
+count ([`read_bronze_orders.py`](../../pipelines/spark/read_bronze_orders.py)). It needs data in
+`oltp_cursor/oltp/orders/`: run the lab02 sync first if bronze is empty. Takes about 2 minutes.
+A finished job stays in the cluster, so delete it before running it again (D-057).
+
+1. Delete the previous run, if any:
+
+   ```bash
+   kubectl -n spark delete sparkapplication read-bronze-orders --ignore-not-found
+   ```
+
+2. Start the job:
+
+   ```bash
+   kubectl apply -f pipelines/spark/read-bronze-orders.yaml
+   ```
+
+3. Follow its state until `COMPLETED` (Ctrl+C to stop watching):
+
+   ```bash
+   kubectl -n spark get sparkapplication read-bronze-orders -w
+   ```
+
+4. Read the counts in the driver log:
+
+   ```bash
+   kubectl -n spark logs read-bronze-orders-driver | grep "bronze orders"
+   ```

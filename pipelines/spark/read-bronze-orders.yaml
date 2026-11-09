@@ -10,6 +10,8 @@ spec:
   mode: cluster
   sparkVersion: 4.0.5
   image: ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0
+  # A rebuilt image keeps the same tag (D-054), so nodes must not reuse a cached copy
+  imagePullPolicy: Always
   # Script from ConfigMap spark-jobs (D-048)
   mainApplicationFile: local:///opt/spark/jobs/read_bronze_orders.py
   restartPolicy:
