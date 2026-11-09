@@ -51,7 +51,7 @@ step 04.01 updates that row from this plan.
 
 | # | Step | Status |
 |---|---|---|
-| 04.01 | Roadmap: README §3, the phase 04 row updated from this plan | To do |
+| 04.01 | [Roadmap](01-roadmap/spec.md): README §3, the phase 04 row updated from this plan | In progress |
 | 04.02 | Airflow image: Dockerfile (Airflow 3.4.0 plus the Airbyte provider), built locally and pushed to `ghcr.io` | To do |
 | 04.03 | Airflow via Argo CD: metadata Postgres, KubernetesExecutor, task logs in S3 (IAM role), DAGs from Git; UI through port-forward | To do |
 | 04.04 | Spark DAG: Airflow runs the dedup job and waits until it completes | To do |
