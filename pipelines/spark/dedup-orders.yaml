@@ -43,7 +43,10 @@ spec:
       configMap:
         name: spark-jobs
   # Spark defaults for cores and memory (D-018): 1 core and 1g per pod, 2 executors
+  # Driver and executors are never evicted by node consolidation while they run (D-075)
   driver:
+    annotations:
+      karpenter.sh/do-not-disrupt: "true"
     serviceAccount: spark
     volumeMounts:
       - name: jobs
@@ -54,4 +57,6 @@ spec:
           name: polaris-credentials
   executor:
     instances: 2
+    annotations:
+      karpenter.sh/do-not-disrupt: "true"
     serviceAccount: spark

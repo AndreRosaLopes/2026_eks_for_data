@@ -50,6 +50,7 @@ replaces the manual "Sync now" in Airbyte and the manual `kubectl apply` of D-05
 - [D-072 — Location of the Airflow Task Logs](../../docs/decisions/072-airflow-task-log-location.md)
 - [D-073 — How the Spark DAG Gets the Job Definition](../../docs/decisions/073-spark-dag-job-definition.md)
 - [D-074 — How the Spark Task Waits for the Job](../../docs/decisions/074-spark-task-deferrable.md)
+- [D-075 — Short-Lived Pods and Node Consolidation](../../docs/decisions/075-batch-pods-node-consolidation.md)
 
 **Divergence resolved (principle 7):** README §3 said the phase 04 steps were "to be defined";
 step 04.01 updates that row from this plan.

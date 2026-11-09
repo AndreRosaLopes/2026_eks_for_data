@@ -75,6 +75,9 @@ spec:
         # IRSA role for the task logs bucket (D-008, D-072): task pods, API server and triggerer
         workers:
           kubernetes:
+            # Task pods are never evicted by node consolidation while they run (D-075)
+            podAnnotations:
+              karpenter.sh/do-not-disrupt: "true"
             serviceAccount:
               create: true
               annotations:
