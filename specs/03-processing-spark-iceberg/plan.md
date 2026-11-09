@@ -58,6 +58,7 @@ Spark.
 - [D-059 — How the Polaris Realm Is Bootstrapped](../../docs/decisions/059-polaris-realm-bootstrap.md)
 - [D-060 — How the `silver` Catalog Is Created in Polaris](../../docs/decisions/060-polaris-catalog-creation.md)
 - [D-061 — Catalog Database User for Polaris](../../docs/decisions/061-polaris-database-user.md)
+- [D-062 — Polaris Credentials for Spark and DuckDB](../../docs/decisions/062-polaris-engine-credentials.md)
 
 **Divergences resolved (principle 7):** README §2 listed Trino and/or Spark as processing engine and
 dbt for transformation, and §3 listed phase 03 as Trino and dbt and phase 04 as Airflow only. Updated
@@ -73,4 +74,4 @@ future tools.
 | 03.03 | [Spark image](03-spark-image/spec.md): Dockerfile, built locally and pushed to `ghcr.io` | In progress |
 | 03.04 | [Spark Operator](04-spark-operator/spec.md) via Argo CD; a job reads bronze `orders` and prints counts | In progress |
 | 03.05 | [Catalog Postgres and Polaris](05-catalog-postgres-and-polaris/spec.md) via Argo CD; warehouse on `silver` | In progress |
-| 03.06 | Dedup job: bronze `orders` → Iceberg `silver.orders`; DuckDB reads it | To do |
+| 03.06 | [Dedup job](06-dedup-job-and-duckdb/spec.md): bronze `orders` → Iceberg `silver.orders`; DuckDB reads it | In progress |
