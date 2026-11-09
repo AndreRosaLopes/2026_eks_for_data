@@ -1,0 +1,12 @@
+# Builds ConfigMap spark-jobs from the job scripts (D-048), synced by the Argo CD Application
+# spark-jobs. Only the ConfigMap: the SparkApplication files are applied with kubectl (D-057).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: spark
+configMapGenerator:
+  - name: spark-jobs
+    files:
+      - read_bronze_orders.py
+# Fixed name, so the SparkApplication files can reference it
+generatorOptions:
+  disableNameSuffixHash: true

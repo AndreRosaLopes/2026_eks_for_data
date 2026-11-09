@@ -1,0 +1,33 @@
+# Reads bronze orders and prints counts (step 03.04). Applied by the user with kubectl (D-057):
+#   kubectl apply -f pipelines/spark/read-bronze-orders.yaml
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: read-bronze-orders
+  namespace: spark
+spec:
+  type: Python
+  mode: cluster
+  sparkVersion: 4.0.5
+  image: ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0
+  # Script from ConfigMap spark-jobs (D-048)
+  mainApplicationFile: local:///opt/spark/jobs/read_bronze_orders.py
+  restartPolicy:
+    type: Never
+  sparkConf:
+    # IRSA only, so a missing role fails instead of falling back to another identity (D-058)
+    spark.hadoop.fs.s3a.aws.credentials.provider: software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+    spark.hadoop.fs.s3a.endpoint.region: us-east-1
+  volumes:
+    - name: jobs
+      configMap:
+        name: spark-jobs
+  # Spark defaults for cores and memory (D-018): 1 core and 1g per pod, 2 executors
+  driver:
+    serviceAccount: spark
+    volumeMounts:
+      - name: jobs
+        mountPath: /opt/spark/jobs
+  executor:
+    instances: 2
+    serviceAccount: spark

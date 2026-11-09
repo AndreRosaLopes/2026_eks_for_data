@@ -1,0 +1,35 @@
+# Kubeflow Spark Operator (D-045) in its own namespace, running jobs in namespace spark (D-056).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spark-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://kubeflow.github.io/spark-operator
+    chart: spark-operator
+    targetRevision: 2.5.2
+    helm:
+      valuesObject:
+        spark:
+          jobNamespaces:
+            - spark
+          # Driver and executors read bronze through IRSA (D-008, D-058)
+          serviceAccount:
+            name: spark
+            annotations:
+              eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-spark
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spark-operator
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # The chart's CRDs exceed the 256 KB annotation limit of client-side apply
+      - ServerSideApply=true

@@ -41,7 +41,7 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Script ConfigMap renders | `kubectl kustomize pipelines/spark` | ConfigMap `spark-jobs` holding `read_bronze_orders.py` | Pending |
+| 1 | Automated | Script ConfigMap renders | `kubectl kustomize pipelines/spark` | ConfigMap `spark-jobs` holding `read_bronze_orders.py` | Pass: renders ConfigMap `spark-jobs` in namespace `spark` with `read_bronze_orders.py`, fixed name |
 | 2 | Automated | Operator deployed | `kubectl -n argocd get applications`; `kubectl -n spark-operator get pods` | `spark-operator` and `spark-jobs` Synced and Healthy; controller and webhook pods Running | Pending |
 | 3 | Automated | Job identity | `kubectl -n spark get serviceaccount spark -o yaml` | Annotation `eks.amazonaws.com/role-arn` with `eks-for-data-spark` | Pending |
 | 4 | Manual | Job runs | `kubectl apply -f pipelines/spark/read-bronze-orders.yaml`, then `kubectl -n spark get sparkapplication` | State `COMPLETED` | Pending |

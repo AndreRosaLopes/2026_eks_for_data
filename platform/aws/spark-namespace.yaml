@@ -1,0 +1,6 @@
+# Namespace for the Spark jobs (D-056). Synced by the root Application, which applies namespaces
+# before Applications, so it exists before the Spark Operator chart creates its ServiceAccount here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spark
