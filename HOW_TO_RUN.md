@@ -124,6 +124,35 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    kubectl -n duckdb create secret generic duckdb-credentials --from-literal=quack-token="$QUACK_TOKEN" --from-literal=postgres-password="$POSTGRES_PASSWORD"
    ```
 
+   **Polaris** ([D-046](docs/decisions/046-catalog-metadata-database.md),
+   [D-059](docs/decisions/059-polaris-realm-bootstrap.md),
+   [D-061](docs/decisions/061-polaris-database-user.md)): the catalog Postgres superuser password,
+   the `polaris` database user password and the Polaris root secret. Generate the ones `.env` does
+   not have yet, load `.env` again, then create the two Secrets:
+
+   ```bash
+   for v in POLARIS_POSTGRES_PASSWORD POLARIS_PG_PASSWORD POLARIS_ROOT_SECRET; do grep -q "^$v=" .env || echo "$v=$(openssl rand -hex 16)" >> .env; done
+   ```
+
+   ```bash
+   set -a; source .env; set +a
+   ```
+
+   ```bash
+   kubectl create namespace polaris
+   ```
+
+   ```bash
+   kubectl -n polaris create secret generic polaris-postgres-credentials --from-literal=password="$POLARIS_POSTGRES_PASSWORD" --from-literal=polaris-password="$POLARIS_PG_PASSWORD"
+   ```
+
+   ```bash
+   kubectl -n polaris create secret generic polaris-persistence --from-literal=username=polaris --from-literal=password="$POLARIS_PG_PASSWORD" --from-literal=jdbcUrl=jdbc:postgresql://polaris-postgres.polaris.svc.cluster.local:5432/polaris
+   ```
+
+   The root secret is used later, by the realm bootstrap and the Polaris CLI
+   ([phase 03 How to Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md)).
+
 2. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
@@ -139,10 +168,13 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    terraform -chdir=infra/aws/gitops apply tfplan
    ```
 
-3. **Airbyte, Postgres, DuckDB and the StorageClass:** they are manifests in `platform/aws`; Argo CD
-   applies them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
-4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres` and
-   `duckdb` `Synced` and `Healthy`, or open the [Argo CD UI](#43-argo-cd).
+3. **Airbyte, Postgres, DuckDB, Spark, Polaris and the StorageClass:** they are manifests in
+   `platform/aws`; Argo CD applies them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
+4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres`,
+   `duckdb`, `spark-operator`, `spark-jobs`, `polaris-postgres` and `polaris` `Synced` and
+   `Healthy`, or open the [Argo CD UI](#43-argo-cd).
+5. **Polaris realm:** bootstrap it once per environment
+   ([phase 03 How to Run, 3. Bootstrap the Polaris Realm](specs/03-processing-spark-iceberg/HOW_TO_RUN.md#3-bootstrap-the-polaris-realm)).
 
 ### 3.3 Services without Argo CD (manual)
 
@@ -209,6 +241,8 @@ role) in Terraform.
 | [Source Postgres](#45-source-postgres) | `kubectl -n postgres exec -it postgres-0 -- psql -U postgres -d source` | — | `postgres` | `POSTGRES_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.password}' \| base64 -d; echo` |
 | [Source Postgres for Airbyte](#45-source-postgres) | Host `postgres.postgres.svc.cluster.local`, port `5432`, database `source` | — | `airbyte` | `AIRBYTE_PG_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.airbyte-password}' \| base64 -d; echo` |
 | [DuckDB UI](#46-duckdb-ui) | `while true; do kubectl -n duckdb port-forward deploy/duckdb 4213:4213; sleep 1; done` | `http://localhost:4213` | — | None. Quack token (local UI only): `QUACK_TOKEN` in `.env`, or `kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' \| base64 -d; echo` |
+| [Polaris API](#47-polaris) | `kubectl -n polaris port-forward svc/polaris 8181:8181` | `http://localhost:8181` (Polaris CLI) | Client ID `root` | `POLARIS_ROOT_SECRET` in `.env` |
+| [Catalog Postgres](#47-polaris) | `kubectl -n polaris exec -it polaris-postgres-0 -- psql -U postgres -d polaris` | — | `postgres` (or `polaris`) | `POLARIS_POSTGRES_PASSWORD` (or `POLARIS_PG_PASSWORD`) in `.env` |
 
 ### 4.1 AWS and Kubernetes
 
@@ -316,6 +350,19 @@ CREATE SECRET (TYPE quack, TOKEN '<QUACK_TOKEN>');
 ATTACH 'quack:localhost:9494' AS remote;
 ```
 
+### 4.7 Polaris
+
+Polaris has no UI; it is used through the Polaris CLI (`pip install apache-polaris==1.8.0`,
+[D-060](docs/decisions/060-polaris-catalog-creation.md)) with the root credentials, in realm
+`POLARIS`. Forward its port in its own terminal ([4.2 Port-Forwards](#42-port-forwards)):
+
+```bash
+kubectl -n polaris port-forward svc/polaris 8181:8181
+```
+
+The CLI reaches `localhost:8181` by default. The root client ID is `root`; the secret is
+`POLARIS_ROOT_SECRET` in `.env` (load it with `set -a; source .env; set +a`).
+
 ## 5. Teardown
 
 ### 5.1 Turn Off
@@ -354,7 +401,7 @@ deleting the cluster and the NAT Gateways.
 | 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
 | VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
 | Bronze, silver and Airbyte buckets, emptied first (**bronze and silver data is lost**); IAM roles and policies (Airbyte, DuckDB, Spark, Polaris, silver data) | Cents (S3 storage) |
-| Argo CD, Airbyte, Postgres, DuckDB and their EBS volumes | Extra Auto Mode node(s) + volumes |
+| Argo CD, Airbyte, Postgres, DuckDB, Spark Operator, Polaris, the catalog Postgres and their EBS volumes | Extra Auto Mode node(s) + volumes |
 
 What stays, at no cost:
 

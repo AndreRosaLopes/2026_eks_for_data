@@ -39,8 +39,8 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Applications synced | `kubectl -n argocd get applications` | `polaris-postgres` and `polaris` Synced and Healthy | Pending |
-| 2 | Automated | Database ready | `psql` in `polaris-postgres-0` as `polaris` | Schema `polaris_schema` exists; `polaris` is not a superuser | Pending |
+| 1 | Automated | Applications synced | `kubectl -n argocd get applications` | `polaris-postgres` and `polaris` Synced and Healthy | Pass: both Synced and Healthy; `polaris` and `polaris-postgres-0` Running |
+| 2 | Automated | Database ready | `psql` in `polaris-postgres-0` as `polaris` | Schema `polaris_schema` exists; `polaris` is not a superuser | Pass: login as `polaris` works; `rolsuper` = false; `polaris_schema` owned by `polaris` |
 | 3 | Manual | Realm bootstrap | `kubectl run` of the admin tool | `Realm 'POLARIS' successfully bootstrapped` | Pending |
 | 4 | Manual | Catalog creation | Port-forward, then `polaris catalogs create`, then `polaris catalogs list` | The catalog is listed with its silver base location and role | Pending |
 | 5 | Automated | Credential vending | Iceberg REST API: create a test namespace and table, asking for vended credentials | Response has temporary S3 credentials; the table's metadata file is in silver (this also covers 03.02 check 4) | Pending |

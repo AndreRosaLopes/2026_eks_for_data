@@ -181,6 +181,23 @@ Run every command in Git Bash, from the repository root, one block at a time.
    - Expected result: a line `bronze orders: rows=<n> distinct_orderkey=<m>`, with `<n>` equal to
      DuckDB's bronze count.
 
+### 03.05 — Catalog Postgres and Polaris
+
+1. Bootstrap the realm: [Run, 3. Bootstrap the Polaris Realm](HOW_TO_RUN.md#3-bootstrap-the-polaris-realm).
+   - Expected result: `Realm 'POLARIS' successfully bootstrapped.`, then `pod "polaris-bootstrap"
+     deleted`.
+
+2. Create a test catalog named `verify`: [Run, 4. Create a Catalog](HOW_TO_RUN.md#4-create-a-catalog),
+   steps 1 to 4, with `verify` in place of `<catalog>`.
+   - Expected result: `catalogs list` shows `verify`, with `default-base-location`
+     `s3://eks-for-data-silver-283429977024/verify` and `roleArn`
+     `arn:aws:iam::283429977024:role/eks-for-data-silver-data`.
+
+3. After the agent's credential-vending check, in the AWS console (region `us-east-1`):
+   **S3** → `eks-for-data-silver-283429977024` → `verify/`.
+   - Expected result: a test table folder with a `metadata/` file ending in `.metadata.json`; the
+     agent then removes the test table and namespace.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -193,3 +210,4 @@ teardown is in its spec:
 - [03.02 — Silver Bucket and IRSA Roles](02-silver-bucket-and-irsa/spec.md#teardown)
 - [03.03 — Spark Image](03-spark-image/spec.md#teardown)
 - [03.04 — Spark Operator and Bronze Read Job](04-spark-operator/spec.md#teardown)
+- [03.05 — Catalog Postgres and Polaris](05-catalog-postgres-and-polaris/spec.md#teardown)

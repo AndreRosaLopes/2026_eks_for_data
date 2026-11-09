@@ -76,3 +76,51 @@ A finished job stays in the cluster, so delete it before running it again (D-057
    ```bash
    kubectl -n spark logs read-bronze-orders-driver | grep "bronze orders"
    ```
+
+## 3. Bootstrap the Polaris Realm
+
+Creates Polaris's tables in the catalog Postgres and the root credentials of realm `POLARIS`, with
+the Polaris admin tool ([D-059](../../docs/decisions/059-polaris-realm-bootstrap.md)). Run it once
+per environment, after Argo CD shows `polaris-postgres` and `polaris` **Synced** and **Healthy**.
+It is safe to run again: a bootstrapped realm is left unchanged. It reads `POLARIS_PG_PASSWORD` and
+`POLARIS_ROOT_SECRET` from `.env` ([How to Run, 3.2](../../HOW_TO_RUN.md#32-services-with-argo-cd)).
+
+```bash
+set -a; source .env; set +a
+```
+
+```bash
+kubectl -n polaris run polaris-bootstrap --rm -i --restart=Never --image=apache/polaris-admin-tool:1.8.0 --env="polaris.persistence.type=relational-jdbc" --env="quarkus.datasource.username=polaris" --env="quarkus.datasource.password=$POLARIS_PG_PASSWORD" --env="quarkus.datasource.jdbc.url=jdbc:postgresql://polaris-postgres.polaris.svc.cluster.local:5432/polaris" -- bootstrap -r POLARIS -c "POLARIS,root,$POLARIS_ROOT_SECRET"
+```
+
+## 4. Create a Catalog
+
+Creates, with the Polaris CLI ([D-060](../../docs/decisions/060-polaris-catalog-creation.md)), a
+catalog whose tables live in the silver bucket and whose credentials Polaris vends by assuming the
+silver data role ([D-049](../../docs/decisions/049-silver-storage-credentials.md)). You choose the
+catalog name in the lab; the commands below use `<catalog>`. Needs the realm bootstrapped
+([3](#3-bootstrap-the-polaris-realm)) and Python 3.10 to 3.14.
+
+1. Install the CLI (once):
+
+   ```bash
+   pip install apache-polaris==1.8.0
+   ```
+
+2. In another terminal, forward the Polaris port ([How to Run, 4.7 Polaris](../../HOW_TO_RUN.md#47-polaris)):
+
+   ```bash
+   kubectl -n polaris port-forward svc/polaris 8181:8181
+   ```
+
+3. Create the catalog, with its base location inside the silver bucket:
+
+   ```bash
+   polaris --client-id root --client-secret "$POLARIS_ROOT_SECRET" catalogs create --storage-type s3 --default-base-location s3://eks-for-data-silver-283429977024/<catalog> --role-arn arn:aws:iam::283429977024:role/eks-for-data-silver-data --region us-east-1 <catalog>
+   ```
+
+4. List the catalogs:
+
+   ```bash
+   polaris --client-id root --client-secret "$POLARIS_ROOT_SECRET" catalogs list
+   ```
