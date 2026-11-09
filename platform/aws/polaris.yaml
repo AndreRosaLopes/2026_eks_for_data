@@ -1,0 +1,35 @@
+# Apache Polaris, the Iceberg REST catalog (D-044), from the official chart. The Secret
+# polaris-persistence is created by hand from .env before the sync (D-031, D-061).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: polaris
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://downloads.apache.org/polaris/helm-chart
+    chart: polaris
+    targetRevision: 1.8.0
+    helm:
+      valuesObject:
+        # Catalog in the catalog Postgres, as user polaris (D-046, D-061)
+        persistence:
+          type: relational-jdbc
+          relationalJdbc:
+            secret:
+              name: polaris-persistence
+        # Assumes the silver data role to vend credentials (D-049)
+        serviceAccount:
+          name: polaris
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-polaris
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: polaris
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

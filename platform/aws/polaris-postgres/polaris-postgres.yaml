@@ -1,0 +1,96 @@
+# Catalog Postgres for Polaris (D-046), same pattern as the source Postgres (D-022). The Secret
+# polaris-postgres-credentials is created by hand from .env before the sync (D-031, D-061).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: polaris
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: polaris-postgres-init
+  namespace: polaris
+data:
+  # Runs only on the first start, when the volume is empty. Polaris does not create its schema:
+  # a dedicated user owns polaris_schema and has no other rights (D-061). The password comes from
+  # the environment (\getenv), so it is never in a command line or a file.
+  01-polaris-user.sh: |
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<'EOSQL'
+    \getenv pw POLARIS_PG_PASSWORD
+    CREATE USER polaris WITH LOGIN PASSWORD :'pw';
+    CREATE SCHEMA polaris_schema AUTHORIZATION polaris;
+    EOSQL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: polaris-postgres
+  namespace: polaris
+spec:
+  selector:
+    app: polaris-postgres
+  ports:
+    - name: postgres
+      port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: polaris-postgres
+  namespace: polaris
+spec:
+  serviceName: polaris-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polaris-postgres
+  # Deleting the StatefulSet also deletes its EBS volume
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        app: polaris-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:18.6
+          env:
+            - name: POSTGRES_DB
+              value: polaris
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-postgres-credentials
+                  key: password
+            - name: POLARIS_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-postgres-credentials
+                  key: polaris-password
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            periodSeconds: 10
+          # No requests: measured first (D-018)
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init
+          configMap:
+            name: polaris-postgres-init
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
