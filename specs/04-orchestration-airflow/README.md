@@ -27,6 +27,19 @@ including making the package public. To repeat it, follow
 - Expected result: the push ends with a line `3.4.0-airbyte6.2.0: digest: sha256:...`, and after
   `docker logout ghcr.io` the `docker pull` of the image succeeds without login.
 
+### 04.03 — Airflow via Argo CD
+
+The agent ran the checks of the [spec](03-airflow-argo-cd/spec.md#verification-plan). To repeat the
+main ones:
+
+1. Sign in to the Airflow UI ([How to Run, 4.8 Airflow](../../HOW_TO_RUN.md#48-airflow)).
+   - Expected result: the UI opens and lists DAG `smoke_test`.
+
+2. Run the smoke test: [Run, 2. Run the Smoke Test DAG](HOW_TO_RUN.md#2-run-the-smoke-test-dag).
+   - Expected result: the run ends `success`, and the task log shows
+     `smoke test: hello from a KubernetesExecutor task pod`, read from S3 after the task pod has
+     ended.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -38,3 +51,4 @@ teardown is in its spec:
 
 - [04.01 — Roadmap](01-roadmap/spec.md#teardown)
 - [04.02 — Airflow Image](02-airflow-image/spec.md#teardown)
+- [04.03 — Airflow via Argo CD](03-airflow-argo-cd/spec.md#teardown)

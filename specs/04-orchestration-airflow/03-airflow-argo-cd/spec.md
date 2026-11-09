@@ -1,6 +1,6 @@
 # 04.03 — Airflow via Argo CD: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [04 — Orchestration: Airflow for Airbyte and Spark](../plan.md)
 
 ## Design
@@ -49,16 +49,16 @@ the user's confirmation, because it creates AWS resources.
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
 | 1 | Automated | Terraform adds only the bucket and role | `terraform plan`; after the user confirms, `terraform apply` in `infra/aws/cluster` | Only additions, no change or destroy; apply succeeds | Pass: `Plan: 6 to add, 0 to change, 0 to destroy`; applied after the user's confirmation (2026-11-09) |
-| 2 | Automated | Applications synced | `kubectl -n argocd get applications`; `kubectl -n airflow get pods` | `airflow-postgres` and `airflow` Synced and Healthy; scheduler, API server, DAG processor and triggerer Running | Pending |
-| 3 | Automated | Database migrated and admin created | Migration and user Job status; `airflow users list` | Both Jobs completed; user `admin` listed | Pending |
-| 4 | Automated | Admin Job safe to rerun | Run the user Job again | It completes without error; still one `admin` | Pending |
-| 5 | Automated | Admin login works | Port-forward; `POST /auth/token` with `admin` and the `.env` password; then the UI opened through the Chrome extension | A token is issued; the UI lists DAG `smoke_test` | Pending |
-| 6 | Automated | DAG read from Git | Airflow API: DAG `smoke_test` and its bundle | DAG present, from the Git bundle, with the commit as its version | Pending |
-| 7 | Automated | Task runs in its own pod | Trigger `smoke_test`; watch pods in `airflow` | A task pod starts and ends; the run is `success` | Pending |
-| 8 | Automated | Log kept in S3 | List the logs bucket | The task log object exists under `logs/` | Pending |
-| 9 | Automated | Log readable after the pod ended | Airflow API: the task's log, after its pod is gone | The printed line is returned, read from S3 | Pending |
-| 10 | Automated | No memory failures | Pod status and events in `airflow` | No `OOMKilled` or `Evicted` (D-018) | Pending |
-| 11 | Automated | No secrets in the repository | `git grep` for every secret in `.env` | No match | Pending |
+| 2 | Automated | Applications synced | `kubectl -n argocd get applications`; `kubectl -n airflow get pods` | `airflow-postgres` and `airflow` Synced and Healthy; scheduler, API server, DAG processor and triggerer Running | Pass: both Synced and Healthy; API server, scheduler, DAG processor, triggerer and Postgres Running (also StatsD, a chart default) |
+| 3 | Automated | Database migrated and admin created | Migration and user Job status; `airflow users list` | Both Jobs completed; user `admin` listed | Pass: `airflow-run-airflow-migrations` and `airflow-create-user` Complete; `airflow users list` shows `admin` (Admin) |
+| 4 | Automated | Admin Job safe to rerun | Run the user Job again | It completes without error; still one `admin` | Pass: the Job was deleted and recreated by Argo CD; it printed `admin already exists in the db` and completed; still one `admin` |
+| 5 | Automated | Admin login works | Port-forward; `POST /auth/token` with `admin` and the `.env` password; then the UI opened through the Chrome extension | A token is issued; the UI lists DAG `smoke_test` | Skipped by the user (2026-11-09) for the browser part: signing in through the browser needs the password, which the agent's permission rules block. The login itself is proven: `POST /auth/token` issued a token for `admin` with the `.env` password, and the UI login page loads |
+| 6 | Automated | DAG read from Git | Airflow API: DAG `smoke_test` and its bundle | DAG present, from the Git bundle, with the commit as its version | Pass: DAG `smoke_test`, bundle `pipelines`, version `6ffa93f1461c7ec5c9a324fc570ec8f06c02b296` (the pushed commit) |
+| 7 | Automated | Task runs in its own pod | Trigger `smoke_test`; watch pods in `airflow` | A task pod starts and ends; the run is `success` | Pass: run `manual__2026-11-09T18:23:24.508711+00:00` ended `success`; task pod `smoke-test-hello-…` started, ran and was removed |
+| 8 | Automated | Log kept in S3 | List the logs bucket | The task log object exists under `logs/` | Pass: `logs/dag_id=smoke_test/run_id=manual__2026-11-09T18:23:24.508711+00:00/task_id=hello/attempt=1.log` (6,511 bytes) in the bucket |
+| 9 | Automated | Log readable after the pod ended | Airflow API: the task's log, after its pod is gone | The printed line is returned, read from S3 | Pass: with no task pod left, the API returned the log, read from S3, with the printed line |
+| 10 | Automated | No memory failures | Pod status and events in `airflow` | No `OOMKilled` or `Evicted` (D-018) | Pass: no restarts; 0 `OOMKilled` or `Evicted` events |
+| 11 | Automated | No secrets in the repository | `git grep` for every secret in `.env` | No match | Pass: no match for the 13 `.env` values whose names have `PASSWORD`, `SECRET`, `TOKEN` or `KEY` |
 
 ## Teardown
 

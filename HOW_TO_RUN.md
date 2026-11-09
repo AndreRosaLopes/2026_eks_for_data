@@ -19,7 +19,7 @@ There are two ways to deploy the services on the cluster:
 | 01 — Ingestion: Airbyte writing Parquet to S3 | Done | [Run](specs/01-ingestion-airbyte-s3/HOW_TO_RUN.md) | [Verify](specs/01-ingestion-airbyte-s3/README.md) |
 | 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 | 03 — Processing: Spark and Iceberg | In progress (03.01 to 03.05 done) | [Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md) | [Verify](specs/03-processing-spark-iceberg/README.md) |
-| 04 — Orchestration: Airflow for Airbyte and Spark | In progress (04.01 and 04.02 done) | [Run](specs/04-orchestration-airflow/HOW_TO_RUN.md) | [Verify](specs/04-orchestration-airflow/README.md) |
+| 04 — Orchestration: Airflow for Airbyte and Spark | In progress (04.01 to 04.03 done) | [Run](specs/04-orchestration-airflow/HOW_TO_RUN.md) | [Verify](specs/04-orchestration-airflow/README.md) |
 
 ## 2. Prerequisites
 
@@ -154,6 +154,52 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    The root secret is used later, by the realm bootstrap and the Polaris CLI
    ([phase 03 How to Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md)).
 
+   **Airflow** ([D-065](docs/decisions/065-airflow-metadata-database.md),
+   [D-071](docs/decisions/071-airflow-admin-login.md)): the metadata Postgres superuser and
+   `airflow` user passwords, the UI `admin` password and the three static keys the chart production
+   guide asks for (API secret key, JWT secret, Fernet key). Generate the ones `.env` does not have
+   yet, load `.env` again, then create the namespace and the six Secrets:
+
+   ```bash
+   for v in AIRFLOW_POSTGRES_PASSWORD AIRFLOW_PG_PASSWORD AIRFLOW_ADMIN_PASSWORD AIRFLOW_API_SECRET_KEY AIRFLOW_JWT_SECRET; do grep -q "^$v=" .env || echo "$v=$(openssl rand -hex 16)" >> .env; done
+   ```
+
+   ```bash
+   grep -q '^AIRFLOW_FERNET_KEY=' .env || echo "AIRFLOW_FERNET_KEY=$(openssl rand -base64 32 | tr '+/' '-_')" >> .env
+   ```
+
+   ```bash
+   set -a; source .env; set +a
+   ```
+
+   ```bash
+   kubectl create namespace airflow
+   ```
+
+   ```bash
+   kubectl -n airflow create secret generic airflow-postgres-credentials --from-literal=password="$AIRFLOW_POSTGRES_PASSWORD" --from-literal=airflow-password="$AIRFLOW_PG_PASSWORD"
+   ```
+
+   ```bash
+   kubectl -n airflow create secret generic airflow-metadata --from-literal=connection="postgresql://airflow:$AIRFLOW_PG_PASSWORD@airflow-postgres.airflow.svc.cluster.local:5432/airflow"
+   ```
+
+   ```bash
+   kubectl -n airflow create secret generic airflow-fernet-key --from-literal=fernet-key="$AIRFLOW_FERNET_KEY"
+   ```
+
+   ```bash
+   kubectl -n airflow create secret generic airflow-api-secret-key --from-literal=api-secret-key="$AIRFLOW_API_SECRET_KEY"
+   ```
+
+   ```bash
+   kubectl -n airflow create secret generic airflow-jwt-secret --from-literal=jwt-secret="$AIRFLOW_JWT_SECRET"
+   ```
+
+   ```bash
+   kubectl -n airflow create secret generic airflow-admin --from-literal=password="$AIRFLOW_ADMIN_PASSWORD"
+   ```
+
 2. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
@@ -169,11 +215,11 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    terraform -chdir=infra/aws/gitops apply tfplan
    ```
 
-3. **Airbyte, Postgres, DuckDB, Spark, Polaris and the StorageClass:** they are manifests in
+3. **Airbyte, Postgres, DuckDB, Spark, Polaris, Airflow and the StorageClass:** they are manifests in
    `platform/aws`; Argo CD applies them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
 4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres`,
-   `duckdb`, `spark-operator`, `spark-jobs`, `polaris-postgres` and `polaris` `Synced` and
-   `Healthy`, or open the [Argo CD UI](#43-argo-cd).
+   `duckdb`, `spark-operator`, `spark-jobs`, `polaris-postgres`, `polaris`, `airflow-postgres` and
+   `airflow` `Synced` and `Healthy`, or open the [Argo CD UI](#43-argo-cd).
 5. **Polaris realm:** bootstrap it once per environment
    ([phase 03 How to Run, 3. Bootstrap the Polaris Realm](specs/03-processing-spark-iceberg/HOW_TO_RUN.md#3-bootstrap-the-polaris-realm)).
 
@@ -243,6 +289,7 @@ role) in Terraform.
 | [Source Postgres for Airbyte](#45-source-postgres) | Host `postgres.postgres.svc.cluster.local`, port `5432`, database `source` | — | `airbyte` | `AIRBYTE_PG_PASSWORD` in `.env`, or `kubectl -n postgres get secret postgres-credentials -o jsonpath='{.data.airbyte-password}' \| base64 -d; echo` |
 | [DuckDB UI](#46-duckdb-ui) | `while true; do kubectl -n duckdb port-forward deploy/duckdb 4213:4213; sleep 1; done` | `http://localhost:4213` | — | None. Quack token (local UI only): `QUACK_TOKEN` in `.env`, or `kubectl -n duckdb get secret duckdb-credentials -o jsonpath='{.data.quack-token}' \| base64 -d; echo` |
 | [Polaris API](#47-polaris) | `kubectl -n polaris port-forward svc/polaris 8181:8181` | `http://localhost:8181` (Polaris CLI) | Client ID `root` | `POLARIS_ROOT_SECRET` in `.env` |
+| [Airflow UI](#48-airflow) | `kubectl -n airflow port-forward svc/airflow-api-server 8080:8080` | `http://localhost:8080` | `admin` | `AIRFLOW_ADMIN_PASSWORD` in `.env` |
 | [Catalog Postgres](#47-polaris) | `kubectl -n polaris exec -it polaris-postgres-0 -- psql -U postgres -d polaris` | — | `postgres` (or `polaris`) | `POLARIS_POSTGRES_PASSWORD` (or `POLARIS_PG_PASSWORD`) in `.env` |
 
 ### 4.1 AWS and Kubernetes
@@ -364,6 +411,20 @@ kubectl -n polaris port-forward svc/polaris 8181:8181
 The CLI reaches `localhost:8181` by default. The root client ID is `root`; the secret is
 `POLARIS_ROOT_SECRET` in `.env` (load it with `set -a; source .env; set +a`).
 
+### 4.8 Airflow
+
+The Airflow UI and REST API are served by the API server
+([D-071](docs/decisions/071-airflow-admin-login.md)). Forward its port in its own terminal
+([4.2 Port-Forwards](#42-port-forwards)):
+
+```bash
+kubectl -n airflow port-forward svc/airflow-api-server 8080:8080
+```
+
+Open `http://localhost:8080` and sign in as `admin` with `AIRFLOW_ADMIN_PASSWORD` from `.env`. Task
+logs are read from the S3 bucket `eks-for-data-airflow-283429977024`
+([D-072](docs/decisions/072-airflow-task-log-location.md)).
+
 ## 5. Teardown
 
 ### 5.1 Turn Off
@@ -401,8 +462,8 @@ deleting the cluster and the NAT Gateways.
 | EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
 | 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
 | VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
-| Bronze, silver and Airbyte buckets, emptied first (**bronze and silver data is lost**); IAM roles and policies (Airbyte, DuckDB, Spark, Polaris, silver data) | Cents (S3 storage) |
-| Argo CD, Airbyte, Postgres, DuckDB, Spark Operator, Polaris, the catalog Postgres and their EBS volumes | Extra Auto Mode node(s) + volumes |
+| Bronze, silver, Airbyte and Airflow buckets, emptied first (**bronze and silver data is lost**); IAM roles and policies (Airbyte, DuckDB, Spark, Polaris, silver data, Airflow) | Cents (S3 storage) |
+| Argo CD, Airbyte, Postgres, DuckDB, Spark Operator, Polaris, Airflow, the catalog and Airflow Postgres and their EBS volumes | Extra Auto Mode node(s) + volumes |
 
 What stays, at no cost:
 

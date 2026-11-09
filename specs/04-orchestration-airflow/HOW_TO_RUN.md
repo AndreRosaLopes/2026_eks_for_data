@@ -45,3 +45,13 @@ and the GitHub CLI (`gh`) logged in with the `write:packages` scope.
 5. Only after the first push: make the package public on GitHub (**Your profile** → **Packages** →
    `airflow` → **Package settings** → **Change visibility** → **Public**), so the cluster pulls it
    without credentials ([D-047](../../docs/decisions/047-spark-dependencies.md)).
+
+## 2. Run the Smoke Test DAG
+
+Runs [`smoke_test`](../../pipelines/airflow/dags/smoke_test.py), a DAG with one task that prints a
+line. It checks that Airflow reads DAGs from Git, runs each task in its own pod and keeps the task
+log in S3. Takes about 1 minute; safe to run again.
+
+1. Open the Airflow UI ([How to Run, 4.8 Airflow](../../HOW_TO_RUN.md#48-airflow)).
+2. In **Dags**, open `smoke_test`, turn on its toggle (new DAGs start paused) and click **Trigger**.
+3. Open the run, then the task `hello`, then **Logs**.
