@@ -1,6 +1,6 @@
 # 03.04 — Spark Operator and Bronze Read Job: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 ## Design
@@ -44,10 +44,10 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 | 1 | Automated | Script ConfigMap renders | `kubectl kustomize pipelines/spark` | ConfigMap `spark-jobs` holding `read_bronze_orders.py` | Pass: renders ConfigMap `spark-jobs` in namespace `spark` with `read_bronze_orders.py`, fixed name |
 | 2 | Automated | Operator deployed | `kubectl -n argocd get applications`; `kubectl -n spark-operator get pods` | `spark-operator` and `spark-jobs` Synced and Healthy; controller and webhook pods Running | Pass: both Synced and Healthy; controller and webhook Running |
 | 3 | Automated | Job identity | `kubectl -n spark get serviceaccount spark -o yaml` | Annotation `eks.amazonaws.com/role-arn` with `eks-for-data-spark` | Pass: `arn:aws:iam::283429977024:role/eks-for-data-spark` |
-| 4 | Manual | Job runs | `kubectl apply -f pipelines/spark/read-bronze-orders.yaml`, then `kubectl -n spark get sparkapplication` | State `COMPLETED` | Partial (2026-11-09, run by the agent with bronze empty). Run 1: `FAILED`, `NoClassDefFoundError: org/apache/hc/client5/http/ConnectionKeepAliveStrategy` (HttpClient 5 jars missing; fixed in the image, D-052 update). Run 2: `FAILED` with `PATH_NOT_FOUND` on the bronze path, as expected for an empty bucket: S3A authenticated through IRSA and listed S3, no `AccessDenied`. `COMPLETED` pending data in bronze |
-| 5 | Manual | Job reads bronze | Driver log (`kubectl -n spark logs`); DuckDB count of bronze `orders` (lab02 query) | Both counts printed; the row count equals DuckDB's (this also proves IRSA, D-058, and S3A on SDK 2.54.17, D-052) | Pending |
-| 6 | Automated | No memory failures | `kubectl -n spark get pods` and pod events | No pod `OOMKilled` or `Evicted` (the D-018 revisit trigger) | Pass for the empty-bronze run (driver ended `Error` from `PATH_NOT_FOUND`, no OOM or eviction); repeat with data |
-| 7 | Manual | Argo CD UI | Argo CD UI → Applications | `spark-operator` and `spark-jobs` Synced and Healthy | Pending |
+| 4 | Manual | Job runs | `kubectl apply -f pipelines/spark/read-bronze-orders.yaml`, then `kubectl -n spark get sparkapplication` | State `COMPLETED` | Partial (2026-11-09, run by the agent with bronze empty). Run 1: `FAILED`, `NoClassDefFoundError: org/apache/hc/client5/http/ConnectionKeepAliveStrategy` (HttpClient 5 jars missing; fixed in the image, D-052 update). Run 2: `FAILED` with `PATH_NOT_FOUND` on the bronze path, as expected for an empty bucket: S3A authenticated through IRSA and listed S3, no `AccessDenied`. Pass on run 3, after the lab02 sync: `COMPLETED` in 135 s |
+| 5 | Manual | Job reads bronze | Driver log (`kubectl -n spark logs`); DuckDB count of bronze `orders` (lab02 query) | Both counts printed; the row count equals DuckDB's (this also proves IRSA, D-058, and S3A on SDK 2.54.17, D-052) | Pass (run by the agent on 2026-11-09): driver log `bronze orders: rows=1366377 distinct_orderkey=1366377`; DuckDB bronze count 1,366,377 = Postgres `oltp.orders` |
+| 6 | Automated | No memory failures | `kubectl -n spark get pods` and pod events | No pod `OOMKilled` or `Evicted` (the D-018 revisit trigger) | Pass: empty-bronze run and run with data (driver `Completed`); no `OOMKilled` or `Evicted` event |
+| 7 | Manual | Argo CD UI | Argo CD UI → Applications | `spark-operator` and `spark-jobs` Synced and Healthy | Pass: confirmed by the user on 2026-11-09 |
 
 ## Teardown
 
