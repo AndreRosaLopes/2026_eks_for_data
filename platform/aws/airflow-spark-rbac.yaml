@@ -9,6 +9,10 @@ rules:
   - apiGroups: ["sparkoperator.k8s.io"]
     resources: ["sparkapplications"]
     verbs: ["create", "get", "list", "watch", "patch", "delete"]
+  # The operator reads the job state through the status subresource while it waits
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkapplications/status"]
+    verbs: ["get"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch"]
