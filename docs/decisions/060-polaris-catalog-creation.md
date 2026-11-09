@@ -32,6 +32,17 @@ installed on the user's computer.
 - **Chosen:** A
 - **Reason:** follows the recommendation.
 
+## Update — 2026-11-09: Catalog Name Chosen in the Lab
+
+The title and context name the catalog `silver`. The name is only a label: no infrastructure refers
+to it, and any catalog whose base location is inside the silver bucket works with the silver data
+role ([D-049](049-silver-storage-credentials.md)).
+
+- **Change:** the catalog name is not fixed in the spec; the user chooses it when running
+  `polaris catalogs create` in the lab, and the Spark job and DuckDB use the same name.
+- **Unchanged:** the client (`polaris catalogs create`), the base location in the silver bucket and
+  the role `eks-for-data-silver-data`.
+
 ## Sources
 
 - [Polaris 1.8.0: Creating a Catalog (CLI example)](https://github.com/apache/polaris/blob/apache-polaris-1.8.0/site/content/in-dev/unreleased/getting-started/creating-a-catalog/_index.md)
