@@ -55,6 +55,9 @@ Spark.
 - [D-056 — Spark Namespace Layout](../../docs/decisions/056-spark-namespace-layout.md)
 - [D-057 — How a Spark Job Run Is Started](../../docs/decisions/057-spark-job-run-start.md)
 - [D-058 — How Spark Gets AWS Credentials to Read Bronze](../../docs/decisions/058-spark-s3a-credentials.md)
+- [D-059 — How the Polaris Realm Is Bootstrapped](../../docs/decisions/059-polaris-realm-bootstrap.md)
+- [D-060 — How the `silver` Catalog Is Created in Polaris](../../docs/decisions/060-polaris-catalog-creation.md)
+- [D-061 — Catalog Database User for Polaris](../../docs/decisions/061-polaris-database-user.md)
 
 **Divergences resolved (principle 7):** README §2 listed Trino and/or Spark as processing engine and
 dbt for transformation, and §3 listed phase 03 as Trino and dbt and phase 04 as Airflow only. Updated
@@ -69,5 +72,5 @@ future tools.
 | 03.02 | [Silver bucket and IRSA roles](02-silver-bucket-and-irsa/spec.md): silver bucket and IRSA roles for Spark and Polaris (Terraform) | In progress |
 | 03.03 | [Spark image](03-spark-image/spec.md): Dockerfile, built locally and pushed to `ghcr.io` | In progress |
 | 03.04 | [Spark Operator](04-spark-operator/spec.md) via Argo CD; a job reads bronze `orders` and prints counts | In progress |
-| 03.05 | Catalog Postgres and Polaris via Argo CD; warehouse on `silver` | To do |
+| 03.05 | [Catalog Postgres and Polaris](05-catalog-postgres-and-polaris/spec.md) via Argo CD; warehouse on `silver` | In progress |
 | 03.06 | Dedup job: bronze `orders` → Iceberg `silver.orders`; DuckDB reads it | To do |
