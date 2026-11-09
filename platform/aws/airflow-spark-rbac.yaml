@@ -1,0 +1,37 @@
+# Lets Airflow run Spark jobs in namespace spark (step 04.04): task pods create the SparkApplication
+# and the triggerer follows it while the task is deferred (D-074). Only in namespace spark.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow-spark-jobs
+  namespace: spark
+rules:
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkapplications"]
+    verbs: ["create", "get", "list", "watch", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow-spark-jobs
+  namespace: spark
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: airflow-spark-jobs
+subjects:
+  - kind: ServiceAccount
+    name: airflow-worker-kubernetes
+    namespace: airflow
+  - kind: ServiceAccount
+    name: airflow-triggerer
+    namespace: airflow

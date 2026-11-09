@@ -88,10 +88,13 @@ spec:
             annotations:
               eks.amazonaws.com/role-arn: arn:aws:iam::283429977024:role/eks-for-data-airflow
 
-        # AWS connection for the logs, with no keys: credentials come from IRSA
         env:
+          # AWS connection for the logs, with no keys: credentials come from IRSA
           - name: AIRFLOW_CONN_AWS_LOGS
             value: '{"conn_type": "aws", "extra": {"region_name": "us-east-1"}}'
+          # Kubernetes connection for the Spark DAG (04.04): Airflow's own ServiceAccount, no credentials
+          - name: AIRFLOW_CONN_KUBERNETES_DEFAULT
+            value: '{"conn_type": "kubernetes", "extra": {"in_cluster": true}}'
 
         config:
           # DAGs read from this public repository with versioning (D-067)

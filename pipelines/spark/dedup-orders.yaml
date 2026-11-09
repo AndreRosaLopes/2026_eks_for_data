@@ -1,6 +1,6 @@
-# Deduplicates bronze orders into an Iceberg table in Polaris (step 03.06). Applied by the user with
-# kubectl (D-057), after setting the arguments chosen in the lab:
-#   kubectl apply -f pipelines/spark/dedup-orders.yaml
+# Deduplicates bronze orders into an Iceberg table in Polaris (step 03.06). A template (D-073): Airflow
+# fills in the three arguments from the DAG run parameters (DAG spark_dedup_orders); to run it by hand,
+# fill them in first (phase 03 How to Run, 6. Run the Dedup Job).
 apiVersion: sparkoperator.k8s.io/v1beta2
 kind: SparkApplication
 metadata:
@@ -15,11 +15,11 @@ spec:
   imagePullPolicy: Always
   # Script from ConfigMap spark-jobs (D-048)
   mainApplicationFile: local:///opt/spark/jobs/dedup_orders.py
-  # Catalog, namespace and table, chosen in the lab
+  # Catalog, namespace and table, chosen in the lab (D-073)
   arguments:
-    - "<catalog>"
-    - "<namespace>"
-    - "<table>"
+    - "{{ params.catalog }}"
+    - "{{ params.namespace }}"
+    - "{{ params.table }}"
   restartPolicy:
     type: Never
   sparkConf:
