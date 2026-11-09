@@ -184,8 +184,8 @@ Run every command in Git Bash, from the repository root, one block at a time.
 ### 03.05 — Catalog Postgres and Polaris
 
 1. Bootstrap the realm: [Run, 3. Bootstrap the Polaris Realm](HOW_TO_RUN.md#3-bootstrap-the-polaris-realm).
-   - Expected result: `Realm 'POLARIS' successfully bootstrapped.`, then `pod "polaris-bootstrap"
-     deleted`.
+   - Expected result: `Realm 'POLARIS' successfully bootstrapped.`, `Bootstrap completed
+     successfully.`, then `pod "polaris-bootstrap" deleted from polaris namespace`.
 
 2. Create a test catalog named `verify`: [Run, 4. Create a Catalog](HOW_TO_RUN.md#4-create-a-catalog),
    steps 1 to 4, with `verify` in place of `<catalog>`.

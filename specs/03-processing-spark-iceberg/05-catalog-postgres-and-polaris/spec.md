@@ -1,6 +1,6 @@
 # 03.05 — Catalog Postgres and Polaris: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 ## Design
@@ -41,12 +41,12 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 |---|---|---|---|---|---|
 | 1 | Automated | Applications synced | `kubectl -n argocd get applications` | `polaris-postgres` and `polaris` Synced and Healthy | Pass: both Synced and Healthy; `polaris` and `polaris-postgres-0` Running |
 | 2 | Automated | Database ready | `psql` in `polaris-postgres-0` as `polaris` | Schema `polaris_schema` exists; `polaris` is not a superuser | Pass: login as `polaris` works; `rolsuper` = false; `polaris_schema` owned by `polaris` |
-| 3 | Manual | Realm bootstrap | `kubectl run` of the admin tool | `Realm 'POLARIS' successfully bootstrapped` | Pending |
-| 4 | Manual | Catalog creation | Port-forward, then `polaris catalogs create`, then `polaris catalogs list` | The catalog is listed with its silver base location and role | Pending |
-| 5 | Automated | Credential vending | Iceberg REST API: create a test namespace and table, asking for vended credentials | Response has temporary S3 credentials; the table's metadata file is in silver (this also covers 03.02 check 4) | Pending |
-| 6 | Automated | Cleanup of the test | Iceberg REST API: drop the test table and namespace | Both removed | Pending |
-| 7 | Automated | No memory failures | `kubectl -n polaris get pods` and pod events | No pod `OOMKilled` or `Evicted` (D-018) | Pending |
-| 8 | Manual | AWS console | S3 → silver bucket, after check 5 | The test table's metadata file is present | Pending |
+| 3 | Manual | Realm bootstrap | `kubectl run` of the admin tool | `Realm 'POLARIS' successfully bootstrapped` | Pass: run by the user on 2026-11-09: `Realm 'POLARIS' successfully bootstrapped.`, `Bootstrap completed successfully.` |
+| 4 | Manual | Catalog creation | Port-forward, then `polaris catalogs create`, then `polaris catalogs list` | The catalog is listed with its silver base location and role | Pass: run by the agent at the user's request: catalog `verify`, base location `s3://eks-for-data-silver-283429977024/verify`, `roleArn` `eks-for-data-silver-data`, region `us-east-1`, `stsUnavailable` false |
+| 5 | Automated | Credential vending | Iceberg REST API: create a test namespace and table, asking for vended credentials | Response has temporary S3 credentials; the table's metadata file is in silver (this also covers 03.02 check 4) | Pass: root's `catalog_admin` has no data privileges by default (403 on `CREATE_TABLE_DIRECT_WITH_WRITE_DELEGATION`), so `CATALOG_MANAGE_CONTENT` was granted on test catalog `verify`; then table `vending_test.t` was created, the response had `s3.access-key-id`, `s3.secret-access-key`, `s3.session-token` and `s3.session-token-expires-at-ms`, and `verify/vending_test/t/metadata/00000-….metadata.json` (739 bytes) is in silver |
+| 6 | Automated | Cleanup of the test | Iceberg REST API: drop the test table and namespace | Both removed | Pass: drop with purge refused (403; Polaris default `DROP_WITH_PURGE_ENABLED` off), so the table was dropped without purge; table and namespace removed (HTTP 204), namespace list empty. The 739-byte metadata file stays in silver until teardown (`force_destroy`) |
+| 7 | Automated | No memory failures | `kubectl -n polaris get pods` and pod events | No pod `OOMKilled` or `Evicted` (D-018) | Pass: both pods Running with 0 restarts; no `OOMKilled` or `Evicted` event; no `ERROR` in the last 300 Polaris log lines |
+| 8 | Manual | AWS console | S3 → silver bucket, after check 5 | The test table's metadata file is present | Pass: confirmed by the user: `00000-784d1178-c245-4ff9-b2df-12a7c7dacc90.metadata.json`, 739 B |
 
 ## Teardown
 
