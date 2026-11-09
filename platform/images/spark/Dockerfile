@@ -28,3 +28,15 @@ ADD --chown=spark:spark --chmod=644 \
 ADD --chown=spark:spark --chmod=644 \
     --checksum=sha256:871e7b53b7329bd1fc19b7252dcadbaeb9cb072fde2b05fe005b815d64a9d50e \
     ${MAVEN}/software/amazon/awssdk/apache5-client/2.54.17/apache5-client-2.54.17.jar /opt/spark/jars/
+
+# Apache HttpClient 5, required by apache5-client and not in the SDK bundle; versions from the
+# SDK 2.54.17 POM (D-052, update of 2026-11-09)
+ADD --chown=spark:spark --chmod=644 \
+    --checksum=sha256:bdef5f8841145cd76c4c605ff301bc840eea0d5292332b7b892a93316c0d8ee1 \
+    ${MAVEN}/org/apache/httpcomponents/client5/httpclient5/5.6.4/httpclient5-5.6.4.jar /opt/spark/jars/
+ADD --chown=spark:spark --chmod=644 \
+    --checksum=sha256:18bfbbabb478dfb67f31aeaf428c387f3c3df654582e1309f708ee1f3086830a \
+    ${MAVEN}/org/apache/httpcomponents/core5/httpcore5/5.4.3/httpcore5-5.4.3.jar /opt/spark/jars/
+ADD --chown=spark:spark --chmod=644 \
+    --checksum=sha256:c7db7026b8e2dea39132b04a6069f6671e2858309b20a146ec5c7dd6ed73a0b6 \
+    ${MAVEN}/org/apache/httpcomponents/core5/httpcore5-h2/5.4.3/httpcore5-h2-5.4.3.jar /opt/spark/jars/
