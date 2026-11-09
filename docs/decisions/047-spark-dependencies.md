@@ -1,6 +1,6 @@
 # D-047 — Spark Dependencies
 
-Status: Accepted
+Status: Superseded by D-055
 Date: 2026-11-02
 Phase: specs/03-processing-spark-iceberg
 
