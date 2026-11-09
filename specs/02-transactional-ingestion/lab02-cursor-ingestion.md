@@ -60,19 +60,23 @@ Follow [How to Run, 4.4 Airbyte](../../HOW_TO_RUN.md#44-airbyte).
 | Field | Value |
 |---|---|
 | Streams | All 8 (`customer`, `lineitem`, `nation`, `orders`, `part`, `partsupp`, `region`, `supplier`), selected |
-| Sync mode | **Incremental \| Append** for each stream |
-| Cursor field | `updated_at` for each stream ([D-028](../../docs/decisions/028-lab02-cursor.md)) |
+| Select Sync Mode | **Append Historical Changes** |
+| Append mode | **Append new rows and updates only** (Incremental \| Append) for each stream |
+| Cursor | `updated_at` for each stream ([D-028](../../docs/decisions/028-lab02-cursor.md)) |
 | Primary key | As detected from the table |
+
+Each stream shows **cursor missing** in red until its cursor is chosen: open the stream's
+**Cursor** field and select `updated_at`. **Next** is enabled once all 8 streams have it.
 
 Then **Next** → **Configure connection**:
 
 | Field | Value |
 |---|---|
+| Schedule type | **Manual** |
 | Destination Namespace | **Source-defined** (writes to `oltp_cursor/oltp/<table>/`) |
-| When the source schema changes | **Propagate field changes only** |
-| Be notified when schema changes occur | Off |
-| Backfill new or renamed columns | Off |
-| Schedule | **Manual** |
+| Advanced settings: When the source schema changes, I want to | **Propagate field changes only** |
+| Advanced settings: Be notified when schema changes occur | Off |
+| Advanced settings: Backfill new or renamed columns | Off |
 
 **Set up connection**, then **Sync now**. Expected: the sync ends as **Succeeded** (several minutes:
 it reads about 1.37 million orders and 6 million line items).
