@@ -19,7 +19,8 @@ data, use the [DuckDB UI](../../HOW_TO_RUN.md#46-duckdb-ui).
 
 [01-generate-tpch.sql](../../pipelines/tpch/01-generate-tpch.sql) writes TPC-H into the `tpch`
 schema (about 1 minute). The scale factor is the line `SET VARIABLE sf = 1;` in the file. Running it
-again replaces the tables.
+again replaces the tables. Sections 1 and 2, with their expected results, form
+[Lab 00 — TPC-H Generation](lab00-tpch-generation.md).
 
 ```bash
 MSYS_NO_PATHCONV=1 kubectl -n duckdb exec -i deploy/duckdb -- /duckdb < pipelines/tpch/01-generate-tpch.sql
