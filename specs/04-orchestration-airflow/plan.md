@@ -46,6 +46,8 @@ replaces the manual "Sync now" in Airbyte and the manual `kubectl apply` of D-05
 - [D-068 — Airflow Base Image Variant](../../docs/decisions/068-airflow-base-image-variant.md)
 - [D-069 — Airflow Base Image Pinning](../../docs/decisions/069-airflow-base-image-pinning.md)
 - [D-070 — How the Airbyte Provider Is Installed in the Image](../../docs/decisions/070-airbyte-provider-constraints.md)
+- [D-071 — Airflow Admin Login](../../docs/decisions/071-airflow-admin-login.md)
+- [D-072 — Location of the Airflow Task Logs](../../docs/decisions/072-airflow-task-log-location.md)
 
 **Divergence resolved (principle 7):** README §3 said the phase 04 steps were "to be defined";
 step 04.01 updates that row from this plan.
@@ -56,7 +58,7 @@ step 04.01 updates that row from this plan.
 |---|---|---|
 | 04.01 | [Roadmap](01-roadmap/spec.md): README §3, the phase 04 row updated from this plan | Done |
 | 04.02 | [Airflow image](02-airflow-image/spec.md): Dockerfile (Airflow 3.4.0 plus the Airbyte provider), built locally and pushed to `ghcr.io` | Done |
-| 04.03 | Airflow via Argo CD: metadata Postgres, KubernetesExecutor, task logs in S3 (IAM role), DAGs from Git; UI through port-forward | To do |
+| 04.03 | [Airflow via Argo CD](03-airflow-argo-cd/spec.md): metadata Postgres, KubernetesExecutor, task logs in S3 (IAM role), DAGs from Git; UI through port-forward | In progress |
 | 04.04 | Spark DAG: Airflow runs the dedup job and waits until it completes | To do |
 | 04.05 | Airbyte DAG and end to end: one DAG triggers the lab02 sync, then the dedup job; phase walkthrough | To do |
 
