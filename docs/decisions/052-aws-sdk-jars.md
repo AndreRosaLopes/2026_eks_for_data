@@ -39,6 +39,21 @@ processing per pull.
 - **Chosen:** B
 - **Reason:** follows the recommendation.
 
+## Update — 2026-11-09: Apache HttpClient 5 Jars
+
+Step 03.04 showed that B is incomplete: S3A failed to create its IRSA credentials provider with
+`NoClassDefFoundError: org/apache/hc/client5/http/ConnectionKeepAliveStrategy`. `apache5-client`
+depends on Apache HttpClient 5, which neither the SDK `bundle` nor Hadoop includes (Hadoop ships
+HttpClient 4).
+
+- **Change:** the image also gets `httpclient5` 5.6.4, `httpcore5` 5.4.3 and `httpcore5-h2` 5.4.3,
+  the versions the AWS SDK 2.54.17 POM sets (`httpcomponents.client5.version`,
+  `httpcomponents.core5.version`); 7 jars in total.
+- **Unchanged:** choice B, one SDK version (2.54.17) for S3A and Iceberg.
+- **Sources:** [`apache5-client` 2.54.17 POM](https://repo1.maven.org/maven2/software/amazon/awssdk/apache5-client/2.54.17/apache5-client-2.54.17.pom),
+  [`aws-sdk-java-pom` 2.54.17](https://repo1.maven.org/maven2/software/amazon/awssdk/aws-sdk-java-pom/2.54.17/aws-sdk-java-pom-2.54.17.pom),
+  [`httpclient5` 5.6.4 POM](https://repo1.maven.org/maven2/org/apache/httpcomponents/client5/httpclient5/5.6.4/httpclient5-5.6.4.pom).
+
 ## Sources
 
 - [Hadoop 3.4.1 `hadoop-aws` POM](https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.1/hadoop-aws-3.4.1.pom) and [`hadoop-project` POM](https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-project/3.4.1/hadoop-project-3.4.1.pom)
