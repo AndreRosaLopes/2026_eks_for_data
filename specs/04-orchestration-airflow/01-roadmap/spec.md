@@ -1,6 +1,6 @@
 # 04.01 — Roadmap: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [04 — Orchestration: Airflow for Airbyte and Spark](../plan.md)
 
 ## Design
@@ -30,8 +30,8 @@ Manual check" rule.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Roadmap row updated | `grep` the phase 04 row in `README.md` | The steps column lists the four steps of 04.02 to 04.05; no "To be defined" | Pending |
-| 2 | Automated | Phase pages linked | Check that the Run and Verify links in the home phase 04 row point to existing files | Both files exist | Pending |
+| 1 | Automated | Roadmap row updated | `grep` the phase 04 row in `README.md` | The steps column lists the four steps of 04.02 to 04.05; no "To be defined" | Pass: row 04 lists "Airflow image; Airflow with its metadata Postgres and task logs in S3; Spark DAG; Airbyte DAG, end to end"; no "To be defined" left in `README.md` |
+| 2 | Automated | Phase pages linked | Check that the Run and Verify links in the home phase 04 row point to existing files | Both files exist | Pass: both links resolve to existing files |
 
 ## Teardown
 
