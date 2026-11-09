@@ -1,6 +1,6 @@
 # 03.03 — Spark Image: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 ## Design
@@ -16,6 +16,7 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 | Image name | `ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0` | [D-054](../../../docs/decisions/054-spark-image-tag.md) |
 | Build and push | From the user's computer, with a GitHub token kept outside the repository | [D-055](../../../docs/decisions/055-spark-image-build.md) |
 | Visibility | Public, set once on GitHub | [D-047](../../../docs/decisions/047-spark-dependencies.md) |
+| Repository link | Label `org.opencontainers.image.source` pointing to this repository | — |
 
 ## Files
 
@@ -30,11 +31,11 @@ Phase: [03 — Processing: Spark and Iceberg](../plan.md)
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Image builds | `docker build` | Build succeeds | Pending |
-| 2 | Automated | Jars present | `docker run` listing `/opt/spark/jars` | The 4 jars, one AWS SDK version | Pending |
-| 3 | Automated | Spark loads S3A and Iceberg | `docker run` with `pyspark` loading `S3AFileSystem` and `SparkCatalog` | Both classes load | Pending |
-| 4 | Manual | Push | `docker login ghcr.io`, then `docker push` | Push completes | Pending |
-| 5 | Manual | Public image | GitHub → Package settings → Change visibility → Public; then `docker pull` after `docker logout ghcr.io` | Pull succeeds without login | Pending |
+| 1 | Automated | Image builds | `docker build` | Build succeeds | Pass: built on 2026-11-09 with Docker 29.3.1 (amd64); every jar checksum matched |
+| 2 | Automated | Jars present | `docker run` listing `/opt/spark/jars` | The 4 jars, one AWS SDK version | Pass: `iceberg-spark-runtime-4.0_2.13-1.12.0`, `hadoop-aws-3.4.1`, `bundle-2.54.17`, `apache5-client-2.54.17`; no other AWS SDK jar |
+| 3 | Automated | Spark loads S3A and Iceberg | `docker run` with `pyspark` loading `S3AFileSystem` and `SparkCatalog` | Both classes load | Pass: `S3AFileSystem`, `SparkCatalog` and `S3TransferManager` loaded |
+| 4 | Manual | Push | `docker login ghcr.io`, then `docker push` | Push completes | Pass: pushed by the agent on 2026-11-09 with the `gh` token; digest `sha256:98168e63dbe79e22d69b03d3fe38ef73f7cace1f17cb4595d331d89c6fe0c250` |
+| 5 | Manual | Public image | GitHub → Package settings → Change visibility → Public; then `docker pull` after `docker logout ghcr.io` | Pull succeeds without login | Pass: package set to Public by the user on 2026-11-09; after `docker logout ghcr.io`, the pull returned digest `sha256:98168e63…`, and an anonymous manifest request returned HTTP 200 |
 
 ## Teardown
 

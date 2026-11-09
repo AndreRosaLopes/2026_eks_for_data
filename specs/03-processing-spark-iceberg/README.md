@@ -138,6 +138,32 @@ Run every command in Git Bash, from the repository root, one block at a time.
    - Expected result: the bucket and the three roles exist; the trust policy names only
      `arn:aws:iam::283429977024:role/eks-for-data-polaris`.
 
+### 03.03 — Spark Image
+
+1. Build, log in and push the image: [Run, 1. Build and Push the Spark Image](HOW_TO_RUN.md#1-build-and-push-the-spark-image),
+   steps 1 to 4.
+   - Expected result: the build ends with `naming to ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0`;
+     `docker login` prints `Login Succeeded`; `docker push` ends with a line
+     `4.0.5-iceberg1.12.0: digest: sha256:...`.
+
+2. Make the package public: [Run, 1. Build and Push the Spark Image](HOW_TO_RUN.md#1-build-and-push-the-spark-image),
+   step 5.
+   - Expected result: GitHub shows the `spark` package as **Public**.
+
+3. Pull the image without credentials:
+
+   ```bash
+   docker logout ghcr.io
+   ```
+
+   ```bash
+   docker pull ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0
+   ```
+
+   - Expected result: `Removing login credentials for ghcr.io`, then the pull ends with
+     `Status: Image is up to date for ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0` (or
+     `Downloaded newer image`), with no `unauthorized` error.
+
 ## End-to-End Verification
 
 Written on the last step: walkthrough proving the phase "Done When".
@@ -148,3 +174,4 @@ The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown)
 teardown is in its spec:
 
 - [03.02 — Silver Bucket and IRSA Roles](02-silver-bucket-and-irsa/spec.md#teardown)
+- [03.03 — Spark Image](03-spark-image/spec.md#teardown)

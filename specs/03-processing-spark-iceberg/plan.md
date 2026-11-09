@@ -70,8 +70,8 @@ future tools.
 | # | Step | Status |
 |---|---|---|
 | 03.01 | Roadmap: README §2 (Spark; Iceberg and REST catalog) and §3 (phases 03 and 04) updated | Done |
-| 03.02 | [Silver bucket and IRSA roles](02-silver-bucket-and-irsa/spec.md): silver bucket and IRSA roles for Spark and Polaris (Terraform) | In progress |
-| 03.03 | [Spark image](03-spark-image/spec.md): Dockerfile, built locally and pushed to `ghcr.io` | In progress |
+| 03.02 | [Silver bucket and IRSA roles](02-silver-bucket-and-irsa/spec.md): silver bucket and IRSA roles for Spark and Polaris (Terraform) | Done |
+| 03.03 | [Spark image](03-spark-image/spec.md): Dockerfile, built locally and pushed to `ghcr.io` | Done |
 | 03.04 | [Spark Operator](04-spark-operator/spec.md) via Argo CD; a job reads bronze `orders` and prints counts | In progress |
 | 03.05 | [Catalog Postgres and Polaris](05-catalog-postgres-and-polaris/spec.md) via Argo CD; warehouse on `silver` | In progress |
 | 03.06 | [Dedup job](06-dedup-job-and-duckdb/spec.md): bronze `orders` → Iceberg `silver.orders`; DuckDB reads it | In progress |
