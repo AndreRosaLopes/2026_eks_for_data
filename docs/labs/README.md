@@ -4,7 +4,7 @@ Data engineering training on the platform in this repository: EKS, Karpenter, Ar
 Pod Identity, Airbyte with a Postgres CDC source (TPC-H data), DuckDB, an S3 bronze layer, the
 Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
-> Delta Lake is not part of the platform yet; lab 3.13 requires adding it.
+> Delta Lake is not part of the platform yet; lab 3.15 requires adding it.
 
 ## 1. Infrastructure: learn Kubernetes
 
@@ -26,40 +26,56 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
 ## 2. Ingestion: Airbyte and its concepts
 
-| # | Lab | What the student does and learns |
-|---|---|---|
-| 2.1 | Ingestion concepts | Batch vs. streaming, ELT (Extract, Load, Transform) vs. ETL, push vs. pull, the medallion architecture (bronze, silver, gold). |
-| 2.2 | Airbyte architecture | Source, destination, connection, and the pods that run each sync (orchestrator, source, destination). Where state is stored. |
-| 2.3 | First connection in the UI | Public API source to S3 bronze. Look at the files, formats and partitioning it creates. |
-| 2.4 | Sync modes | Full refresh (overwrite or append) vs. incremental (append or append + deduped). Pick a cursor and see what each mode does with updates and deletes. |
-| 2.5 | CDC (Change Data Capture) on Postgres | WAL (Write-Ahead Log), logical replication, publication, replication slot, `REPLICA IDENTITY`. The `_ab_cdc_*` metadata columns. |
-| 2.6 | Simulating a day of changes | Run the day-simulation scripts (inserts, updates, deletes on TPC-H tables) and follow them into bronze. |
-| 2.7 | Risks of a replication slot | Pause the sync and watch WAL pile up. Then see the slot's WAL limit and how to recover. |
-| 2.8 | Schema evolution | Add, drop or rename a column at the source and see how Airbyte propagates it. Compare the schema-change policies. |
-| 2.9 | Idempotency and reprocessing | Reset a stream, resync it, find duplicates, and see why bronze is append-only and versioned. |
-| 2.10 | Exploring bronze with DuckDB | Query Parquet/JSONL on S3, count records, inspect CDC metadata. |
-| 2.11 | Connections as code | UI vs. API vs. declarative configuration, and why it matters for reproducibility. |
-| 2.12 | Monitoring syncs | Logs, failures, retries, and the sync duration and row count of each run. |
+| # | Topic | Concept | Practice on this platform |
+|---|---|---|---|
+| 2.1 | Ingestion concepts | Batch vs. streaming, ELT (Extract, Load, Transform) vs. ETL, push vs. pull, the medallion architecture (bronze, silver, gold). | Map each concept to the platform's components (Airbyte, S3 bronze, Spark, Iceberg). |
+| 2.2 | Airbyte architecture | Source, destination, connection, and the pods that run each sync (orchestrator, source, destination). Where state is stored. | Run a sync, watch its pods appear and finish, and find where its state is stored. |
+| 2.3 | First connection in the UI | The files, formats and partitioning a connection creates in the destination. | Create a public API source to S3 bronze connection in the UI and look at the files it writes. |
+| 2.4 | Sync modes | Full refresh (overwrite or append) vs. incremental (append or append + deduped), and the cursor. | Pick a cursor and see what each mode does with updates and deletes. |
+| 2.5 | CDC (Change Data Capture) on Postgres | WAL (Write-Ahead Log), logical replication, publication, replication slot, `REPLICA IDENTITY`. | Set up the Postgres CDC source and inspect the `_ab_cdc_*` metadata columns in bronze. |
+| 2.6 | Simulating a day of changes | How inserts, updates and deletes at the source reach bronze. | Run the day-simulation scripts (inserts, updates, deletes on TPC-H tables) and follow them into bronze. |
+| 2.7 | Risks of a replication slot | A slot that is not consumed keeps WAL on disk; the slot's WAL limit protects the database. | Pause the sync and watch WAL pile up. Then see the slot's WAL limit and how to recover. |
+| 2.8 | Schema evolution | Airbyte's schema-change policies. | Add, drop or rename a column at the source, see how Airbyte propagates it, and compare the policies. |
+| 2.9 | Idempotency and reprocessing | Why bronze is append-only and versioned. | Reset a stream, resync it and find duplicates. |
+| 2.10 | Exploring bronze with DuckDB | Querying files in place on S3, with no load step. | Query Parquet/JSONL on S3, count records, inspect CDC metadata. |
+| 2.11 | Connections as code | UI vs. API vs. declarative configuration, and why it matters for reproducibility. | Compare a connection created in the UI with one defined through the API or declarative configuration. |
+| 2.12 | Monitoring syncs | Logs, failures and retries of each sync. | Read the logs, sync duration and row count of each run. |
+| 2.13 | CDC heartbeat | On a database with little traffic, WAL builds up because the replication slot does not advance. A heartbeat table that Airbyte keeps writing to fixes this. | Create an `airbyte_heartbeat` table, add it to the publication, set `heartbeat_action_query`, and compare WAL size with and without it. |
+| 2.14 | TOAST columns | TOAST is how Postgres stores large values outside the row. With the default `REPLICA IDENTITY`, an unchanged TOAST value is left out of the WAL, so the CDC record arrives without it. | Update a row that has a large text column and see what reaches bronze. Then try `REPLICA IDENTITY FULL`. |
+| 2.15 | Initial load vs. CDC | A large first snapshot can block streaming. Airbyte's WASS algorithm and the "Initial Load Timeout in Hours" setting (default 8) deal with this. | Lower the timeout and watch the snapshot split into several syncs. |
+| 2.16 | Refreshes and generations | "Refresh and remove records" vs. "refresh and retain records", the `_airbyte_generation_id` column, and resumable full refresh with synthetic cursors. | Run both kinds of refresh, then look at the generation IDs in bronze. |
+| 2.17 | Mappers and PII | Mappers transform each stream during the sync: hash, encrypt (RSA), rename fields, filter rows. PII (personally identifiable information) is data that identifies a person. Do not map a cursor or primary key field, and remember that hashing does not change data that is already loaded. | Hash `c_phone` in TPC-H `customer`, then see why the destination has to be cleared. |
+| 2.18 | Connector Builder and low-code CDK | Build an API connector without code with the CDK (Connector Development Kit). Pagination can be offset, page number, cursor or header link. Errors are retried with exponential backoff, and the wait time can be read from a rate-limit header. | Build a connector for a public API that has pagination and rate limits. |
+| 2.19 | Ingesting straight into Iceberg | Airbyte's S3 Data Lake destination writes Iceberg tables (REST, Glue or Nessie catalogs), with no Parquet-in-bronze step before Spark. | Compare it with the current bronze → Spark path. Check first whether Polaris is supported: the docs disagree. |
+| 2.20 | Debezium by comparison | Debezium is the CDC engine inside Airbyte. Incremental snapshots run in chunks (DBLog watermarks), are started from a signaling table, and run alongside streaming. Exactly-once delivery depends on Kafka Connect. | Not applicable. |
+| 2.21 | Data contracts | ODCS (Open Data Contract Standard) is a YAML file that defines a dataset's schema, quality rules, SLA and owner. A schema registry checks schema compatibility for each message. | Write an ODCS contract for `orders` and validate it with `datacontract lint`. |
+| 2.22 | Delivery semantics | At-most-once, at-least-once and exactly-once delivery, and why bronze is designed for at-least-once. | Interrupt a sync, rerun it and count duplicate keys in bronze. |
+| 2.23 | Late-arriving and out-of-order data | Event time vs. ingestion time, and why records can arrive late or out of order. | Compare `_ab_cdc_updated_at` with `_airbyte_extracted_at` in bronze. |
+| 2.24 | Checkpointing and backpressure | How a sync saves its state while it runs, and what happens when it fails halfway. | Cancel a sync halfway and see where the next one resumes. |
+| 2.25 | Event-driven file ingestion | S3 event notifications vs. polling for new files. | Not applicable. |
+| 2.26 | Freshness and volume | Data observability: alerts when a sync is late or brings in too few rows. | Compare the last sync time and row count of each stream with an expected threshold. |
 
 ## 3. Transformations: Spark, Delta and Iceberg
 
 | # | Lab | What the student does and learns |
 |---|---|---|
-| 3.1 | Spark fundamentals | Driver, executors, partitions, lazy evaluation, transformations vs. actions, DataFrame vs. SQL. |
-| 3.2 | Spark on Kubernetes | Spark Operator, the `SparkApplication` resource, its driver and executor pods, the image, how job code is delivered, and S3A credentials. |
-| 3.3 | Spark UI | Jobs, stages, tasks, the DAG (Directed Acyclic Graph) of each job, SQL plans, the shuffle, skew and spill. Reach it through `port-forward` and the History Server. |
-| 3.4 | Performance | Partitioning, `repartition` vs. `coalesce`, broadcast joins, AQE (Adaptive Query Execution), caching, executor sizing. Compare runs before and after in the Spark UI. |
-| 3.5 | Table formats | Why plain Parquet is not enough: ACID transactions, snapshots, metadata, manifests. |
-| 3.6 | Iceberg and its catalog | Polaris REST catalog, namespaces and tables, the metadata tree (`metadata.json`, manifest list, manifests, data files). |
-| 3.7 | Bronze to silver dedup | Keep the latest record per key from the CDC stream, handling deletes and ordering by `_ab_cdc_lsn`. |
-| 3.8 | `MERGE INTO` (upsert) | SCD1 (Slowly Changing Dimension type 1, overwrite in place) with `MERGE INTO`. Then check idempotency by running the job twice. |
-| 3.9 | SCD2 in Iceberg | Keep history with `valid_from`, `valid_to` and `is_current`, using the two-step pattern (close the current row, then insert the new one) or a single `MERGE` with a union. Test it with the simulated customer changes. |
-| 3.10 | Time travel and rollback | `VERSION AS OF`, `TIMESTAMP AS OF`, `rollback_to_snapshot`, tags and branches. |
-| 3.11 | Schema and partition evolution | Add a column, then change the partition spec without rewriting data (hidden partitioning). |
-| 3.12 | Table maintenance | Small files, `rewrite_data_files` (compaction), `expire_snapshots`, `remove_orphan_files`. Copy-on-write vs. merge-on-read. |
-| 3.13 | Delta Lake by comparison | Same SCD2 and `MERGE` in Delta. Compare the `_delta_log`, time travel, `OPTIMIZE`/Z-ORDER, `VACUUM`, catalogs, and what other engines can read each format. |
-| 3.14 | Gold layer | Aggregates and a star schema (fact and dimension tables) built from TPC-H, then queried from DuckDB or another engine through the catalog. |
-| 3.15 | Data quality | Checks for nulls, unique keys, referential integrity and row counts between layers. Fail the job when a check fails. |
+| 3.01 | Bronze to silver, day by day | Append each day's rows of the 8 tables from the date-cursor bronze to silver Iceberg tables, choosing the day's rows by ingestion time (`_airbyte_extracted_at`) in two ways: a watermark read from silver, or a timestamp passed to the job. Deduplicate within the day, trim text, and extract numbers with regex. Run 3 simulated days and a rerun. |
+| 3.02 | Bronze to silver with dirty data | Same as 3.01, after inserting invalid rows at the source: regex and allowed-value checks on `name`, `phone`, `mktsegment`, `orderpriority`, ranges and dates. Rows that fail go to a quarantine table (`<table>_rejected`). |
+| 3.03 | Spark fundamentals | Driver, executors, partitions, lazy evaluation, transformations vs. actions, DataFrame vs. SQL. |
+| 3.04 | Spark on Kubernetes | Spark Operator, the `SparkApplication` resource, its driver and executor pods, the image, how job code is delivered, and S3A credentials. |
+| 3.05 | Spark UI | Jobs, stages, tasks, the DAG (Directed Acyclic Graph) of each job, SQL plans, the shuffle, skew and spill. Reach it through `port-forward` and the History Server. |
+| 3.06 | Performance | Partitioning, `repartition` vs. `coalesce`, broadcast joins, AQE (Adaptive Query Execution), caching, executor sizing. Compare runs before and after in the Spark UI. |
+| 3.07 | Table formats | Why plain Parquet is not enough: ACID transactions, snapshots, metadata, manifests. |
+| 3.08 | Iceberg and its catalog | Polaris REST catalog, namespaces and tables, the metadata tree (`metadata.json`, manifest list, manifests, data files). |
+| 3.09 | Bronze to silver dedup | Keep the latest record per key from the CDC stream, handling deletes and ordering by `_ab_cdc_lsn`. |
+| 3.10 | `MERGE INTO` (upsert) | SCD1 (Slowly Changing Dimension type 1, overwrite in place) with `MERGE INTO`. Then check idempotency by running the job twice. |
+| 3.11 | SCD2 in Iceberg | Keep history with `valid_from`, `valid_to` and `is_current`, using the two-step pattern (close the current row, then insert the new one) or a single `MERGE` with a union. Test it with the simulated customer changes. |
+| 3.12 | Time travel and rollback | `VERSION AS OF`, `TIMESTAMP AS OF`, `rollback_to_snapshot`, tags and branches. |
+| 3.13 | Schema and partition evolution | Add a column, then change the partition spec without rewriting data (hidden partitioning). |
+| 3.14 | Table maintenance | Small files, `rewrite_data_files` (compaction), `expire_snapshots`, `remove_orphan_files`. Copy-on-write vs. merge-on-read. |
+| 3.15 | Delta Lake by comparison | Same SCD2 and `MERGE` in Delta. Compare the `_delta_log`, time travel, `OPTIMIZE`/Z-ORDER, `VACUUM`, catalogs, and what other engines can read each format. |
+| 3.16 | Gold layer | Aggregates and a star schema (fact and dimension tables) built from TPC-H, then queried from DuckDB or another engine through the catalog. |
+| 3.17 | Data quality | Checks for nulls, unique keys, referential integrity and row counts between layers. Fail the job when a check fails. |
 
 ## 4. Orchestration: Airflow
 
