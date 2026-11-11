@@ -59,7 +59,7 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
 | # | Lab | What the student does and learns |
 |---|---|---|
-| 3.01 | Bronze to silver, day by day | Append each day's rows of the 8 tables from the date-cursor bronze to silver Iceberg tables, choosing the day's rows by ingestion time (`_airbyte_extracted_at`) in two ways: a watermark read from silver, or a timestamp passed to the job. Deduplicate within the day, trim text, and extract numbers with regex. Run 3 simulated days and a rerun. |
+| 3.01 | Bronze to silver, day by day | Write each day's rows of the 8 tables from the date-cursor bronze to silver Iceberg tables, choosing the day's rows by ingestion time (`_airbyte_extracted_at`) in two ways: a watermark read from silver, or a time interval passed to the job. Keep each key's last state of the day, trim text, and extract numbers with regex. Partition silver by batch and overwrite the batch on each run, so reruns are idempotent. Declare each table's schema and cast bronze to it. Organize the code in three ways, one lab each: metadata-driven (A), one script per table (B), per-table spec and shared module (C). Run 3 simulated days and two reruns. |
 | 3.02 | Bronze to silver with dirty data | Same as 3.01, after inserting invalid rows at the source: regex and allowed-value checks on `name`, `phone`, `mktsegment`, `orderpriority`, ranges and dates. Rows that fail go to a quarantine table (`<table>_rejected`). |
 | 3.03 | Spark fundamentals | Driver, executors, partitions, lazy evaluation, transformations vs. actions, DataFrame vs. SQL. |
 | 3.04 | Spark on Kubernetes | Spark Operator, the `SparkApplication` resource, its driver and executor pods, the image, how job code is delivered, and S3A credentials. |
