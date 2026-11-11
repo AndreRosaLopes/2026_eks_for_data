@@ -25,7 +25,7 @@ with its prerequisites done.
 - **Treatments as rules:** a per-table treatment is a rule in the JSON, not code. This lab needs
   one kind of rule, `extract`: a regex group pulled out of a column into a new typed column. It
   covers `name_number` and the `orderpriority` split. Every table also gets the common treatments
-  (trim, `_batch`, `_loaded_at`) from the engine.
+  (trim, `_row_hash`, `_batch`, `_loaded_at`) from the engine.
 - **The contract is declared once:** the engine builds the `CREATE TABLE` and the casts from the
   same JSON columns.
 - **JSON, not YAML:** Python reads JSON with its standard library, so the Spark image needs no new
@@ -135,7 +135,7 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                        "silver_tables_a.json")) as file:
     TABLES = json.load(file)
 TECHNICAL = {"updated_at": "timestamp", "_airbyte_extracted_at": "timestamp",
-             "_batch": "timestamp", "_loaded_at": "timestamp"}
+             "_row_hash": "string", "_batch": "timestamp", "_loaded_at": "timestamp"}
 FIRST_BATCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 bronze, catalog, namespace, since, until = sys.argv[1:6]
 loaded_at = datetime.now(timezone.utc)
@@ -188,7 +188,8 @@ for name, spec in TABLES.items():
 ```
 
 **2.4 Cast, dedup and treat.** Cast to the JSON types (the bronze columns not listed are dropped),
-keep the last state per key, trim text, then apply the `extract` rules.
+keep the last state per key, trim text, take the row hash of the JSON `columns` (business columns
+only, in their order), then apply the `extract` rules.
 
 ```python
     in_bronze = {**spec["columns"], "updated_at": "timestamp",
@@ -198,6 +199,8 @@ keep the last state per key, trim text, then apply the `extract` rules.
         F.col("updated_at").desc(), extracted.desc())
     day = day.withColumn("_rank", F.row_number().over(latest)).where("_rank = 1").drop("_rank")
     day = day.select([F.trim(c).alias(c) if t == "string" else F.col(c) for c, t in day.dtypes])
+    values = [F.coalesce(F.col(c).cast("string"), F.lit("\u0000")) for c in spec["columns"]]
+    day = day.withColumn("_row_hash", F.sha2(F.concat_ws("\u001f", *values), 256))
     for rule in spec["extract"]:
         day = day.withColumn(
             rule["column"],

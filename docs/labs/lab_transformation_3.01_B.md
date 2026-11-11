@@ -19,7 +19,7 @@ with its prerequisites done.
 
   | File | Role |
   |---|---|
-  | `silver_b_<table>.py` (8 files) | Everything for one table: `CREATE TABLE`, read, cast and trim per column, dedup, treatments, write, log |
+  | `silver_b_<table>.py` (8 files) | Everything for one table: `CREATE TABLE`, read, cast and trim per column, dedup, row hash, treatments, write, log |
   | `bronze_to_silver_b.py` | Entry point: arguments, Spark session, calls the 8 scripts in order |
 
 - **Explicit:** each script reads top to bottom with no indirection; every column, type and
@@ -61,7 +61,7 @@ def run(spark, bronze, namespace, since, until, loaded_at):
           custkey bigint, name string, address string, nationkey bigint, phone string,
           acctbal decimal(15,2), mktsegment string, comment string, created_at date,
           name_number int,
-          updated_at timestamp, _airbyte_extracted_at timestamp,
+          updated_at timestamp, _airbyte_extracted_at timestamp, _row_hash string,
           _batch timestamp, _loaded_at timestamp)
         USING iceberg PARTITIONED BY (_batch)""")
 
@@ -98,6 +98,12 @@ def run(spark, bronze, namespace, since, until, loaded_at):
         F.col("updated_at").desc(), extracted.desc())
     day = day.withColumn("_rank", F.row_number().over(latest)).where("_rank = 1").drop("_rank")
 
+    # Row hash of the business columns, in contract order
+    business = ["custkey", "name", "address", "nationkey", "phone", "acctbal", "mktsegment",
+                "comment", "created_at"]
+    values = [F.coalesce(F.col(c).cast("string"), F.lit("\u0000")) for c in business]
+    day = day.withColumn("_row_hash", F.sha2(F.concat_ws("\u001f", *values), 256))
+
     # Treatments
     day = (day
            .withColumn("name_number", F.regexp_extract("name", r"#(\d+)$", 1).cast("int"))
@@ -126,8 +132,9 @@ change, from the table's line in the [Silver Contract](lab_transformation_3.01.m
 | What | Change |
 |---|---|
 | Docstring, `target`, bronze folder, log line | `customer` → the table name |
-| `CREATE TABLE` | The table's columns and derived columns, then the same 4 technical columns |
+| `CREATE TABLE` | The table's columns and derived columns, then the same 5 technical columns |
 | `select` | One line per column: `cast` to its type, wrapped in `F.trim` for `string` columns; keep the `updated_at` and `_airbyte_extracted_at` lines |
+| `business` | The table's columns from "Columns and types", in that order; never the derived or technical ones |
 | `Window.partitionBy` | The table's key (`"partkey", "suppkey"` for `partsupp`; `"orderkey", "linenumber"` for `lineitem`) |
 | Treatments | `supplier`: keep the `name_number` line. `orders`: replace it with the two lines below. Other tables: remove it |
 

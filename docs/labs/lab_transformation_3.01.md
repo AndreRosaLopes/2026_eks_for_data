@@ -40,8 +40,15 @@ validation.
   fails the run instead of reaching silver. Bronze columns not in the contract (Airbyte's
   `_airbyte_raw_id`, `_airbyte_meta`, `_airbyte_generation_id`) are dropped.
 - **Steps per table:** read the run's bronze rows → cast to the contract → keep the last state per
-  key → treatments → overwrite the batch → log. The order matters: dedup sorts by `updated_at`, so
-  types are enforced first.
+  key → trim → row hash → other treatments → overwrite the batch → log. The order matters: dedup
+  sorts by `updated_at`, so types are enforced first; the hash is taken from the cleaned values.
+- **Row hash (`_row_hash`):** a SHA-256 of the row's business columns, the contract columns in
+  their declared order, after cast and trim. It leaves out the control columns (`updated_at`,
+  `_airbyte_extracted_at`, `_batch`, `_loaded_at`) and the derived ones, which come from business
+  columns. Two rows with the same hash hold the same business values, so it tells a real change
+  from a row read again, and lets later labs (`MERGE INTO`, SCD) compare versions with one column.
+  The values are joined with a separator that does not occur in the data (`\u001f`), and a null
+  becomes `\u0000`, so a null never matches an empty text.
 - **Batch:** the rows of one run. Each silver table is partitioned by `_batch`, the start of the
   run's interval, so each run writes its own partition. A key updated on 3 days has 3 rows in
   silver, one per batch. Keeping only the latest version is covered in the next labs
@@ -110,8 +117,9 @@ Types follow the TPC-H specification: keys `bigint`, money and quantities `decim
 | `orders` | `orderkey` | `orderkey bigint, custkey bigint, orderstatus string, totalprice decimal(15,2), orderdate date, orderpriority string, clerk string, shippriority int, comment string` | `priority_number int, priority_label string` |
 | `lineitem` | `orderkey, linenumber` | `orderkey bigint, partkey bigint, suppkey bigint, linenumber int, quantity decimal(15,2), extendedprice decimal(15,2), discount decimal(15,2), tax decimal(15,2), returnflag string, linestatus string, shipdate date, commitdate date, receiptdate date, shipinstruct string, shipmode string, comment string` | — |
 
-Every table also has `updated_at timestamp`, `_airbyte_extracted_at timestamp`, `_batch timestamp`
-and `_loaded_at timestamp`, and is partitioned by `_batch`.
+Every table also has `updated_at timestamp`, `_airbyte_extracted_at timestamp`,
+`_row_hash string`, `_batch timestamp` and `_loaded_at timestamp`, and is partitioned by `_batch`.
+`_row_hash` covers the columns of the "Columns and types" column only.
 
 ## Steps
 
@@ -319,6 +327,16 @@ table, change the table name and its key.
    ```
 
    Expected: 0 or a few: the rows Airbyte read again at the cursor boundary, each in two batches.
+   Their business values did not change, so both copies have the same `_row_hash`:
+
+   ```sql
+   SELECT count(*) AS repeated_with_other_hash
+   FROM (SELECT custkey, updated_at
+         FROM lake.<namespace>.customer
+         GROUP BY ALL HAVING count(*) > 1 AND count(DISTINCT _row_hash) > 1);
+   ```
+
+   Expected: 0.
 
 3. **The latest version of each key matches the source:**
 
@@ -363,7 +381,8 @@ table, change the table name and its key.
    ```
 
    Expected: the columns and types of `customer` in the [Silver Contract](#silver-contract), plus
-   `updated_at`, `_airbyte_extracted_at`, `_batch` and `_loaded_at` as timestamps.
+   `updated_at`, `_airbyte_extracted_at`, `_batch` and `_loaded_at` as timestamps, and
+   `_row_hash` as text.
 
 ## Questions
 

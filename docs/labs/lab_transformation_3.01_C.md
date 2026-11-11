@@ -19,7 +19,7 @@ with its prerequisites done.
   | File | Role |
   |---|---|
   | `silver_tables_c.py` | What differs per table: declared columns, key, treatment function |
-  | `silver_common_c.py` | What every table shares: create, read, cast, dedup, trim, write |
+  | `silver_common_c.py` | What every table shares: create, read, cast, dedup, trim, row hash, write |
   | `bronze_to_silver_c.py` | Entry point: arguments, Spark session, loop over the tables |
 
 - **The contract is declared once:** each table's columns are written in a `CREATE TABLE`. The job
@@ -47,8 +47,9 @@ from datetime import datetime, timezone
 from pyspark.sql import Window, functions as F
 
 FIRST_BATCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
-TECHNICAL = ("updated_at timestamp, _airbyte_extracted_at timestamp, "
+TECHNICAL = ("updated_at timestamp, _airbyte_extracted_at timestamp, _row_hash string, "
              "_batch timestamp, _loaded_at timestamp")
+CONTROL = ("updated_at", "_airbyte_extracted_at")
 EXTRACTED = F.col("_airbyte_extracted_at")
 
 
@@ -93,6 +94,13 @@ def last_state(df, key):
 def trim_text(df):
     """Trims every text column."""
     return df.select([F.trim(c).alias(c) if t == "string" else F.col(c) for c, t in df.dtypes])
+
+
+def row_hash(df):
+    """SHA-256 of the business columns, in contract order; call it before the derived columns."""
+    business = [c for c in df.columns if c not in CONTROL]
+    values = [F.coalesce(F.col(c).cast("string"), F.lit("\u0000")) for c in business]
+    return df.withColumn("_row_hash", F.sha2(F.concat_ws("\u001f", *values), 256))
 
 
 def name_number(df):
@@ -230,7 +238,7 @@ for name, table in TABLES.items():
     day, bound, batch = common.read_batch(spark, f"{bronze}/{name}/", target, since, until)
     day = common.cast_to(day, spark.table(target).schema)
     day = common.last_state(day, table["key"])
-    day = table["treat"](common.trim_text(day))
+    day = table["treat"](common.row_hash(common.trim_text(day)))
     written, replaced = common.write_batch(spark, day, target, batch, loaded_at)
     print(f"silver {namespace}.{name}: since={bound} until={until} "
           f"written={written} replaced={replaced}")
