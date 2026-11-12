@@ -267,7 +267,7 @@ its [Validation](lab_transformation_3.01.md#validation).
 ## Questions
 
 1. What do you change to add a ninth table? And to add a column to `customer`?
-2. Lab 3.02 checks that `mktsegment` holds one of 5 allowed values. What would the JSON and the
+2. Lab 3.03 checks that `mktsegment` holds one of 5 allowed values. What would the JSON and the
    engine need for that?
 3. When does a metadata-driven job become harder to read than plain code?
 

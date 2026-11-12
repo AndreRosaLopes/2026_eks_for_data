@@ -4,7 +4,7 @@ Data engineering training on the platform in this repository: EKS, Karpenter, Ar
 Pod Identity, Airbyte with a Postgres CDC source (TPC-H data), DuckDB, an S3 bronze layer, the
 Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
-> Delta Lake is not part of the platform yet; lab 3.15 requires adding it.
+> Delta Lake is not part of the platform yet; lab 3.16 requires adding it.
 
 ## 1. Infrastructure: learn Kubernetes
 
@@ -60,21 +60,21 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 | # | Lab | What the student does and learns |
 |---|---|---|
 | 3.01 | Bronze to silver, day by day | Write each day's rows of the 8 tables from the date-cursor bronze to silver Iceberg tables, choosing the day's rows by ingestion time (`_airbyte_extracted_at`) in two ways: a watermark read from silver, or a time interval passed to the job. Keep each key's last state of the day, trim text, and extract numbers with regex. Partition silver by batch and overwrite the batch on each run, so reruns are idempotent. Declare each table's schema and cast bronze to it. Organize the code in three ways, one lab each: metadata-driven (A), one script per table (B), per-table spec and shared module (C). Run 3 simulated days and two reruns. |
-| 3.02 | Bronze to silver with dirty data | Same as 3.01, after inserting invalid rows at the source: regex and allowed-value checks on `name`, `phone`, `mktsegment`, `orderpriority`, ranges and dates. Rows that fail go to a quarantine table (`<table>_rejected`). |
-| 3.03 | Spark fundamentals | Driver, executors, partitions, lazy evaluation, transformations vs. actions, DataFrame vs. SQL. |
-| 3.04 | Spark on Kubernetes | Spark Operator, the `SparkApplication` resource, its driver and executor pods, the image, how job code is delivered, and S3A credentials. |
-| 3.05 | Spark UI | Jobs, stages, tasks, the DAG (Directed Acyclic Graph) of each job, SQL plans, the shuffle, skew and spill. Reach it through `port-forward` and the History Server. |
-| 3.06 | Performance | Partitioning, `repartition` vs. `coalesce`, broadcast joins, AQE (Adaptive Query Execution), caching, executor sizing. Compare runs before and after in the Spark UI. |
-| 3.07 | Table formats | Why plain Parquet is not enough: ACID transactions, snapshots, metadata, manifests. |
-| 3.08 | Iceberg and its catalog | Polaris REST catalog, namespaces and tables, the metadata tree (`metadata.json`, manifest list, manifests, data files). |
-| 3.09 | Bronze to silver dedup | Keep the latest record per key from the CDC stream, handling deletes and ordering by `_ab_cdc_lsn`. |
-| 3.10 | `MERGE INTO` (upsert) | SCD1 (Slowly Changing Dimension type 1, overwrite in place) with `MERGE INTO`. Then check idempotency by running the job twice. |
-| 3.11 | SCD2 in Iceberg | Keep history with `valid_from`, `valid_to` and `is_current`, using the two-step pattern (close the current row, then insert the new one) or a single `MERGE` with a union. Test it with the simulated customer changes. |
-| 3.12 | Time travel and rollback | `VERSION AS OF`, `TIMESTAMP AS OF`, `rollback_to_snapshot`, tags and branches. |
-| 3.13 | Schema and partition evolution | Add a column, then change the partition spec without rewriting data (hidden partitioning). |
-| 3.14 | Table maintenance | Small files, `rewrite_data_files` (compaction), `expire_snapshots`, `remove_orphan_files`. Copy-on-write vs. merge-on-read. |
-| 3.15 | Delta Lake by comparison | Same SCD2 and `MERGE` in Delta. Compare the `_delta_log`, time travel, `OPTIMIZE`/Z-ORDER, `VACUUM`, catalogs, and what other engines can read each format. |
-| 3.16 | Gold layer | Aggregates and a star schema (fact and dimension tables) built from TPC-H, then queried from DuckDB or another engine through the catalog. |
+| 3.02 | Silver to gold, day by day | Build a star schema (date, customer, supplier and part dimensions; a line-item fact) and a monthly sales aggregate from the 3.01 C silver tables, then query it from DuckDB. Take each key's current state, rebuild the dimensions and the aggregate in full, and rewrite only the fact's months touched by new silver batches (`overwritePartitions()` on a table partitioned by `months(orderdate)`). Check grain, referential integrity, revenue against the source, and that a rerun changes nothing. |
+| 3.03 | Bronze to silver with dirty data | Same as 3.01, after inserting invalid rows at the source: regex and allowed-value checks on `name`, `phone`, `mktsegment`, `orderpriority`, ranges and dates. Rows that fail go to a quarantine table (`<table>_rejected`). |
+| 3.04 | Spark fundamentals | Driver, executors, partitions, lazy evaluation, transformations vs. actions, DataFrame vs. SQL. |
+| 3.05 | Spark on Kubernetes | Spark Operator, the `SparkApplication` resource, its driver and executor pods, the image, how job code is delivered, and S3A credentials. |
+| 3.06 | Spark UI | Jobs, stages, tasks, the DAG (Directed Acyclic Graph) of each job, SQL plans, the shuffle, skew and spill. Reach it through `port-forward` and the History Server. |
+| 3.07 | Performance | Partitioning, `repartition` vs. `coalesce`, broadcast joins, AQE (Adaptive Query Execution), caching, executor sizing. Compare runs before and after in the Spark UI. |
+| 3.08 | Table formats | Why plain Parquet is not enough: ACID transactions, snapshots, metadata, manifests. |
+| 3.09 | Iceberg and its catalog | Polaris REST catalog, namespaces and tables, the metadata tree (`metadata.json`, manifest list, manifests, data files). |
+| 3.10 | Bronze to silver dedup | Keep the latest record per key from the CDC stream, handling deletes and ordering by `_ab_cdc_lsn`. |
+| 3.11 | `MERGE INTO` (upsert) | SCD1 (Slowly Changing Dimension type 1, overwrite in place) with `MERGE INTO`. Then check idempotency by running the job twice. |
+| 3.12 | SCD2 in Iceberg | Keep history with `valid_from`, `valid_to` and `is_current`, using the two-step pattern (close the current row, then insert the new one) or a single `MERGE` with a union. Test it with the simulated customer changes. |
+| 3.13 | Time travel and rollback | `VERSION AS OF`, `TIMESTAMP AS OF`, `rollback_to_snapshot`, tags and branches. |
+| 3.14 | Schema and partition evolution | Add a column, then change the partition spec without rewriting data (hidden partitioning). |
+| 3.15 | Table maintenance | Small files, `rewrite_data_files` (compaction), `expire_snapshots`, `remove_orphan_files`. Copy-on-write vs. merge-on-read. |
+| 3.16 | Delta Lake by comparison | Same SCD2 and `MERGE` in Delta. Compare the `_delta_log`, time travel, `OPTIMIZE`/Z-ORDER, `VACUUM`, catalogs, and what other engines can read each format. |
 | 3.17 | Data quality | Checks for nulls, unique keys, referential integrity and row counts between layers. Fail the job when a check fails. |
 
 ## 4. Orchestration: Airflow

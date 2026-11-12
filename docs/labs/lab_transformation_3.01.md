@@ -88,7 +88,7 @@ validation.
   `name_number` = 1, in `customer` and `supplier`); `orderpriority` split (`1-URGENT` →
   `priority_number` = 1, `priority_label` = `URGENT`, in `orders`).
 - **Deletes:** the date cursor never sees a deleted row, so customers deleted at the source stay in
-  silver. CDC (lab 2.5) fixes this, in lab 3.09.
+  silver. CDC (lab 2.5) fixes this, in lab 3.10.
 - **Bronze read:** Airbyte writes each table's files to one folder, with no date sub-folders, so
   every run reads all the table's files and then filters them. The cost grows a little each day;
   at lab scale it does not matter.

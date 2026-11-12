@@ -32,7 +32,7 @@ with its prerequisites done.
   Python adds the script's folder to its import path, so the two other files are found there.
 - **Implications:** adding a table is one entry in `silver_tables_c.py`; a fix to a common step is
   made once; a type change in the contract needs an `ALTER TABLE`, because `CREATE TABLE IF NOT
-  EXISTS` does not change an existing table (lab 3.13).
+  EXISTS` does not change an existing table (lab 3.14).
 
 ## Steps
 
