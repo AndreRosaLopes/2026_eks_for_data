@@ -22,7 +22,10 @@ if [ "$account" != "$ACCOUNT_ID" ]; then
   exit 1
 fi
 
-# 1. Infrastructure: network, EKS, buckets, IAM roles (about 15–20 minutes; no prompt)
+# 1. Infrastructure: the persistent buckets first (D-077), then network, EKS and IAM roles
+#    (about 15–20 minutes; no prompt)
+terraform -chdir=infra/aws/data init
+terraform -chdir=infra/aws/data apply -auto-approve
 terraform -chdir=infra/aws/cluster init
 terraform -chdir=infra/aws/cluster apply -auto-approve
 

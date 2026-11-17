@@ -75,7 +75,7 @@ Every check is run automatically by Claude:
 | # | Step | Status |
 |---|---|---|
 | 05.01 | [Roadmap](01-roadmap/spec.md): README §3, the phase 05 row added from this plan | Done |
-| 05.02 | [Persistent data root](02-persistent-data-root/spec.md): the four buckets move to `infra/aws/data`, plus the Velero bucket; `cluster` refers to them by name; `down.sh` keeps them; automated check that bronze and silver survive a teardown | In progress |
+| 05.02 | [Persistent data root](02-persistent-data-root/spec.md): the four buckets move to `infra/aws/data`, plus the Velero bucket; `cluster` refers to them by name; `down.sh` keeps them; automated check that bronze and silver survive a teardown | Done |
 | 05.03 | Snapshot controller and Velero: the add-on, the Velero IRSA role, the `infra/aws/backup` root and the `VolumeSnapshotClass`; automated backup and restore of a test volume | To do |
 | 05.04 | Backup on teardown, restore on bring-up: `down.sh` (cold backup, keep the latest only), `up.sh` (restore before `gitops`), the purge; `HOW_TO_RUN.md` §3 and §5 updated | To do |
 | 05.05 | End to end: automated walkthrough of every "Done When" check across a full `down.sh` and `up.sh` cycle | To do |

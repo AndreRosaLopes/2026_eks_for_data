@@ -1,6 +1,6 @@
 # 05.02 — Persistent Data Root: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [05 — Lab State Between Environments](../plan.md)
 
 ## Design
@@ -36,12 +36,12 @@ No manual check: by the user's decision, every test of this phase is automated a
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Both roots are valid | `terraform validate` on `data` and `cluster` | Both valid | Pending |
-| 2 | Automated | Bring-up creates the buckets | `up.sh`, then list the `eks-for-data-*` buckets | Five buckets | Pending |
-| 3 | Automated | The services reach their buckets | `kubectl -n argocd get applications` | Every application `Synced` and `Healthy` | Pending |
-| 4 | Automated | The roles point to the right buckets | Compare the ARNs in the IAM policies with the bucket names | Every ARN matches an existing bucket | Pending |
-| 5 | Automated | Bronze and silver survive a teardown | Write a marker file to bronze and to silver, run `down.sh`, then read the markers | Both markers exist; no EKS cluster, NAT Gateway or VPC is left | Pending |
-| 6 | Automated | A new bring-up keeps the buckets | `terraform plan` on `infra/aws/data` after `down.sh` | No changes | Pending |
+| 1 | Automated | Both roots are valid | `terraform validate` on `data` and `cluster` | Both valid | Pass: both `Success! The configuration is valid.`; `terraform fmt -check` clean |
+| 2 | Automated | Bring-up creates the buckets | `up.sh`, then list the `eks-for-data-*` buckets | Five buckets | Pass: `airbyte`, `airflow`, `bronze`, `silver`, `velero` |
+| 3 | Automated | The services reach their buckets | `kubectl -n argocd get applications` | Every application `Synced` and `Healthy` | Pass: all 10 applications |
+| 4 | Automated | The roles point to the right buckets | Compare the ARNs in the IAM policies with the bucket names | Every ARN matches an existing bucket | Pass: 6 ARNs in the `airbyte`, `duckdb`, `spark`, `airflow` and `silver-data` roles, all existing buckets |
+| 5 | Automated | Bronze and silver survive a teardown | Write a marker file to bronze and to silver, run `down.sh`, then read the markers | Both markers exist; no EKS cluster, NAT Gateway or VPC is left | Pass: `_verify/05-02-marker.txt` read from both; the three lists are empty |
+| 6 | Automated | A new bring-up keeps the buckets | `terraform plan` on `infra/aws/data` after `down.sh` | No changes | Pass: "No changes" (exit code 0 with `-detailed-exitcode`) |
 
 ## Teardown
 

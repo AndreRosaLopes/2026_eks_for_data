@@ -1,27 +1,15 @@
 # The account ID makes the global bucket names unique (D-015)
 data "aws_caller_identity" "current" {}
 
-# Raw data layer: destination of the Airbyte Parquet files
-module "s3_bronze" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "5.17.0"
-
-  bucket        = "${local.name}-bronze-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
-
-  attach_deny_insecure_transport_policy = true
+# The buckets live in infra/aws/data (D-077); their ARNs are built from the fixed name pattern
+locals {
+  bucket_arn = {
+    for b in ["bronze", "silver", "airbyte", "airflow"] :
+    b => "arn:aws:s3:::${local.name}-${b}-${data.aws_caller_identity.current.account_id}"
+  }
 }
 
-# Airbyte logs, state and workload output (D-009)
-module "s3_airbyte" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "5.17.0"
 
-  bucket        = "${local.name}-airbyte-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
-
-  attach_deny_insecure_transport_policy = true
-}
 
 # IRSA role for the Airbyte ServiceAccount, used by every Airbyte pod (D-008)
 module "airbyte_irsa" {
@@ -52,10 +40,10 @@ module "airbyte_irsa" {
         "s3:GetBucketLocation",
       ]
       resources = [
-        module.s3_bronze.s3_bucket_arn,
-        "${module.s3_bronze.s3_bucket_arn}/*",
-        module.s3_airbyte.s3_bucket_arn,
-        "${module.s3_airbyte.s3_bucket_arn}/*",
+        local.bucket_arn.bronze,
+        "${local.bucket_arn.bronze}/*",
+        local.bucket_arn.airbyte,
+        "${local.bucket_arn.airbyte}/*",
       ]
     }
   }
@@ -84,23 +72,13 @@ module "duckdb_irsa" {
         "s3:GetBucketLocation",
       ]
       resources = [
-        module.s3_bronze.s3_bucket_arn,
-        "${module.s3_bronze.s3_bucket_arn}/*",
+        local.bucket_arn.bronze,
+        "${local.bucket_arn.bronze}/*",
       ]
     }
   }
 }
 
-# Cleaned data layer: Iceberg tables written by Spark, registered in Polaris (D-015, D-044)
-module "s3_silver" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "5.17.0"
-
-  bucket        = "${local.name}-silver-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
-
-  attach_deny_insecure_transport_policy = true
-}
 
 # IRSA role for the Spark jobs: read-only on the bronze bucket; silver access is vended by Polaris
 # (D-008, D-049)
@@ -126,8 +104,8 @@ module "spark_irsa" {
         "s3:GetBucketLocation",
       ]
       resources = [
-        module.s3_bronze.s3_bucket_arn,
-        "${module.s3_bronze.s3_bucket_arn}/*",
+        local.bucket_arn.bronze,
+        "${local.bucket_arn.bronze}/*",
       ]
     }
   }
@@ -189,23 +167,13 @@ resource "aws_iam_role_policy" "silver_data" {
         "s3:ListBucketMultipartUploads",
       ]
       Resource = [
-        module.s3_silver.s3_bucket_arn,
-        "${module.s3_silver.s3_bucket_arn}/*",
+        local.bucket_arn.silver,
+        "${local.bucket_arn.silver}/*",
       ]
     }]
   })
 }
 
-# Airflow task logs (remote logging), one bucket per platform component (D-064, D-072)
-module "s3_airflow" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "5.17.0"
-
-  bucket        = "${local.name}-airflow-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
-
-  attach_deny_insecure_transport_policy = true
-}
 
 # IRSA role for the Airflow components that write or read task logs: task pods (KubernetesExecutor
 # worker), the API
@@ -238,8 +206,8 @@ module "airflow_irsa" {
         "s3:GetBucketLocation",
       ]
       resources = [
-        module.s3_airflow.s3_bucket_arn,
-        "${module.s3_airflow.s3_bucket_arn}/*",
+        local.bucket_arn.airflow,
+        "${local.bucket_arn.airflow}/*",
       ]
     }
   }

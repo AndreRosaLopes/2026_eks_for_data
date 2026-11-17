@@ -19,6 +19,14 @@ proves the phase [Done When](plan.md#done-when).
 No manual check: this step only updates the roadmap in [README §3](../../README.md#3-phases)
 ([spec](01-roadmap/spec.md)).
 
+### 05.02 — Persistent Data Root
+
+No manual check: every check is automated and was run by the agent
+([spec, Verification Plan](02-persistent-data-root/spec.md#verification-plan)). Expected results:
+`./scripts/up.sh` creates the five `eks-for-data-*` buckets (bronze, silver, Airbyte, Airflow,
+Velero), and after `./scripts/down.sh` the bronze and silver files are still there while no EKS
+cluster, NAT Gateway or VPC is left.
+
 ## End-to-End Verification
 
 Written on the last step.
@@ -29,3 +37,4 @@ The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown)
 teardown is in its spec:
 
 - [05.01 — Roadmap](01-roadmap/spec.md#teardown)
+- [05.02 — Persistent Data Root](02-persistent-data-root/spec.md#teardown)

@@ -22,24 +22,12 @@ output "oidc_provider_arn" {
   value = module.eks.oidc_provider_arn
 }
 
-output "bronze_bucket" {
-  value = module.s3_bronze.s3_bucket_id
-}
-
-output "airbyte_bucket" {
-  value = module.s3_airbyte.s3_bucket_id
-}
-
 output "airbyte_role_arn" {
   value = module.airbyte_irsa.arn
 }
 
 output "duckdb_role_arn" {
   value = module.duckdb_irsa.arn
-}
-
-output "silver_bucket" {
-  value = module.s3_silver.s3_bucket_id
 }
 
 output "spark_role_arn" {
@@ -52,10 +40,6 @@ output "polaris_role_arn" {
 
 output "silver_data_role_arn" {
   value = aws_iam_role.silver_data.arn
-}
-
-output "airflow_logs_bucket" {
-  value = module.s3_airflow.s3_bucket_id
 }
 
 output "airflow_role_arn" {

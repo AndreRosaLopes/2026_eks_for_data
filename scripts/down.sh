@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Tear down the AWS environment (HOW_TO_RUN.md §5.1 and §5.2). Bronze and silver data is lost.
+# Tear down the AWS environment (HOW_TO_RUN.md §5.1 and §5.2). The buckets in infra/aws/data are
+# kept, with their data (D-077).
 # Run from Git Bash: ./scripts/down.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."

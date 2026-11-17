@@ -20,7 +20,7 @@ There are two ways to deploy the services on the cluster:
 | 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 | 03 — Processing: Spark and Iceberg | In progress (03.01 to 03.05 done) | [Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md) | [Verify](specs/03-processing-spark-iceberg/README.md) |
 | 04 — Orchestration: Airflow for Airbyte and Spark | In progress (04.01 to 04.03 done) | [Run](specs/04-orchestration-airflow/HOW_TO_RUN.md) | [Verify](specs/04-orchestration-airflow/README.md) |
-| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
+| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 and 05.02 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
 
 ## 2. Prerequisites
 
