@@ -4,7 +4,7 @@ data "aws_caller_identity" "current" {}
 # The buckets live in infra/aws/data (D-077); their ARNs are built from the fixed name pattern
 locals {
   bucket_arn = {
-    for b in ["bronze", "silver", "airbyte", "airflow"] :
+    for b in ["bronze", "silver", "airbyte", "airflow", "velero"] :
     b => "arn:aws:s3:::${local.name}-${b}-${data.aws_caller_identity.current.account_id}"
   }
 }
@@ -209,6 +209,41 @@ module "airflow_irsa" {
         local.bucket_arn.airflow,
         "${local.bucket_arn.airflow}/*",
       ]
+    }
+  }
+}
+
+# IRSA role for the Velero server: the S3 actions of the AWS plugin README, on the Velero bucket only.
+# No EC2 actions: snapshots are taken by the CSI driver, not by Velero (D-008, D-076)
+module "velero_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.8.2"
+
+  name            = "${local.name}-velero"
+  use_name_prefix = false
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["velero:velero"]
+    }
+  }
+
+  permissions = {
+    S3VeleroObjects = {
+      actions = [
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts",
+      ]
+      resources = ["${local.bucket_arn.velero}/*"]
+    }
+    S3VeleroBucket = {
+      actions   = ["s3:ListBucket"]
+      resources = [local.bucket_arn.velero]
     }
   }
 }

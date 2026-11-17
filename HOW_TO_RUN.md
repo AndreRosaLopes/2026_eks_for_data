@@ -20,7 +20,7 @@ There are two ways to deploy the services on the cluster:
 | 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 | 03 — Processing: Spark and Iceberg | In progress (03.01 to 03.05 done) | [Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md) | [Verify](specs/03-processing-spark-iceberg/README.md) |
 | 04 — Orchestration: Airflow for Airbyte and Spark | In progress (04.01 to 04.03 done) | [Run](specs/04-orchestration-airflow/HOW_TO_RUN.md) | [Verify](specs/04-orchestration-airflow/README.md) |
-| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 and 05.02 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
+| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 to 05.03 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
 
 ## 2. Prerequisites
 
@@ -35,8 +35,8 @@ There are two ways to deploy the services on the cluster:
 ## 3. Bring Up
 
 **Quick option (with Argo CD):** `./scripts/up.sh` runs sections 3.1 and 3.2 steps 1 and 2 in one
-go: it generates the missing values in `.env`, checks the AWS account, applies `infra/aws/cluster`,
-creates the namespaces and Secrets, applies `infra/aws/gitops`, with no `yes` prompt, and
+go: it generates the missing values in `.env`, checks the AWS account, applies `infra/aws/cluster`
+and `infra/aws/backup` (Velero), creates the namespaces and Secrets, applies `infra/aws/gitops`, with no `yes` prompt, and
 bootstraps the Polaris realm (3.2 step 5) once Polaris is Healthy. Then check 3.2 step 4.
 
 ### 3.1 Infrastructure (both paths)
@@ -434,8 +434,8 @@ logs are read from the S3 bucket `eks-for-data-airflow-283429977024`
 ## 5. Teardown
 
 **Quick option (with Argo CD):** `./scripts/down.sh` runs sections 5.1 and 5.2 in one go: it checks
-the AWS account, deletes the services, destroys `infra/aws/gitops` and `infra/aws/cluster` with no `yes`
-prompt, deletes the EKS log group if it came back, lists anything left and removes the
+the AWS account, deletes the services, destroys `infra/aws/gitops`, `infra/aws/backup` and
+`infra/aws/cluster` with no `yes` prompt, deletes the EKS log group if it came back, lists anything left and removes the
 `kubectl` context.
 
 ### 5.1 Turn Off

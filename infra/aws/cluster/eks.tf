@@ -33,4 +33,11 @@ module "eks" {
   # EKS default envelope encryption, no customer KMS key (D-014)
   create_kms_key    = false
   encryption_config = null
+
+  # Snapshot controller for CSI volume snapshots, not included in Auto Mode (D-076, D-084)
+  addons = {
+    snapshot-controller = {
+      addon_version = "v8.7.0-eksbuild.4"
+    }
+  }
 }

@@ -29,6 +29,10 @@ terraform -chdir=infra/aws/data apply -auto-approve
 terraform -chdir=infra/aws/cluster init
 terraform -chdir=infra/aws/cluster apply -auto-approve
 
+# Velero, before Argo CD starts the services (D-078)
+terraform -chdir=infra/aws/backup init
+terraform -chdir=infra/aws/backup apply -auto-approve
+
 aws eks update-kubeconfig --name eks-for-data --region us-east-1
 
 # 2. Namespaces and Secrets; safe to run again (create or update)

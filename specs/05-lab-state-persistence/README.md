@@ -27,6 +27,15 @@ No manual check: every check is automated and was run by the agent
 Velero), and after `./scripts/down.sh` the bronze and silver files are still there while no EKS
 cluster, NAT Gateway or VPC is left.
 
+### 05.03 — Snapshot Controller and Velero
+
+No manual check: every check is automated and run by the agent
+([spec, Verification Plan](03-snapshot-controller-velero/spec.md#verification-plan)); checks 2 to 9
+run in step 05.05. Expected results: `./scripts/up.sh` installs the `snapshot-controller` add-on and
+Velero, whose backup storage location is `Available`; a test volume is backed up with a CSI snapshot
+and restored with its data; deleting the backup leaves no EBS snapshot; `./scripts/down.sh` removes
+Velero with the cluster.
+
 ## End-to-End Verification
 
 Written on the last step.
@@ -38,3 +47,4 @@ teardown is in its spec:
 
 - [05.01 — Roadmap](01-roadmap/spec.md#teardown)
 - [05.02 — Persistent Data Root](02-persistent-data-root/spec.md#teardown)
+- [05.03 — Snapshot Controller and Velero](03-snapshot-controller-velero/spec.md#teardown)
