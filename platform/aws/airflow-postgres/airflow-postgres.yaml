@@ -1,11 +1,6 @@
 # Airflow metadata Postgres (D-065), same pattern as the Polaris catalog Postgres (D-046). The Secret
 # airflow-postgres-credentials is created by hand from .env before the sync (D-031).
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: airflow
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: airflow-postgres-init
@@ -44,9 +39,10 @@ spec:
   selector:
     matchLabels:
       app: airflow-postgres
-  # Deleting the StatefulSet also deletes its EBS volume
+  # The volume outlives the StatefulSet, so down.sh can back it up; down.sh then deletes it with
+  # the namespace, which up.sh creates (D-086)
   persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Delete
+    whenDeleted: Retain
     whenScaled: Retain
   template:
     metadata:

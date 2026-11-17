@@ -1,11 +1,6 @@
 # Source Postgres for the transactional ingestion (D-022). The Secret postgres-credentials is
 # created by hand from .env before the sync (D-031, D-036).
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: postgres
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-init
@@ -47,9 +42,10 @@ spec:
   selector:
     matchLabels:
       app: postgres
-  # Deleting the StatefulSet also deletes its EBS volume
+  # The volume outlives the StatefulSet, so down.sh can back it up; down.sh then deletes it with
+  # the namespace, which up.sh creates (D-086)
   persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Delete
+    whenDeleted: Retain
     whenScaled: Retain
   template:
     metadata:
