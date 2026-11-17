@@ -4,10 +4,12 @@ Status: Approved
 
 ## Objective
 
-Labs continue where they stopped: `down.sh` saves the state of every database and `up.sh` brings it
-back in the new cluster, so a new environment no longer starts from zero. The S3 data (bronze,
-silver, Airbyte, Airflow logs) survives the teardown. EKS, the NAT Gateways and the nodes are still
-destroyed, so the cost stays near zero while the environment is down.
+Stop the labs at any point and resume them later from that same point.
+
+How it is planned: `down.sh` saves the state of every database and `up.sh` brings it back in the new
+cluster, so a new environment no longer starts from zero. The S3 data (bronze, silver, Airbyte,
+Airflow logs) survives the teardown. EKS, the NAT Gateways and the nodes are still destroyed, so the
+cost stays near zero while the environment is down.
 
 ## Scope
 
@@ -54,6 +56,8 @@ Every check is run automatically by Claude:
 - [D-079 — Database Consistency at Backup Time](../../docs/decisions/079-backup-consistency.md)
 - [D-080 — Backup Retention](../../docs/decisions/080-backup-retention.md)
 - [D-081 — Velero Version](../../docs/decisions/081-velero-version.md)
+- [D-082 — Deleting the Persistent Buckets on Purge](../../docs/decisions/082-persistent-bucket-deletion.md)
+- [D-083 — S3 Module Version in the Data Root](../../docs/decisions/083-data-root-s3-module-version.md)
 
 **Divergences (principle 7):**
 
