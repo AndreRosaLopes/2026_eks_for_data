@@ -1,6 +1,6 @@
 # 05.01 — Roadmap: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [05 — Lab State Between Environments](../plan.md)
 
 ## Design
@@ -30,8 +30,8 @@ agent), this documentation-only step skips the "at least one Manual check" rule.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Roadmap row added | `grep` the phase 05 row in `README.md` | The steps column lists the four ideas of 05.02 to 05.05 | Pending |
-| 2 | Automated | Phase pages linked | Check that the Run and Verify links in the home phase 05 row point to existing files | Both files exist | Pending |
+| 1 | Automated | Roadmap row added | `grep` the phase 05 row in `README.md` | The steps column lists the four ideas of 05.02 to 05.05 | Pass: row at README.md line 39 lists the four ideas |
+| 2 | Automated | Phase pages linked | Check that the Run and Verify links in the home phase 05 row point to existing files | Both files exist | Pass: both files exist |
 
 ## Teardown
 

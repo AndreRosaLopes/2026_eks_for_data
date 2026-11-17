@@ -36,6 +36,7 @@ To bring up the environment and its services, see [HOW_TO_RUN.md](HOW_TO_RUN.md)
 | 02 | **Transactional ingestion:** TPC-H in Postgres, date cursor and CDC | Source Postgres; DuckDB service; data load and day simulation; labs 02 and 03 |
 | 03 | **Processing:** Spark writing Iceberg tables to silver, with a REST catalog | Silver bucket and IRSA; Spark; REST catalog; dedup job bronze → silver |
 | 04 | **Orchestration:** Airflow triggering Airbyte and Spark | Airflow image; Airflow with its metadata Postgres and task logs in S3; Spark DAG; Airbyte DAG, end to end |
+| 05 | **Lab state:** Velero keeps the databases and buckets between environments | Persistent data root; snapshot controller and Velero; backup on teardown and restore on bring-up; end to end |
 | — | **Next phases** | To be decided |
 
 ## 4. Premises
