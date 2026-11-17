@@ -60,6 +60,7 @@ Every check is run automatically by Claude:
 - [D-083 — S3 Module Version in the Data Root](../../docs/decisions/083-data-root-s3-module-version.md)
 - [D-084 — Snapshot Controller Add-on Version](../../docs/decisions/084-snapshot-controller-addon-version.md)
 - [D-085 — Where the VolumeSnapshotClass Is Defined](../../docs/decisions/085-volumesnapshotclass-location.md)
+- [D-086 — Keeping the Database Volumes Until the Backup](../../docs/decisions/086-database-volumes-until-backup.md)
 
 **Divergences (principle 7):**
 
