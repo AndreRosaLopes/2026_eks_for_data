@@ -22,9 +22,9 @@ if [ "$account" != "$ACCOUNT_ID" ]; then
   exit 1
 fi
 
-# 1. Infrastructure: network, EKS, buckets, IAM roles (about 15–20 minutes; asks for "yes")
+# 1. Infrastructure: network, EKS, buckets, IAM roles (about 15–20 minutes; no prompt)
 terraform -chdir=infra/aws/cluster init
-terraform -chdir=infra/aws/cluster apply
+terraform -chdir=infra/aws/cluster apply -auto-approve
 
 aws eks update-kubeconfig --name eks-for-data --region us-east-1
 
@@ -68,11 +68,32 @@ secret airflow airflow-api-secret-key --from-literal=api-secret-key="$AIRFLOW_AP
 secret airflow airflow-jwt-secret --from-literal=jwt-secret="$AIRFLOW_JWT_SECRET"
 secret airflow airflow-admin --from-literal=password="$AIRFLOW_ADMIN_PASSWORD"
 
-# 3. Argo CD; it then deploys the services in platform/aws from Git (asks for "yes")
+# 3. Argo CD; it then deploys the services in platform/aws from Git (no prompt)
 terraform -chdir=infra/aws/gitops init
-terraform -chdir=infra/aws/gitops apply
+terraform -chdir=infra/aws/gitops apply -auto-approve
+
+# 4. Polaris realm bootstrap (D-059), once Argo CD has Polaris and its Postgres Healthy;
+#    safe to run again (specs/03-processing-spark-iceberg/HOW_TO_RUN.md §3)
+wait_healthy() {
+  local app=$1 i
+  for i in $(seq 1 120); do   # up to 20 minutes
+    [ "$(kubectl -n argocd get application "$app" -o jsonpath='{.status.health.status}' 2>/dev/null)" = Healthy ] && return 0
+    sleep 10
+  done
+  echo "Timed out waiting for application $app to be Healthy" >&2
+  return 1
+}
+wait_healthy polaris-postgres
+wait_healthy polaris
+
+kubectl -n polaris run polaris-bootstrap --rm -i --restart=Never \
+  --image=apache/polaris-admin-tool:1.8.0 \
+  --env="polaris.persistence.type=relational-jdbc" \
+  --env="quarkus.datasource.username=polaris" \
+  --env="quarkus.datasource.password=$POLARIS_PG_PASSWORD" \
+  --env="quarkus.datasource.jdbc.url=jdbc:postgresql://polaris-postgres.polaris.svc.cluster.local:5432/polaris" \
+  -- bootstrap -r POLARIS -c "POLARIS,root,$POLARIS_ROOT_SECRET"
 
 echo
-echo "Done. Wait until every application is Synced and Healthy:"
+echo "Done. Check that every application is Synced and Healthy:"
 echo "  kubectl -n argocd get applications"
-echo "Then bootstrap the Polaris realm (specs/03-processing-spark-iceberg/HOW_TO_RUN.md §3)."

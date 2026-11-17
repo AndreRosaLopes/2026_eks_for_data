@@ -21,9 +21,9 @@ kubectl delete pod --all                                   # no test pods keepin
 kubectl delete application platform -n argocd --ignore-not-found   # waits for the child applications
 kubectl delete namespace airbyte --ignore-not-found        # PVC → Airbyte EBS volume deleted
 
-# 2. Argo CD, then the infrastructure (each asks for "yes")
-terraform -chdir=infra/aws/gitops destroy
-terraform -chdir=infra/aws/cluster destroy
+# 2. Argo CD, then the infrastructure (no prompt)
+terraform -chdir=infra/aws/gitops destroy -auto-approve
+terraform -chdir=infra/aws/cluster destroy -auto-approve
 
 # 3. EKS may recreate its log group after the destroy; the next apply fails if it exists
 log_group=/aws/eks/eks-for-data/cluster
