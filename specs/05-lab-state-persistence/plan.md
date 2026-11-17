@@ -63,6 +63,7 @@ Every check is run automatically by Claude:
 - [D-086 — Keeping the Database Volumes Until the Backup](../../docs/decisions/086-database-volumes-until-backup.md)
 - [D-087 — How the Scripts Drive Velero](../../docs/decisions/087-velero-driver.md)
 - [D-088 — How the Purge Deletes the Backups](../../docs/decisions/088-purge-backup-deletion.md)
+- [D-089 — How the End-to-End Checks Are Run](../../docs/decisions/089-end-to-end-check-method.md)
 
 **Divergences (principle 7):**
 
@@ -85,7 +86,7 @@ Every check is run automatically by Claude:
 | 05.02 | [Persistent data root](02-persistent-data-root/spec.md): the four buckets move to `infra/aws/data`, plus the Velero bucket; `cluster` refers to them by name; `down.sh` keeps them; automated check that bronze and silver survive a teardown | Done |
 | 05.03 | [Snapshot controller and Velero](03-snapshot-controller-velero/spec.md): the add-on, the Velero IRSA role, the `infra/aws/backup` root and the `VolumeSnapshotClass`; `up.sh` applies and `down.sh` destroys the `backup` root; automated backup and restore of a test volume | Done |
 | 05.04 | [Backup on teardown, restore on bring-up](04-backup-restore/spec.md): `down.sh` (cold backup, keep the latest only), `up.sh` (restore before `gitops`), the purge; `HOW_TO_RUN.md` §3 and §5 updated | Done |
-| 05.05 | End to end: automated walkthrough of every "Done When" check across a full `down.sh` and `up.sh` cycle; also runs checks 2 to 9 of 05.03 | To do |
+| 05.05 | [End to end](05-end-to-end/spec.md): automated walkthrough of every "Done When" check across a full `down.sh` and `up.sh` cycle; also runs checks 2 to 9 of 05.03 | In progress |
 
 Left to the step specs: the chart and plugin patch versions, the exact resources included in the
 restore, and whether the verification commands become a script in the repository.
