@@ -1,6 +1,6 @@
 # D-003 — Repository and Terraform Root Layout
 
-Status: Accepted
+Status: Superseded by [D-077](077-persistent-data-root.md)
 Date: 2026-10-17
 Phase: specs/01-ingestion-airbyte-s3
 
