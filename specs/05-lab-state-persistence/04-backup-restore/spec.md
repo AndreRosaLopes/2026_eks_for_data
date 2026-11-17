@@ -1,6 +1,6 @@
 # 05.04 — Backup on Teardown, Restore on Bring-Up: Specification
 
-Status: Approved
+Status: Implemented
 Phase: [05 — Lab State Between Environments](../plan.md)
 
 ## Design
@@ -57,8 +57,8 @@ its `down.sh` and `up.sh` cycle, and their results are recorded here.
 
 | # | Type | Check | Command or Action | Expected Result | Result |
 |---|---|---|---|---|---|
-| 1 | Automated | Scripts and manifests are valid | `bash -n` on both scripts; `kubectl apply --dry-run=client` on the three manifests | No errors | Pending |
-| 2 | Automated | Manifests match the Design | Read the three manifests | No Namespace object; `whenDeleted: Retain` | Pending |
+| 1 | Automated | Scripts and manifests are valid | `bash -n` on both scripts; `kubectl apply --dry-run=client` on the three manifests | No errors | Pass: `bash -n` clean on both scripts; `kubectl --dry-run=client` needs a reachable cluster (none running), so the three manifests were parsed as YAML instead: all valid (ConfigMap, Service, StatefulSet each) |
+| 2 | Automated | Manifests match the Design | Read the three manifests | No Namespace object; `whenDeleted: Retain` | Pass: no Namespace in any of the three; `whenDeleted: Retain` in all three |
 | 3 | Automated | First bring-up, no backup | `up.sh` | Restore skipped; every application `Synced` and `Healthy` | Deferred to 05.05 |
 | 4 | Automated | Teardown backs up first | Write a marker row in each of the four databases; `down.sh`; `velero backup describe` before Velero goes | Backup `Completed`, with four volume snapshots | Deferred to 05.05 |
 | 5 | Automated | After teardown, only data is left | `down.sh` final lists; EBS volumes and snapshots tagged `eks:eks-cluster-name=eks-for-data` | No cluster, NAT Gateway or VPC; no volume; four snapshots | Deferred to 05.05 |
@@ -66,8 +66,8 @@ its `down.sh` and `up.sh` cycle, and their results are recorded here.
 | 7 | Automated | Data is back | Read the marker row in each of the four databases | Four markers found; applications `Synced` and `Healthy` | Deferred to 05.05 |
 | 8 | Automated | Only the latest backup is kept | Second `down.sh`, then list the backups in the Velero bucket and the tagged snapshots | One backup; four snapshots | Deferred to 05.05 |
 | 9 | Automated | Purge leaves nothing | `up.sh`, then `down.sh --purge`; list the `eks-for-data-*` buckets and tagged snapshots | Every list empty | Deferred to 05.05 |
-| 10 | Automated | Docs match the scripts | Read `HOW_TO_RUN.md` §2, §3 and §5 | Velero CLI, restore, backup and purge described; no line says the normal teardown deletes the buckets | Pending |
-| 11 | Automated | No secrets in the repository | `git grep` for each `.env` value | No match | Pending |
+| 10 | Automated | Docs match the scripts | Read `HOW_TO_RUN.md` §2, §3 and §5 | Velero CLI, restore, backup and purge described; no line says the normal teardown deletes the buckets | Pass: §2 Velero CLI 1.18.2; §3.1 steps 3 and 4 (`data`, `backup`); §3.2 step 2 restore; §5.1 backup; §5.3 purge; no line says the normal teardown deletes the buckets |
+| 11 | Automated | No secrets in the repository | `git grep` for each `.env` value | Pass: no `.env` password, token or key found; only the non-secret `REPO_NAME`, `GIT_USER` and `REPO_URL` match |
 
 ## Teardown
 

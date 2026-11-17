@@ -36,6 +36,16 @@ Velero, whose backup storage location is `Available`; a test volume is backed up
 and restored with its data; deleting the backup leaves no EBS snapshot; `./scripts/down.sh` removes
 Velero with the cluster.
 
+### 05.04 — Backup on Teardown, Restore on Bring-Up
+
+No manual check: every check is automated and run by the agent
+([spec, Verification Plan](04-backup-restore/spec.md#verification-plan)); checks 3 to 9 run in step
+05.05. Expected results: [`./scripts/down.sh`](../../HOW_TO_RUN.md#5-teardown) backs up the four
+databases and keeps only the latest backup; afterwards only the buckets and four EBS snapshots are
+left; [`./scripts/up.sh`](../../HOW_TO_RUN.md#3-bring-up) restores them before Argo CD, with the data
+written before the teardown; [`./scripts/down.sh --purge`](../../HOW_TO_RUN.md#53-purge-full-reset)
+leaves no bucket, backup or snapshot.
+
 ## End-to-End Verification
 
 Written on the last step.
@@ -48,3 +58,4 @@ teardown is in its spec:
 - [05.01 — Roadmap](01-roadmap/spec.md#teardown)
 - [05.02 — Persistent Data Root](02-persistent-data-root/spec.md#teardown)
 - [05.03 — Snapshot Controller and Velero](03-snapshot-controller-velero/spec.md#teardown)
+- [05.04 — Backup on Teardown, Restore on Bring-Up](04-backup-restore/spec.md#teardown)

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Bring up the AWS environment: infrastructure, Secrets and Argo CD (HOW_TO_RUN.md §3.1 and §3.2).
+# Bring up the AWS environment: infrastructure, Secrets, the database restore and Argo CD
+# (HOW_TO_RUN.md §3).
 # Run from Git Bash: ./scripts/up.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -21,6 +22,7 @@ if [ "$account" != "$ACCOUNT_ID" ]; then
   echo "Wrong AWS account: $account (expected $ACCOUNT_ID)" >&2
   exit 1
 fi
+command -v velero >/dev/null || { echo "Velero CLI not found (HOW_TO_RUN.md §2)" >&2; exit 1; }
 
 # 1. Infrastructure: the persistent buckets first (D-077), then network, EKS and IAM roles
 #    (about 15–20 minutes; no prompt)
@@ -75,11 +77,31 @@ secret airflow airflow-api-secret-key --from-literal=api-secret-key="$AIRFLOW_AP
 secret airflow airflow-jwt-secret --from-literal=jwt-secret="$AIRFLOW_JWT_SECRET"
 secret airflow airflow-admin --from-literal=password="$AIRFLOW_ADMIN_PASSWORD"
 
-# 3. Argo CD; it then deploys the services in platform/aws from Git (no prompt)
+# 3. Restore the database volumes from the latest backup, before Argo CD starts the databases
+#    (D-078, D-080); skipped when the bucket has none (first bring-up, or after a purge)
+bucket=eks-for-data-velero-$ACCOUNT_ID
+backup=$(aws s3 ls "s3://$bucket/backups/" | awk '{print $2}' | tr -d / | sort | tail -n 1)
+if [ -n "$backup" ]; then
+  for i in $(seq 1 60); do   # up to 10 minutes for Velero to read the backup from the bucket
+    kubectl -n velero get backup "$backup" >/dev/null 2>&1 && break
+    sleep 10
+  done
+  velero restore create --from-backup "$backup" --include-resources persistentvolumeclaims --wait
+  restore=$(kubectl -n velero get restores --sort-by=.metadata.creationTimestamp     -o jsonpath='{.items[-1:].metadata.name}')
+  phase=$(kubectl -n velero get restore "$restore" -o jsonpath='{.status.phase}')
+  if [ "$phase" != Completed ]; then
+    echo "Restore $restore ended as $phase (velero restore describe $restore)" >&2
+    exit 1
+  fi
+else
+  echo "No backup in $bucket: starting with empty databases"
+fi
+
+# 4. Argo CD; it then deploys the services in platform/aws from Git (no prompt)
 terraform -chdir=infra/aws/gitops init
 terraform -chdir=infra/aws/gitops apply -auto-approve
 
-# 4. Polaris realm bootstrap (D-059), once Argo CD has Polaris and its Postgres Healthy;
+# 5. Polaris realm bootstrap (D-059), once Argo CD has Polaris and its Postgres Healthy;
 #    safe to run again (specs/03-processing-spark-iceberg/HOW_TO_RUN.md §3)
 wait_healthy() {
   local app=$1 i

@@ -20,7 +20,7 @@ There are two ways to deploy the services on the cluster:
 | 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 | 03 — Processing: Spark and Iceberg | In progress (03.01 to 03.05 done) | [Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md) | [Verify](specs/03-processing-spark-iceberg/README.md) |
 | 04 — Orchestration: Airflow for Airbyte and Spark | In progress (04.01 to 04.03 done) | [Run](specs/04-orchestration-airflow/HOW_TO_RUN.md) | [Verify](specs/04-orchestration-airflow/README.md) |
-| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 to 05.03 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
+| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 to 05.04 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
 
 ## 2. Prerequisites
 
@@ -29,19 +29,25 @@ There are two ways to deploy the services on the cluster:
 - Git Bash in the repository root, with the `.env` variables loaded (Bash syntax; it does not work
   in PowerShell): `set -a; source .env; set +a`
 - kubectl 1.35 to 1.37 (`kubectl version --client`)
+- [Velero CLI](https://velero.io/docs/main/basic-install/) 1.18.2, the server's version
+  ([D-081](docs/decisions/081-velero-version.md)): `velero version --client-only`. On Windows,
+  `choco install velero`, or the release archive from GitHub
 - Manual path only: [Helm](https://helm.sh/docs/intro/install/) 3 and
   [yq](https://github.com/mikefarah/yq) 4, to read the chart values from the Argo CD manifests
 
 ## 3. Bring Up
 
-**Quick option (with Argo CD):** `./scripts/up.sh` runs sections 3.1 and 3.2 steps 1 and 2 in one
-go: it generates the missing values in `.env`, checks the AWS account, applies `infra/aws/cluster`
-and `infra/aws/backup` (Velero), creates the namespaces and Secrets, applies `infra/aws/gitops`, with no `yes` prompt, and
-bootstraps the Polaris realm (3.2 step 5) once Polaris is Healthy. Then check 3.2 step 4.
+**Quick option (with Argo CD):** `./scripts/up.sh` runs sections 3.1 and 3.2 steps 1 to 3 in one
+go: it generates the missing values in `.env`, checks the AWS account, applies `infra/aws/data`
+(buckets), `infra/aws/cluster` and `infra/aws/backup` (Velero), creates the namespaces and Secrets,
+restores the databases from the latest backup, applies `infra/aws/gitops`, with no `yes` prompt, and
+bootstraps the Polaris realm (3.2 step 6) once Polaris is Healthy. Then check 3.2 step 5.
 
 ### 3.1 Infrastructure (both paths)
 
-The `infra/aws/cluster` root creates the network, the EKS cluster, the buckets and the IAM roles.
+The `infra/aws/data` root creates the buckets, which outlive the environment
+([D-077](docs/decisions/077-persistent-data-root.md)); the `infra/aws/cluster` root creates the
+network, the EKS cluster and the IAM roles; the `infra/aws/backup` root installs Velero.
 
 1. Load the `.env` variables:
 
@@ -55,7 +61,17 @@ The `infra/aws/cluster` root creates the network, the EKS cluster, the buckets a
    aws sts get-caller-identity --query Account --output text
    ```
 
-3. Create the infrastructure (about 15–20 minutes; cost starts running). Terraform allows only your
+3. Create the buckets; on later bring-ups it reports no changes:
+
+   ```bash
+   terraform -chdir=infra/aws/data init
+   ```
+
+   ```bash
+   terraform -chdir=infra/aws/data apply
+   ```
+
+   Then the infrastructure (about 15–20 minutes; cost starts running). Terraform allows only your
    public IP to reach the EKS API:
 
    ```bash
@@ -70,7 +86,18 @@ The `infra/aws/cluster` root creates the network, the EKS cluster, the buckets a
    terraform -chdir=infra/aws/cluster apply tfplan
    ```
 
-4. Point `kubectl` to the cluster:
+4. Install Velero, before any service starts
+   ([D-078](docs/decisions/078-velero-installation-and-restore-order.md)):
+
+   ```bash
+   terraform -chdir=infra/aws/backup init
+   ```
+
+   ```bash
+   terraform -chdir=infra/aws/backup apply
+   ```
+
+5. Point `kubectl` to the cluster:
 
    ```bash
    aws eks update-kubeconfig --name eks-for-data --region us-east-1
@@ -206,7 +233,22 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    kubectl -n airflow create secret generic airflow-admin --from-literal=password="$AIRFLOW_ADMIN_PASSWORD"
    ```
 
-2. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
+2. **Restore the databases** ([05.04 design](specs/05-lab-state-persistence/04-backup-restore/spec.md#design)),
+   before Argo CD starts them, so their volumes come from the latest backup. Skip this step when
+   `velero backup get` lists no backup (first bring-up, or after a purge); then the databases start
+   empty. Otherwise restore the one backup listed, replacing `<backup>`:
+
+   ```bash
+   velero backup get
+   ```
+
+   ```bash
+   velero restore create --from-backup <backup> --include-resources persistentvolumeclaims --wait
+   ```
+
+   The restore must end `Completed`. Velero lists the backups about a minute after it starts.
+
+3. **Argo CD:** apply the `infra/aws/gitops` root after the cluster
    ([01.04 design](specs/01-ingestion-airbyte-s3/04-argo-cd/spec.md#design)):
 
    ```bash
@@ -221,12 +263,12 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    terraform -chdir=infra/aws/gitops apply tfplan
    ```
 
-3. **Airbyte, Postgres, DuckDB, Spark, Polaris, Airflow and the StorageClass:** they are manifests in
+4. **Airbyte, Postgres, DuckDB, Spark, Polaris, Airflow and the StorageClass:** they are manifests in
    `platform/aws`; Argo CD applies them after `git push` to `main` ([01.05 design](specs/01-ingestion-airbyte-s3/05-airbyte/spec.md#design)).
-4. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres`,
+5. **Check:** `kubectl -n argocd get applications` shows `platform`, `airbyte`, `postgres`,
    `duckdb`, `spark-operator`, `spark-jobs`, `polaris-postgres`, `polaris`, `airflow-postgres` and
    `airflow` `Synced` and `Healthy`, or open the [Argo CD UI](#43-argo-cd).
-5. **Polaris realm:** bootstrap it once per environment
+6. **Polaris realm:** bootstrap it once per environment
    ([phase 03 How to Run, 3. Bootstrap the Polaris Realm](specs/03-processing-spark-iceberg/HOW_TO_RUN.md#3-bootstrap-the-polaris-realm)).
 
 ### 3.3 Services without Argo CD (manual)
@@ -434,25 +476,38 @@ logs are read from the S3 bucket `eks-for-data-airflow-283429977024`
 ## 5. Teardown
 
 **Quick option (with Argo CD):** `./scripts/down.sh` runs sections 5.1 and 5.2 in one go: it checks
-the AWS account, deletes the services, destroys `infra/aws/gitops`, `infra/aws/backup` and
-`infra/aws/cluster` with no `yes` prompt, deletes the EKS log group if it came back, lists anything left and removes the
-`kubectl` context.
+the AWS account, stops the services, backs up the four databases with Velero (and stops if the backup
+fails), deletes the older backup, deletes the database namespaces, destroys `infra/aws/gitops`,
+`infra/aws/backup` and `infra/aws/cluster` with no `yes` prompt, deletes the EKS log group if it came
+back, lists anything left and removes the `kubectl` context. The buckets and the latest backup are
+kept, so the next bring-up continues from this point. `./scripts/down.sh --purge` runs section 5.3
+instead of the backup.
 
 ### 5.1 Turn Off
 
-Delete the services **while the cluster is up**, so their EBS volumes are deleted with them; then
-destroy the infrastructure. In Git Bash, from the repository root:
+Stop the services and back up the databases **while the cluster is up**, then delete the database
+volumes and destroy the infrastructure
+([05.04 design](specs/05-lab-state-persistence/04-backup-restore/spec.md#design)). In Git Bash, from
+the repository root:
 
 **With Argo CD:**
 
 ```bash
 set -a; source .env; set +a
 kubectl delete pod --all                     # no test pods keeping nodes alive
-kubectl delete application platform -n argocd   # waits for the cascade to its child applications
-kubectl delete namespace airbyte --ignore-not-found   # PVC → Airbyte EBS volume deleted
+kubectl delete application platform -n argocd   # waits for the cascade; database volumes stay
+kubectl -n airbyte delete statefulset airbyte-db --cascade=foreground --ignore-not-found
+velero backup create lab-$(date -u +%Y%m%d%H%M%S) --include-namespaces postgres,polaris,airflow,airbyte --include-resources persistentvolumeclaims --wait
+velero backup get                            # the new backup Completed; delete any older one:
+velero backup delete <older-backup> --confirm
+kubectl delete namespace postgres polaris airflow airbyte   # PVCs → EBS volumes deleted
 terraform -chdir=infra/aws/gitops destroy    # Argo CD; asks for "yes"
+terraform -chdir=infra/aws/backup destroy    # Velero; asks for "yes"
 terraform -chdir=infra/aws/cluster destroy   # shows the plan and asks for "yes"
 ```
+
+If the backup does not end `Completed`, stop there: the volumes still exist, and
+`velero backup describe <backup>` shows why.
 
 **Without Argo CD:** remove what you installed by hand, then destroy only the `cluster` root:
 
@@ -463,8 +518,9 @@ kubectl delete -f platform/aws/storageclass.yaml
 terraform -chdir=infra/aws/cluster destroy
 ```
 
-The order matters: Argo CD must delete its applications before it is removed, the namespaces with
-volumes must go while the cluster is up (otherwise their EBS volumes are left behind and keep
+The order matters: Argo CD must delete its applications before it is removed, the backup must
+complete before the database namespaces go, the namespaces with volumes must go while the cluster is
+up (otherwise their EBS volumes are left behind and keep
 costing), and the `gitops` root needs the cluster to exist. It takes about 10–15 minutes, mostly
 deleting the cluster and the NAT Gateways.
 
@@ -473,14 +529,21 @@ deleting the cluster and the NAT Gateways.
 | EKS cluster, Auto Mode nodes, IAM roles, OIDC provider, security groups, CloudWatch log group | US$ 0.10/h + nodes |
 | 2 NAT Gateways, 2 Elastic IPs | US$ 0.10/h |
 | VPC, subnets, route tables, Internet Gateway, S3 endpoint | (free) |
-| Bronze, silver, Airbyte and Airflow buckets, emptied first (**bronze and silver data is lost**); IAM roles and policies (Airbyte, DuckDB, Spark, Polaris, silver data, Airflow) | Cents (S3 storage) |
-| Argo CD, Airbyte, Postgres, DuckDB, Spark Operator, Polaris, Airflow, the catalog and Airflow Postgres and their EBS volumes | Extra Auto Mode node(s) + volumes |
+| IAM roles and policies (Airbyte, DuckDB, Spark, Polaris, silver data, Airflow, Velero) | (free) |
+| Argo CD, Velero, Airbyte, Postgres, DuckDB, Spark Operator, Polaris, Airflow, the catalog and Airflow Postgres and their EBS volumes | Extra Auto Mode node(s) + volumes |
+
+What stays, at a cost of cents per month, until the purge (5.3):
+
+- The five buckets of `infra/aws/data` (bronze, silver, Airbyte, Airflow, Velero), with their data
+  (S3 storage).
+- The latest backup: its files in the Velero bucket and the EBS snapshots of the four database
+  volumes (US$ 0.05/GB-month, [D-076](docs/decisions/076-lab-state-persistence.md)).
 
 What stays, at no cost:
 
 - The code and `.terraform.lock.hcl` in Git.
-- The local `terraform.tfstate`, now empty; the next `apply` recreates everything from it
-  ([3. Bring Up](#3-bring-up)).
+- The local `terraform.tfstate` of each root, empty except for `infra/aws/data`; the next `apply`
+  recreates everything from it ([3. Bring Up](#3-bring-up)).
 - The `eks-for-data` context in `~/.kube/config`, pointing to a cluster that no longer exists.
   Remove it with `kubectl config delete-context eks-for-data`.
 - The `aws:eks:cluster-name` cost allocation tag activation in Billing.
@@ -502,3 +565,26 @@ aws ec2 describe-vpcs --filters Name=tag:project,Values=2026_eks_for_data $P --q
   Check with `MSYS_NO_PATHCONV=1 aws logs describe-log-groups --log-group-name-prefix /aws/eks/eks-for-data $P`
   and, if it is there, delete it with
   `MSYS_NO_PATHCONV=1 aws logs delete-log-group --log-group-name /aws/eks/eks-for-data/cluster --profile eks-ws --region us-east-1`.
+- Expected result after the purge (5.3): also no `eks-for-data-*` bucket and no EBS snapshot tagged
+  `eks:eks-cluster-name=eks-for-data`:
+  `aws s3 ls --profile eks-ws | grep eks-for-data` and
+  `aws ec2 describe-snapshots --owner-ids self --filters Name=tag:eks:eks-cluster-name,Values=eks-for-data $P --query 'Snapshots[].SnapshotId'`.
+
+### 5.3 Purge (Full Reset)
+
+Removes everything the lab keeps between environments: every backup with its EBS snapshots, and the
+five buckets with their data. The next bring-up starts from zero
+([D-088](docs/decisions/088-purge-backup-deletion.md)). It needs the cluster up, because Velero
+deletes the snapshots; if the environment is down, bring it up first ([3. Bring Up](#3-bring-up)).
+
+```bash
+./scripts/down.sh --purge
+```
+
+By hand, instead of the backup and `velero backup delete <older-backup>` lines of 5.1, run
+`velero backup delete --all --confirm`, wait until `velero backup get` lists nothing, continue with 5.1,
+and end with:
+
+```bash
+terraform -chdir=infra/aws/data destroy   # empties and deletes the five buckets; asks for "yes"
+```
