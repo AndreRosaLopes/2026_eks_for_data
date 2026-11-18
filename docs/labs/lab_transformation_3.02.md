@@ -547,5 +547,5 @@ kubectl -n spark delete sparkapplication silver-to-gold
 ```
 
 The gold tables go with the silver bucket and the catalog at
-[Turn Off](../../HOW_TO_RUN.md#51-turn-off). To start this lab over before then, use a new gold
+[Turn Off](../../HOW_TO_RUN.md#35-turn-off). To start this lab over before then, use a new gold
 namespace in [7](#7-how-to-run-the-job).

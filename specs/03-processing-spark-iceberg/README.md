@@ -183,11 +183,12 @@ Run every command in Git Bash, from the repository root, one block at a time.
 
 ### 03.05 — Catalog Postgres and Polaris
 
-1. Bootstrap the realm: [Run, 3. Bootstrap the Polaris Realm](HOW_TO_RUN.md#3-bootstrap-the-polaris-realm).
+1. Bootstrap the realm: [How to Run, A.1 Bring Up by Hand](../../HOW_TO_RUN.md#a1-bring-up-by-hand),
+   step 10 (`./scripts/up.sh` runs it).
    - Expected result: `Realm 'POLARIS' successfully bootstrapped.`, `Bootstrap completed
      successfully.`, then `pod "polaris-bootstrap" deleted from polaris namespace`.
 
-2. Create a test catalog named `verify`: [Run, 4. Create a Catalog](HOW_TO_RUN.md#4-create-a-catalog),
+2. Create a test catalog named `verify`: [How to Run, 3.3 Polaris Engine Access](../../HOW_TO_RUN.md#33-polaris-engine-access),
    steps 1 to 4, with `verify` in place of `<catalog>`.
    - Expected result: `catalogs list` shows `verify`, with `default-base-location`
      `s3://eks-for-data-silver-283429977024/verify` and `roleArn`
@@ -201,16 +202,16 @@ Run every command in Git Bash, from the repository root, one block at a time.
 ### 03.06 — Dedup Job and DuckDB Read-Back
 
 1. Create the engines' principal with the names you choose:
-   [Run, 5. Create the Engines' Principal](HOW_TO_RUN.md#5-create-the-engines-principal).
-   - Expected result: `principals list` (same CLI options as in step 1 of Run 5) shows your
+   [How to Run, 3.3 Polaris Engine Access](../../HOW_TO_RUN.md#33-polaris-engine-access), steps 5 to 7.
+   - Expected result: `principals list` (same CLI options as in step 5 of How to Run 3.3) shows your
      principal; `kubectl -n spark get secret polaris-credentials` and
      `kubectl -n duckdb get secret polaris-credentials` both find the Secret.
 
-2. Run the dedup job: [Run, 6. Run the Dedup Job](HOW_TO_RUN.md#6-run-the-dedup-job).
+2. Run the dedup job: [Run, 3. Run the Dedup Job](HOW_TO_RUN.md#3-run-the-dedup-job).
    - Expected result: state `COMPLETED`; the driver log shows
      `silver <namespace>.<table>: rows=<n> distinct_orderkey=<n>`, both numbers equal.
 
-3. Read the table in DuckDB: [Run, 7. Read the Table with DuckDB](HOW_TO_RUN.md#7-read-the-table-with-duckdb).
+3. Read the table in DuckDB: [Run, 4. Read the Table with DuckDB](HOW_TO_RUN.md#4-read-the-table-with-duckdb).
    - Expected result: `silver_rows` equals `bronze_orderkeys`.
 
 ## End-to-End Verification
@@ -218,7 +219,7 @@ Run every command in Git Bash, from the repository root, one block at a time.
 Proves the phase [Done When](plan.md#done-when), in a fresh environment, in this order:
 
 1. Bring up the environment and the Polaris realm:
-   [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up), items 1 to 5.
+   [How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up) and [3.2 Check](../../HOW_TO_RUN.md#32-check).
    - Expected result: Argo CD shows every Application **Synced** and **Healthy**; the bootstrap
      prints `Realm 'POLARIS' successfully bootstrapped.`
 
@@ -233,13 +234,12 @@ Proves the phase [Done When](plan.md#done-when), in a fresh environment, in this
    - Expected result: `COMPLETED`; `bronze orders: rows=<n>` with `<n>` equal to bronze in step 2.
 
 4. **The table exists in the REST catalog, one row per `orderkey`:**
-   [Run, 4. Create a Catalog](HOW_TO_RUN.md#4-create-a-catalog),
-   [5. Create the Engines' Principal](HOW_TO_RUN.md#5-create-the-engines-principal) and
-   [6. Run the Dedup Job](HOW_TO_RUN.md#6-run-the-dedup-job).
+   [How to Run, 3.3 Polaris Engine Access](../../HOW_TO_RUN.md#33-polaris-engine-access), then
+   [Run, 3. Run the Dedup Job](HOW_TO_RUN.md#3-run-the-dedup-job).
    - Expected result: `COMPLETED`; `rows` equals `distinct_orderkey` in the driver log.
 
 5. **DuckDB reads the table through the catalog; its count equals the distinct `orderkey` in
-   bronze:** [Run, 7. Read the Table with DuckDB](HOW_TO_RUN.md#7-read-the-table-with-duckdb).
+   bronze:** [Run, 4. Read the Table with DuckDB](HOW_TO_RUN.md#4-read-the-table-with-duckdb).
    - Expected result: `silver_rows` = `bronze_orderkeys`.
 
 6. **No secrets in the repository:** search the repository for the value of every `.env` variable
@@ -253,14 +253,14 @@ Proves the phase [Done When](plan.md#done-when), in a fresh environment, in this
    - Expected result: only `search done`, with no `FOUND:` line.
 
 7. **The teardown removes every resource that incurs cost:**
-   [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off), then
-   [5.2 Check Nothing Is Left](../../HOW_TO_RUN.md#52-check-nothing-is-left).
+   [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off), then
+   [3.6 Check Nothing Is Left](../../HOW_TO_RUN.md#36-check-nothing-is-left).
    - Expected result: no EKS cluster, EC2 instance, EBS volume, NAT Gateway, load balancer or
      bucket of the project remains.
 
 ## Teardown
 
-The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown). Each step's own
+The whole environment: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off). Each step's own
 teardown is in its spec:
 
 - [03.02 — Silver Bucket and IRSA Roles](02-silver-bucket-and-irsa/spec.md#teardown)

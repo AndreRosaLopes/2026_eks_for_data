@@ -206,7 +206,7 @@ missed.
 
 Stop the port-forwards ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)). Keep
 the source, destination and connection: they disappear with Airbyte's database, and the Parquet
-files with the bronze bucket, at [Turn Off](../../HOW_TO_RUN.md#51-turn-off).
+files with the bronze bucket, at [Turn Off](../../HOW_TO_RUN.md#35-turn-off).
 
 Optional, when you stop using CDC and no sync is running: drop the slot, so Postgres stops holding
 WAL for it ([02.08 Teardown](08-airbyte-user-and-cdc-preparation/spec.md#teardown)). To use CDC

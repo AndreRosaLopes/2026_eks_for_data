@@ -98,20 +98,20 @@ verification proves the phase [Done When](plan.md#done-when).
 
 Proves the phase [Done When](plan.md#done-when).
 
-1. Bring the environment up: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up) (skip it if
+1. Bring the environment up: [How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up) (skip it if
    the environment is already up).
    - Expected result: `terraform apply` completes for `cluster` and `gitops`; Argo CD shows
      `platform` and `airbyte` **Synced** and **Healthy** (01.04 and 01.05 sections above).
 2. Run [Lab 01 — API Ingestion](HOW_TO_RUN.md#1-lab-01--api-ingestion).
    - Expected result: the sync **Succeeded**, and the Parquet file in the bronze bucket is readable,
      with `ditto`.
-3. Tear down: [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off), then
-   [5.2 Check Nothing Is Left](../../HOW_TO_RUN.md#52-check-nothing-is-left).
+3. Tear down: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off), then
+   [3.6 Check Nothing Is Left](../../HOW_TO_RUN.md#36-check-nothing-is-left).
    - Expected result: every command returns empty; nothing that costs is left.
 
 ## Teardown
 
-The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown). Each step's own
+The whole environment: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off). Each step's own
 teardown is in its spec:
 
 - [01.01 — Network](01-network/spec.md#teardown)

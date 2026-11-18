@@ -46,7 +46,7 @@ Written on the last step: walkthrough proving the phase "Done When".
 
 ## Teardown
 
-The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown). Each step's own
+The whole environment: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off). Each step's own
 teardown is in its spec:
 
 - [04.01 — Roadmap](01-roadmap/spec.md#teardown)

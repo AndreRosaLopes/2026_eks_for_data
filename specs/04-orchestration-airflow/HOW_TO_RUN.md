@@ -7,7 +7,7 @@ What to execute in this phase, once the environment is up. The checks and expect
 
 ## Prerequisites
 
-- The environment up: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up); Argo CD shows the
+- The environment up: [How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up); Argo CD shows the
   phase services **Synced** and **Healthy**.
 
 ## 1. Build and Push the Airflow Image

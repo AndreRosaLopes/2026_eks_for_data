@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tear down the AWS environment (HOW_TO_RUN.md §5). The databases are backed up with Velero first,
+# Tear down the AWS environment (HOW_TO_RUN.md §3.5). The databases are backed up with Velero first,
 # and the buckets in infra/aws/data are kept, with their data (D-076, D-077).
 # Run from Git Bash: ./scripts/down.sh
 # Full reset (D-088): ./scripts/down.sh --purge deletes every backup and the buckets instead

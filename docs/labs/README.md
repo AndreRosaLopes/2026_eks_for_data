@@ -10,19 +10,20 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
 | # | Lab | What the student does and learns |
 |---|---|---|
-| 1.1 | Platform tour | Read the architecture, then map AWS (VPC, EKS, S3, RDS) to Kubernetes objects. Look at what Terraform created and what Argo CD created. |
-| 1.2 | `kubectl` basics | Contexts, namespaces, `get`/`describe`/`logs`/`exec`, `-o yaml`, labels and selectors. |
-| 1.3 | Workload objects | Pod, Deployment, ReplicaSet, StatefulSet, Job, CronJob. Delete a pod and watch it come back (self-healing). |
-| 1.4 | Networking | Service (ClusterIP), DNS between namespaces, `port-forward` to reach the UIs, Ingress or Load Balancer. |
-| 1.5 | Configuration and secrets | ConfigMap, Secret, environment variables and mounted volumes. Why secrets stay out of Git. |
-| 1.6 | Storage | PersistentVolume, PersistentVolumeClaim, StorageClass (EBS). Why Postgres needs state and Spark does not. |
-| 1.7 | Resources and scheduling | Requests and limits, QoS (Quality of Service) classes, OOMKilled, taints and tolerations, node affinity. |
-| 1.8 | Autoscaling with Karpenter | Create a pending pod and watch a node appear. Then watch consolidation remove it, and see how `do-not-disrupt` protects Spark and Airflow pods. |
-| 1.9 | AWS identity | Pod Identity: a ServiceAccount gets an IAM role, then the pod reads S3 with no access keys. Break the permission and read the `AccessDenied` error. |
-| 1.10 | GitOps with Argo CD | Application, sync, drift, and self-heal: change something by hand and watch Argo CD revert it. Roll back through Git. |
-| 1.11 | RBAC (Role-Based Access Control) | Role, RoleBinding, `kubectl auth can-i`, and the Airflow-to-SparkApplication case. |
-| 1.12 | Troubleshooting | `CrashLoopBackOff`, `ImagePullBackOff`, `Pending`, events, `kubectl debug`. |
-| 1.13 | Cost | Spot vs. On-Demand nodes, cost per node and namespace, and turning the lab off. |
+| 1.01 | [Services without Argo CD](lab_infrastructure_1.01.md) | Install the StorageClass with `kubectl` and Airbyte with `helm`, reading the chart values from the Argo CD Application. See why Helm hooks matter and what is lost without GitOps. |
+| 1.02 | Platform tour | Read the architecture, then map AWS (VPC, EKS, S3, RDS) to Kubernetes objects. Look at what Terraform created and what Argo CD created. |
+| 1.03 | `kubectl` basics | Contexts, namespaces, `get`/`describe`/`logs`/`exec`, `-o yaml`, labels and selectors. |
+| 1.04 | Workload objects | Pod, Deployment, ReplicaSet, StatefulSet, Job, CronJob. Delete a pod and watch it come back (self-healing). |
+| 1.05 | Networking | Service (ClusterIP), DNS between namespaces, `port-forward` to reach the UIs, Ingress or Load Balancer. |
+| 1.06 | Configuration and secrets | ConfigMap, Secret, environment variables and mounted volumes. Why secrets stay out of Git. |
+| 1.07 | Storage | PersistentVolume, PersistentVolumeClaim, StorageClass (EBS). Why Postgres needs state and Spark does not. |
+| 1.08 | Resources and scheduling | Requests and limits, QoS (Quality of Service) classes, OOMKilled, taints and tolerations, node affinity. |
+| 1.09 | Autoscaling with Karpenter | Create a pending pod and watch a node appear. Then watch consolidation remove it, and see how `do-not-disrupt` protects Spark and Airflow pods. |
+| 1.10 | AWS identity | Pod Identity: a ServiceAccount gets an IAM role, then the pod reads S3 with no access keys. Break the permission and read the `AccessDenied` error. |
+| 1.11 | GitOps with Argo CD | Application, sync, drift, and self-heal: change something by hand and watch Argo CD revert it. Roll back through Git. |
+| 1.12 | RBAC (Role-Based Access Control) | Role, RoleBinding, `kubectl auth can-i`, and the Airflow-to-SparkApplication case. |
+| 1.13 | Troubleshooting | `CrashLoopBackOff`, `ImagePullBackOff`, `Pending`, events, `kubectl debug`. |
+| 1.14 | Cost | Spot vs. On-Demand nodes, cost per node and namespace, and turning the lab off. |
 
 ## 2. Ingestion: Airbyte and its concepts
 

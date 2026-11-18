@@ -80,4 +80,4 @@ Expected: columns including `id`, `name` and Airbyte's `_airbyte_*` metadata; `1
 
 Stop the port-forward ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)). Nothing else: the source, destination and connection
 disappear with Airbyte's database, and the Parquet files with the bronze bucket, at
-[Turn Off](../../HOW_TO_RUN.md#51-turn-off).
+[Turn Off](../../HOW_TO_RUN.md#35-turn-off).

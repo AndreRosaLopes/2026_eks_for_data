@@ -10,7 +10,7 @@ on its own; the end-to-end verification proves the phase [Done When](plan.md#don
 
 - [How to Run, 2. Prerequisites](../../HOW_TO_RUN.md#2-prerequisites)
 - [How to Run, 4. Access](../../HOW_TO_RUN.md#4-access): source Postgres and DuckDB UI; the
-  passwords come from `.env` ([How to Run, 3.2](../../HOW_TO_RUN.md#32-services-with-argo-cd))
+  passwords come from `.env` ([How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up))
 
 ## Step Verification
 
@@ -190,7 +190,7 @@ Follow [Lab 03 — CDC Ingestion](lab03-cdc-ingestion.md):
 
 Proves the phase [Done When](plan.md#done-when), from a new environment.
 
-1. Bring the environment up: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up).
+1. Bring the environment up: [How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up).
    - Expected result: Argo CD shows `airbyte`, `postgres` and `duckdb` **Synced** and **Healthy**.
 2. In the [DuckDB UI](../../HOW_TO_RUN.md#46-duckdb-ui), run `FROM duckdb_databases()`.
    - Expected result: `source` listed: DuckDB reads the source Postgres.
@@ -210,15 +210,15 @@ Proves the phase [Done When](plan.md#done-when), from a new environment.
    ```
 
    - Expected result: `No secrets found` (a match prints only the variable name, never the value).
-7. Tear down: [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off), then
-   [5.2 Check Nothing Is Left](../../HOW_TO_RUN.md#52-check-nothing-is-left).
+7. Tear down: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off), then
+   [3.6 Check Nothing Is Left](../../HOW_TO_RUN.md#36-check-nothing-is-left).
    - Expected result: every command returns empty; nothing that costs is left.
 
 ## Teardown
 
 - [02.01](01-roadmap-and-architecture/spec.md#teardown): not applicable
-- [02.02](02-source-database/spec.md#teardown): covered by [Turn Off](../../HOW_TO_RUN.md#51-turn-off)
-- [02.03](03-duckdb-service/spec.md#teardown): covered by [Turn Off](../../HOW_TO_RUN.md#51-turn-off)
+- [02.02](02-source-database/spec.md#teardown): covered by [Turn Off](../../HOW_TO_RUN.md#35-turn-off)
+- [02.03](03-duckdb-service/spec.md#teardown): covered by [Turn Off](../../HOW_TO_RUN.md#35-turn-off)
 - [02.04](04-tpch-generation/spec.md#teardown): the tables go with the Postgres volume
 - [02.05](05-oltp-baseline/spec.md#teardown): `oltp` goes with the Postgres volume; rerunning the
   script resets it

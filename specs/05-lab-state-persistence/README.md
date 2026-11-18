@@ -40,10 +40,10 @@ Velero with the cluster.
 
 No manual check: every check is automated and run by the agent
 ([spec, Verification Plan](04-backup-restore/spec.md#verification-plan)); checks 3 to 9 run in step
-05.05. Expected results: [`./scripts/down.sh`](../../HOW_TO_RUN.md#5-teardown) backs up the four
+05.05. Expected results: [`./scripts/down.sh`](../../HOW_TO_RUN.md#35-turn-off) backs up the four
 databases and keeps only the latest backup; afterwards only the buckets and four EBS snapshots are
-left; [`./scripts/up.sh`](../../HOW_TO_RUN.md#3-bring-up) restores them before Argo CD, with the data
-written before the teardown; [`./scripts/down.sh --purge`](../../HOW_TO_RUN.md#53-purge-full-reset)
+left; [`./scripts/up.sh`](../../HOW_TO_RUN.md#31-bring-up) restores them before Argo CD, with the data
+written before the teardown; [`./scripts/down.sh --purge`](../../HOW_TO_RUN.md#37-purge-full-reset)
 leaves no bucket, backup or snapshot.
 
 ### 05.05 — End to End
@@ -58,7 +58,7 @@ checks of 05.03 and 05.04. Expected results: the steps below.
 Proves the phase [Done When](plan.md#done-when). Each step was run by the agent in step 05.05
 ([results](05-end-to-end/spec.md#verification-plan)); repeat it to verify by hand.
 
-1. Bring the environment up with no backup: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up).
+1. Bring the environment up with no backup: [How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up).
    - Expected result: `up.sh` prints `No backup in eks-for-data-velero-283429977024: starting with
      empty databases`; every application `Synced` and `Healthy`.
 2. Create test data: TPC-H ([phase 02 How to Run, 1, 2 and 4](../02-transactional-ingestion/HOW_TO_RUN.md)),
@@ -68,11 +68,11 @@ Proves the phase [Done When](plan.md#done-when). Each step was run by the agent 
    `smoke_test` ([phase 04 How to Run](../04-orchestration-airflow/HOW_TO_RUN.md)), and a marker row
    in each of the four databases ([How to Run, 4. Access](../../HOW_TO_RUN.md#4-access)). Write down
    the TPC-H row counts, the `airbyte_slot` position and the silver row count.
-3. Tear down: [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off) (`./scripts/down.sh`).
+3. Tear down: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off) (`./scripts/down.sh`).
    - Expected result: the backup ends `Completed` with five volume snapshots; afterwards
-     [5.2](../../HOW_TO_RUN.md#52-check-nothing-is-left) lists nothing, and only the five
+     [3.6](../../HOW_TO_RUN.md#36-check-nothing-is-left) lists nothing, and only the five
      `eks-for-data-*` buckets, one backup and five tagged EBS snapshots are left.
-4. Bring the environment up again: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up),
+4. Bring the environment up again: [How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up),
    including 3.2 step 7 (Polaris engine credentials after a restore).
    - Expected result: the restore ends `Completed` before Argo CD creates `platform`; every
      application `Synced` and `Healthy`.
@@ -81,7 +81,7 @@ Proves the phase [Done When](plan.md#done-when). Each step was run by the agent 
      same Airbyte connection, whose next sync, after one row is inserted, writes only that row to
      bronze; DuckDB reads the same `silver` row count through Polaris; Airflow lists the
      `smoke_test` run and its task log opens.
-6. Reset everything: [How to Run, 5.3 Purge](../../HOW_TO_RUN.md#53-purge-full-reset).
+6. Reset everything: [How to Run, 3.7 Purge](../../HOW_TO_RUN.md#37-purge-full-reset).
    - Expected result: no `eks-for-data-*` bucket, EBS snapshot, volume, cluster, NAT Gateway or VPC.
 7. Search the repository for each `.env` value (`git grep`).
    - Expected result: no password, token or key; only the non-secret profile, region, account,
@@ -89,7 +89,7 @@ Proves the phase [Done When](plan.md#done-when). Each step was run by the agent 
 
 ## Teardown
 
-The whole environment: [How to Run, 5. Teardown](../../HOW_TO_RUN.md#5-teardown). Each step's own
+The whole environment: [How to Run, 3.5 Turn Off](../../HOW_TO_RUN.md#35-turn-off). Each step's own
 teardown is in its spec:
 
 - [05.01 — Roadmap](01-roadmap/spec.md#teardown)

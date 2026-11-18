@@ -11,7 +11,7 @@ this lab in every new environment, before lab 02 or lab 03.
 ## Prerequisites
 
 - The environment up: Argo CD shows `postgres` and `duckdb` **Synced** and **Healthy**
-  ([How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up)).
+  ([How to Run, 3.1 Bring Up](../../HOW_TO_RUN.md#31-bring-up)).
 - Git Bash in the repository root.
 
 The scripts run with the DuckDB CLI inside the DuckDB pod

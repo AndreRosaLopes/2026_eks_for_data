@@ -20,7 +20,7 @@ validation.
 
 ## Prerequisites
 
-- Phase 03 done up to [Run, 5. Create the Engines' Principal](../../specs/03-processing-spark-iceberg/HOW_TO_RUN.md#5-create-the-engines-principal):
+- The Polaris engine access done: [How to Run, 3.3 Polaris Engine Access](../../HOW_TO_RUN.md#33-polaris-engine-access):
   a Polaris catalog, the engines' principal, and Secret `polaris-credentials` in `spark` and
   `duckdb`.
 - [Lab 02 — Date Cursor Ingestion](../../specs/02-transactional-ingestion/lab02-cursor-ingestion.md)
@@ -28,7 +28,7 @@ validation.
   least once.
 - The [Airbyte UI](../../HOW_TO_RUN.md#44-airbyte) and the [DuckDB UI](../../HOW_TO_RUN.md#46-duckdb-ui)
   open, with the catalog attached as `lake`
-  ([Run, 7. Read the Table with DuckDB](../../specs/03-processing-spark-iceberg/HOW_TO_RUN.md#7-read-the-table-with-duckdb),
+  ([phase 03 Run, 4. Read the Table with DuckDB](../../specs/03-processing-spark-iceberg/HOW_TO_RUN.md#4-read-the-table-with-duckdb),
   first block).
 - Git Bash in the repository root, with push access to `main`.
 
@@ -403,5 +403,5 @@ kubectl -n spark delete sparkapplication bronze-to-silver-$VARIANT
 ```
 
 The silver tables go with the silver bucket and the catalog at
-[Turn Off](../../HOW_TO_RUN.md#51-turn-off). To start this lab over before then, use a new
+[Turn Off](../../HOW_TO_RUN.md#35-turn-off). To start this lab over before then, use a new
 namespace in [3](#3-how-to-run-the-job).

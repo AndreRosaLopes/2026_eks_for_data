@@ -134,7 +134,7 @@ rows that exist. [Lab 03 — CDC](lab03-cdc-ingestion.md) captures them.
 
 Stop the port-forwards ([How to Run, 4.2 Port-Forwards](../../HOW_TO_RUN.md#42-port-forwards)).
 Nothing else: the source, destination and connection disappear with Airbyte's database, and the
-Parquet files with the bronze bucket, at [Turn Off](../../HOW_TO_RUN.md#51-turn-off). To drop the
+Parquet files with the bronze bucket, at [Turn Off](../../HOW_TO_RUN.md#35-turn-off). To drop the
 files earlier:
 
 ```bash

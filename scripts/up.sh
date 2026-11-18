@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bring up the AWS environment: infrastructure, Secrets, the database restore and Argo CD
-# (HOW_TO_RUN.md §3).
+# (HOW_TO_RUN.md §3.1).
 # Run from Git Bash: ./scripts/up.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -102,7 +102,7 @@ terraform -chdir=infra/aws/gitops init
 terraform -chdir=infra/aws/gitops apply -auto-approve
 
 # 5. Polaris realm bootstrap (D-059), once Argo CD has Polaris and its Postgres Healthy;
-#    safe to run again (specs/03-processing-spark-iceberg/HOW_TO_RUN.md §3)
+#    safe to run again (HOW_TO_RUN.md Appendix A.1, step 10)
 wait_healthy() {
   local app=$1 i
   for i in $(seq 1 120); do   # up to 20 minutes
