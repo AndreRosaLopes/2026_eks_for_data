@@ -80,13 +80,13 @@ secret airflow airflow-admin --from-literal=password="$AIRFLOW_ADMIN_PASSWORD"
 # 3. Restore the database volumes from the latest backup, before Argo CD starts the databases
 #    (D-078, D-080); skipped when the bucket has none (first bring-up, or after a purge)
 bucket=eks-for-data-velero-$ACCOUNT_ID
-backup=$(aws s3 ls "s3://$bucket/backups/" | awk '{print $2}' | tr -d / | sort | tail -n 1)
+backup=$( (aws s3 ls "s3://$bucket/backups/" || true) | awk '{print $2}' | tr -d / | sort | tail -n 1)
 if [ -n "$backup" ]; then
   for i in $(seq 1 60); do   # up to 10 minutes for Velero to read the backup from the bucket
     kubectl -n velero get backup "$backup" >/dev/null 2>&1 && break
     sleep 10
   done
-  velero restore create --from-backup "$backup" --include-resources persistentvolumeclaims --wait
+  velero restore create --from-backup "$backup" --include-resources persistentvolumeclaims,volumesnapshots.snapshot.storage.k8s.io,volumesnapshotcontents.snapshot.storage.k8s.io --wait
   restore=$(kubectl -n velero get restores --sort-by=.metadata.creationTimestamp     -o jsonpath='{.items[-1:].metadata.name}')
   phase=$(kubectl -n velero get restore "$restore" -o jsonpath='{.status.phase}')
   if [ "$phase" != Completed ]; then

@@ -27,6 +27,8 @@ kubectl delete pod --all                                   # no test pods keepin
 kubectl delete application platform -n argocd --ignore-not-found   # waits for the child applications
 # airbyte-db is a Helm hook, which Argo CD may leave running
 kubectl -n airbyte delete statefulset airbyte-db --cascade=foreground --ignore-not-found
+# The cascade also deleted the StorageClass, which Velero's CSI plugin reads to snapshot each volume
+kubectl apply -f platform/aws/storageclass.yaml
 
 databases=postgres,polaris,airflow,airbyte
 
