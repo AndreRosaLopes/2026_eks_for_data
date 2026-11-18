@@ -46,9 +46,46 @@ left; [`./scripts/up.sh`](../../HOW_TO_RUN.md#3-bring-up) restores them before A
 written before the teardown; [`./scripts/down.sh --purge`](../../HOW_TO_RUN.md#53-purge-full-reset)
 leaves no bucket, backup or snapshot.
 
+### 05.05 — End to End
+
+No manual check: every check is automated and was run by the agent across a full
+`up.sh` → `down.sh` → `up.sh` → `down.sh --purge` cycle
+([spec, Verification Plan](05-end-to-end/spec.md#verification-plan)); it also ran the deferred
+checks of 05.03 and 05.04. Expected results: the steps below.
+
 ## End-to-End Verification
 
-Written on the last step.
+Proves the phase [Done When](plan.md#done-when). Each step was run by the agent in step 05.05
+([results](05-end-to-end/spec.md#verification-plan)); repeat it to verify by hand.
+
+1. Bring the environment up with no backup: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up).
+   - Expected result: `up.sh` prints `No backup in eks-for-data-velero-283429977024: starting with
+     empty databases`; every application `Synced` and `Healthy`.
+2. Create test data: TPC-H ([phase 02 How to Run, 1, 2 and 4](../02-transactional-ingestion/HOW_TO_RUN.md)),
+   a CDC connection and one sync ([phase 02 Lab 03](../02-transactional-ingestion/lab03-cdc-ingestion.md)),
+   a catalog, the engines' principal and a `silver` table from DuckDB
+   ([phase 03 How to Run, 4, 5 and 7](../03-processing-spark-iceberg/HOW_TO_RUN.md)), one run of
+   `smoke_test` ([phase 04 How to Run](../04-orchestration-airflow/HOW_TO_RUN.md)), and a marker row
+   in each of the four databases ([How to Run, 4. Access](../../HOW_TO_RUN.md#4-access)). Write down
+   the TPC-H row counts, the `airbyte_slot` position and the silver row count.
+3. Tear down: [How to Run, 5.1 Turn Off](../../HOW_TO_RUN.md#51-turn-off) (`./scripts/down.sh`).
+   - Expected result: the backup ends `Completed` with five volume snapshots; afterwards
+     [5.2](../../HOW_TO_RUN.md#52-check-nothing-is-left) lists nothing, and only the five
+     `eks-for-data-*` buckets, one backup and five tagged EBS snapshots are left.
+4. Bring the environment up again: [How to Run, 3. Bring Up](../../HOW_TO_RUN.md#3-bring-up),
+   including 3.2 step 7 (Polaris engine credentials after a restore).
+   - Expected result: the restore ends `Completed` before Argo CD creates `platform`; every
+     application `Synced` and `Healthy`.
+5. Read the restored state.
+   - Expected result: the four markers; the same TPC-H row counts and the slot `airbyte_slot`; the
+     same Airbyte connection, whose next sync, after one row is inserted, writes only that row to
+     bronze; DuckDB reads the same `silver` row count through Polaris; Airflow lists the
+     `smoke_test` run and its task log opens.
+6. Reset everything: [How to Run, 5.3 Purge](../../HOW_TO_RUN.md#53-purge-full-reset).
+   - Expected result: no `eks-for-data-*` bucket, EBS snapshot, volume, cluster, NAT Gateway or VPC.
+7. Search the repository for each `.env` value (`git grep`).
+   - Expected result: no password, token or key; only the non-secret profile, region, account,
+     repository and Git user values.
 
 ## Teardown
 
@@ -59,3 +96,4 @@ teardown is in its spec:
 - [05.02 — Persistent Data Root](02-persistent-data-root/spec.md#teardown)
 - [05.03 — Snapshot Controller and Velero](03-snapshot-controller-velero/spec.md#teardown)
 - [05.04 — Backup on Teardown, Restore on Bring-Up](04-backup-restore/spec.md#teardown)
+- [05.05 — End to End](05-end-to-end/spec.md#teardown)
