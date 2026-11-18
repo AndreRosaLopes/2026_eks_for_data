@@ -133,6 +133,15 @@ credentials to both namespaces. Run it after [4](#4-create-a-catalog), with the 
 forwarded. The names below (`engines`, `engine_role`, `<catalog>_contributor`) are examples; the
 principal, its roles and their privileges are lab choices.
 
+When to run it: the principal lives in the catalog Postgres, which `up.sh` restores from the latest
+backup ([phase 05](../05-lab-state-persistence/README.md)):
+
+- **After a restore:** the catalog, the principal and the `.env` values are still valid; run only
+  step 4.
+- **With no backup** (first bring-up, or after `down.sh --purge`): run [4](#4-create-a-catalog) and
+  every step here. Polaris generates new credentials, so first delete the old `POLARIS_CLIENT_ID`
+  and `POLARIS_CLIENT_SECRET` lines from `.env` (step 1 appends to it).
+
 1. Create the principal and save its credentials in `.env` (they are printed only once):
 
    ```bash

@@ -20,7 +20,7 @@ There are two ways to deploy the services on the cluster:
 | 02 — Transactional ingestion: TPC-H in Postgres, cursor and CDC | In progress (02.01–02.09 done) | [Run](specs/02-transactional-ingestion/HOW_TO_RUN.md) | [Verify](specs/02-transactional-ingestion/README.md) |
 | 03 — Processing: Spark and Iceberg | In progress (03.01 to 03.05 done) | [Run](specs/03-processing-spark-iceberg/HOW_TO_RUN.md) | [Verify](specs/03-processing-spark-iceberg/README.md) |
 | 04 — Orchestration: Airflow for Airbyte and Spark | In progress (04.01 to 04.03 done) | [Run](specs/04-orchestration-airflow/HOW_TO_RUN.md) | [Verify](specs/04-orchestration-airflow/README.md) |
-| 05 — Lab state: Velero keeps the databases and buckets between environments | In progress (05.01 to 05.04 done) | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
+| 05 — Lab state: Velero keeps the databases and buckets between environments | Done | [Run](specs/05-lab-state-persistence/HOW_TO_RUN.md) | [Verify](specs/05-lab-state-persistence/README.md) |
 
 ## 2. Prerequisites
 
@@ -41,7 +41,8 @@ There are two ways to deploy the services on the cluster:
 go: it generates the missing values in `.env`, checks the AWS account, applies `infra/aws/data`
 (buckets), `infra/aws/cluster` and `infra/aws/backup` (Velero), creates the namespaces and Secrets,
 restores the databases from the latest backup, applies `infra/aws/gitops`, with no `yes` prompt, and
-bootstraps the Polaris realm (3.2 step 6) once Polaris is Healthy. Then check 3.2 step 5.
+bootstraps the Polaris realm (3.2 step 6) once Polaris is Healthy. Then check 3.2 step 5 and
+run 3.2 step 7.
 
 ### 3.1 Infrastructure (both paths)
 
@@ -243,7 +244,7 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    ```
 
    ```bash
-   velero restore create --from-backup <backup> --include-resources persistentvolumeclaims --wait
+   velero restore create --from-backup <backup> --include-resources persistentvolumeclaims,volumesnapshots.snapshot.storage.k8s.io,volumesnapshotcontents.snapshot.storage.k8s.io --wait
    ```
 
    The restore must end `Completed`. Velero lists the backups about a minute after it starts.
@@ -270,6 +271,9 @@ What it creates and why: [01.01 design](specs/01-ingestion-airbyte-s3/01-network
    `airflow` `Synced` and `Healthy`, or open the [Argo CD UI](#43-argo-cd).
 6. **Polaris realm:** bootstrap it once per environment
    ([phase 03 How to Run, 3. Bootstrap the Polaris Realm](specs/03-processing-spark-iceberg/HOW_TO_RUN.md#3-bootstrap-the-polaris-realm)).
+7. **Polaris engine credentials:** after a restore, only send them to Spark and DuckDB again; with
+   no backup (first bring-up, or after a purge), create the catalog and the principal again
+   ([phase 03 How to Run, 5. Create the Engines' Principal](specs/03-processing-spark-iceberg/HOW_TO_RUN.md#5-create-the-engines-principal)).
 
 ### 3.3 Services without Argo CD (manual)
 
@@ -476,8 +480,8 @@ logs are read from the S3 bucket `eks-for-data-airflow-283429977024`
 ## 5. Teardown
 
 **Quick option (with Argo CD):** `./scripts/down.sh` runs sections 5.1 and 5.2 in one go: it checks
-the AWS account, stops the services, backs up the four databases with Velero (and stops if the backup
-fails), deletes the older backup, deletes the database namespaces, destroys `infra/aws/gitops`,
+the AWS account, stops the services, backs up the four databases (and the Airflow triggerer log volume) with Velero (and stops if the
+backup fails), deletes the older backup, deletes the database namespaces, destroys `infra/aws/gitops`,
 `infra/aws/backup` and `infra/aws/cluster` with no `yes` prompt, deletes the EKS log group if it came
 back, lists anything left and removes the `kubectl` context. The buckets and the latest backup are
 kept, so the next bring-up continues from this point. `./scripts/down.sh --purge` runs section 5.3
@@ -497,6 +501,7 @@ set -a; source .env; set +a
 kubectl delete pod --all                     # no test pods keeping nodes alive
 kubectl delete application platform -n argocd   # waits for the cascade; database volumes stay
 kubectl -n airbyte delete statefulset airbyte-db --cascade=foreground --ignore-not-found
+kubectl apply -f platform/aws/storageclass.yaml   # the cascade deleted it; Velero needs it
 velero backup create lab-$(date -u +%Y%m%d%H%M%S) --include-namespaces postgres,polaris,airflow,airbyte --include-resources persistentvolumeclaims --wait
 velero backup get                            # the new backup Completed; delete any older one:
 velero backup delete <older-backup> --confirm
@@ -536,8 +541,8 @@ What stays, at a cost of cents per month, until the purge (5.3):
 
 - The five buckets of `infra/aws/data` (bronze, silver, Airbyte, Airflow, Velero), with their data
   (S3 storage).
-- The latest backup: its files in the Velero bucket and the EBS snapshots of the four database
-  volumes (US$ 0.05/GB-month, [D-076](docs/decisions/076-lab-state-persistence.md)).
+- The latest backup: its files in the Velero bucket and the EBS snapshots of the five volumes in
+  the database namespaces (the four databases and the Airflow triggerer logs) (US$ 0.05/GB-month, [D-076](docs/decisions/076-lab-state-persistence.md)).
 
 What stays, at no cost:
 
