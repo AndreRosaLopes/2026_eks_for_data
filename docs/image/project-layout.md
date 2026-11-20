@@ -2,7 +2,7 @@
 
 Where each project component goes in the architecture image for LinkedIn, following the patterns
 in [layout-patterns.md](layout-patterns.md). The image shows the whole project, including the
-components still in development. Colors are not covered.
+components still in development.
 
 Decisions:
 
@@ -68,3 +68,28 @@ section 7). Writing VPC and IRSA as text in the AWS band instead of as icons bri
 
 Image-generation models cannot reproduce a face faithfully. Leave an empty circle in the prompt
 and paste the real photo in afterwards (for example, in Canva).
+
+## 5. Color palette
+
+Black with fluorescent lime. Near-black surfaces instead of pure black, and lime only as an accent.
+Contrast between text and background is not checked yet.
+
+| Role | Hex | Where it goes |
+|---|---|---|
+| Background | `#0D0F0E` | The whole page |
+| Panel | `#161A18` | The main diagram panel |
+| Card / band | `#1F2421` | Infrastructure bands, column cards |
+| Lime accent | `#39FF14` | Title highlight, the Orchestration dashed box, flow arrows |
+| Soft lime | `#89F336` | The GitOps dashed box, column headers |
+| Main text | `#E8F0EA` | Tool labels |
+| Muted text | `#8A968E` | Captions, subtitle |
+| Bronze / Silver / Gold | `#CD7F32` / `#C0C0C0` / `#FFD700` | Only the three medallion buckets |
+
+Tool logos keep their official colors.
+
+View and adjust the palette:
+
+- [Coolors](https://coolors.co/0d0f0e-161a18-1f2421-39ff14-89f336-e8f0ea-8a968e): the seven
+  colors side by side.
+- [Realtime Colors](https://www.realtimecolors.com/?colors=e8f0ea-0d0f0e-39ff14-89f336-1f2421):
+  the palette applied to a page, with a contrast check.
