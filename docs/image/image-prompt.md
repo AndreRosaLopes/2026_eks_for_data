@@ -45,7 +45,8 @@ four images as style and layout references: same structure (title top-left, nest
 left-to-right data flow, BI column last, small signature bottom-right), but with the dark palette
 below. Do NOT draw any logos: wherever a logo goes, draw an empty rounded-square slot with a thin
 #2A322D outline and write the tool name in UPPERCASE bold below it. Every logo slot has the same
-size, and the logo placed in it fills about 85% of the slot. All text must be crisp, legible and
+size, and the logo placed in it fills about 85% of the slot. The slot is only a placeholder: in
+the final image each logo sits directly on the background, with no box or fill around it. All text must be crisp, legible and
 spelled exactly as written here.
 
 PALETTE
@@ -70,13 +71,14 @@ title and its logos, and the next layer sits on top of it, to the right)
 2. Layer 2, on top of it (#1E2420, soft-lime dashed border): left strip with the vertical title "AWS", slots
    "AMAZON EKS" and "AMAZON VPC" stacked, and the small text "IAM · IRSA".
 3. Layer 3, on top of it: a soft-lime (#89F336) dashed rounded box filled with #161A18. On its
-   top frame line, centered: chips "GITHUB" and "ARGO CD", and the label "GITOPS".
+   top frame line: the label "GITOPS" on the left (same style as "ORCHESTRATION", soft-lime),
+   and chips "GITHUB" and "ARGO CD" centered.
 
 MAIN AREA (inside the GITOPS box)
 - Along the left edge: a band in #1F2421 with the vertical title "OBSERVABILITY" and slots
   "PROMETHEUS" and "GRAFANA" stacked.
 - Across the bottom of the box: a grey bar (#2A302C) as wide as everything above it, from the
-  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with a large "VELERO" slot (about twice the height of the other logo slots).
+  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with a large "VELERO" slot (about twice the height of the other logo slots), with the word "VELERO" in pure white.
 - Then, left to right, with thick lime arrows between the columns:
   1. Column "DATA SOURCE": slots "POSTGRESQL" (caption "TPC-H OLTP · CDC") and "DUCKDB"
      (caption "Data generation").

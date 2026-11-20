@@ -47,8 +47,8 @@
   /* Logo slot + label */
   .item { display: flex; flex-direction: column; align-items: center; text-align: center; }
   .slot {
-    width: 84px; height: 84px; border-radius: 18px; background: var(--card);
-    border: 1.5px solid var(--outline); display: flex; align-items: center; justify-content: center;
+    width: 84px; height: 84px; border-radius: 18px; background: transparent;
+    border: none; display: flex; align-items: center; justify-content: center;
   }
   /* Logos fill about 85% of their slot */
   .slot img { width: 72px; height: 72px; object-fit: contain; }
@@ -79,7 +79,7 @@
   }
   .band-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 12px 6px; }
   .band-body .row { display: flex; gap: 14px; }
-  .band-body .slot { width: 66px; height: 66px; border-radius: 14px; background: var(--panel); }
+  .band-body .slot { width: 66px; height: 66px; border-radius: 14px; background: transparent; }
   .band-body .slot img { width: 56px; height: 56px; }
   .band-body .name { font-size: 11px; margin-top: 6px; }
   .small-text { font: 800 12px Inter, sans-serif; letter-spacing: .6px; color: var(--muted); }
@@ -118,6 +118,12 @@
   /* GitOps box: main row on top, backup bar across the bottom */
   .gitops { background: var(--panel); flex-direction: column; gap: 16px; }
   .gitops .frame-label { background: #1E2420; }
+  /* GITOPS title on the top-left frame line, same pattern as ORCHESTRATION and CATALOG */
+  .gitops-title {
+    position: absolute; top: -13px; left: 28px; background: #1E2420; padding: 0 12px;
+    font: 900 18px Montserrat, sans-serif; letter-spacing: 2px; color: var(--soft-lime);
+    text-shadow: 0 0 12px rgba(137,243,54,.45);
+  }
   .gitops-main { flex: 1; display: flex; gap: 18px; align-items: stretch; }
 
   .obs {
@@ -131,7 +137,7 @@
     background: #2A302C; border: 1px solid #3A453E; border-radius: 14px;
   }
   .bar-title { font: 800 14px Montserrat, sans-serif; letter-spacing: 1.6px; color: var(--text); }
-  .backup-bar .slot.wide { width: 248px; height: 88px; border-radius: 16px; background: var(--card); }
+  .backup-bar .slot.wide { width: 248px; height: 88px; border-radius: 16px; background: transparent; }
   .backup-bar .slot.wide img { width: 224px; height: 80px; }
 
   .column { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; width: 150px; }
@@ -177,8 +183,8 @@
 
   /* Table-format badge under each bucket */
   .fmt {
-    width: 104px; height: 40px; margin-top: 58px; border-radius: 10px; background: var(--card);
-    border: 1.5px solid var(--outline); display: flex; align-items: center; justify-content: center;
+    width: 104px; height: 40px; margin-top: 58px; border-radius: 10px; background: transparent;
+    border: none; display: flex; align-items: center; justify-content: center;
   }
   .fmt img { width: 88px; height: 30px; object-fit: contain; }
 
@@ -240,9 +246,9 @@
 
     <!-- Layer 3: GitOps box -->
     <section class="gitops">
+      <div class="gitops-title">GITOPS</div>
       <div class="frame-label">
         <div class="chip"><img src="logos/github-icon.svg" alt="GitHub">GITHUB</div>
-        <div class="label">GITOPS</div>
         <div class="chip"><img src="logos/argo-icon.svg" alt="Argo CD">ARGO CD</div>
       </div>
 
