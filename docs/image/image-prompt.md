@@ -52,8 +52,9 @@ spelled exactly as written here.
 PALETTE
 - Page background #0D0F0E (near-black), with a very subtle dark texture.
 - Main diagram panel #161A18; cards and bands #1F2421.
-- Lime accent #39FF14: title highlight, the ORCHESTRATION dashed box, flow arrows, soft glow.
-- Soft lime #89F336: the GITOPS dashed box and column headers.
+- Lime accent #39FF14: title highlight, flow arrows, and every dashed frame (INFRASTRUCTURE AS CODE,
+  CLOUD, GITOPS, ORCHESTRATION, CATALOG) and its title, all with the same soft glow.
+- Soft lime #89F336: column headers only.
 - Main text #E8F0EA; captions and subtitle #8A968E.
 - Bronze #CD7F32, silver #C0C0C0 and gold #FFD700 only for the three bucket icons.
 - Lime used sparingly, as an accent; the dark tones carry the image.
@@ -68,11 +69,11 @@ LAYERS (peeled from left to right, like stacked cards; each layer's left strip h
 and the next layer sits on top of it, to the right). Every frame title (INFRASTRUCTURE AS CODE,
 CLOUD, GITOPS, ORCHESTRATION, CATALOG) uses the same style: on the top-left frame line, breaking
 the dashed line, bold uppercase, the same font and size.
-1. Layer 1, the largest card, behind everything (#101311, soft-lime #89F336 dashed border):
+1. Layer 1, the largest card, behind everything (#101311, lime #39FF14 dashed border):
    title "INFRASTRUCTURE AS CODE"; left strip with slot "TERRAFORM".
-2. Layer 2, on top of it (#1E2420, soft-lime dashed border): title "CLOUD"; left strip with
+2. Layer 2, on top of it (#1E2420, lime dashed border): title "CLOUD"; left strip with
    slots "AMAZON EKS" and "AMAZON VPC" stacked, and the small text "IAM · IRSA".
-3. Layer 3, on top of it: a soft-lime (#89F336) dashed rounded box filled with #161A18. Title
+3. Layer 3, on top of it: a lime (#39FF14) dashed rounded box filled with #161A18. Title
    "GITOPS"; on the same top frame line, centered: "GITHUB" and "ARGO CD" (logo + name, no box).
 
 MAIN AREA (inside the GITOPS box)
@@ -95,9 +96,9 @@ MAIN AREA (inside the GITOPS box)
        "ICEBERG" below it.
      - Each data layer (BRONZE, SILVER, GOLD: column title and bucket) sits in its own small
        thin dashed rectangle; the tool columns between them are not framed.
-     - The three format badges sit a little lower, apart from the buckets. A soft-lime dashed
+     - The three format badges sit a little lower, apart from the buckets. A lime dashed
        rectangle as wide as the ORCHESTRATION box wraps them. Its title "CATALOG" sits on the
-       top-left frame line, in the same style as "ORCHESTRATION" but soft-lime; an
+       top-left frame line, in the same style and color as "ORCHESTRATION"; an
        "APACHE POLARIS" (logo + name, no box) sits in its bottom-left corner.
      - Near the top of the box, centered above the first "APACHE SPARK" column: slot
        "APACHE AIRFLOW", with a very thin lime line arrow running top-down from it to each task

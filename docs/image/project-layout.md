@@ -84,8 +84,8 @@ Contrast between text and background is not checked yet.
 | Background | `#0D0F0E` | The whole page |
 | Panel | `#161A18` | The main diagram panel |
 | Card / band | `#1F2421` | Infrastructure bands, column cards |
-| Lime accent | `#39FF14` | Title highlight, the Orchestration dashed box, flow arrows |
-| Soft lime | `#89F336` | The GitOps dashed box, column headers |
+| Lime accent | `#39FF14` | Title highlight, flow arrows, and every dashed frame and frame title, with the same glow |
+| Soft lime | `#89F336` | Column headers |
 | Main text | `#E8F0EA` | Tool labels |
 | Muted text | `#8A968E` | Captions, subtitle |
 | Bronze / Silver / Gold | `#CD7F32` / `#C0C0C0` / `#FFD700` | Only the three medallion buckets |
