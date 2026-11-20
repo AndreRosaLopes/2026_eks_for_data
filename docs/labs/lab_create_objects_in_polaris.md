@@ -287,13 +287,13 @@ git commit -m "Add job that creates the silver objects in Polaris"
 git push
 ```
 
-Argo CD updates the ConfigMap within about 3 minutes. Check that it has both files:
+Argo CD updates the ConfigMap within about 3 minutes. List the names of the files it holds:
 
 ```bash
-kubectl -n spark get configmap spark-jobs -o jsonpath='{.data}' | grep -o 'create_objects\.[a-z]*' | sort -u
+kubectl -n spark get configmap spark-jobs -o go-template='{{range $k, $v := .data}}{{$k}}{{"\n"}}{{end}}'
 ```
 
-Expected: `create_objects.py` and `create_objects.sql`.
+Expected: one line per file, including `create_objects.py` and `create_objects.sql`.
 
 ### 5. Run the Job
 
@@ -332,6 +332,65 @@ kubectl -n spark logs create-objects-driver | grep -E "^(done|object)"
 Repeat the four commands of [5](#5-run-the-job). Expected: the same output; `IF NOT EXISTS` leaves
 the schema and the tables as they were.
 
+### 7. Read the Timeline of a Run
+
+The job takes about 2 minutes, while the 8 `CREATE TABLE` take a few seconds. The rest is waiting
+for computers and downloading the image. Example of one run (2026-11-20), read from the driver log
+and the Kubernetes events:
+
+| Time (UTC) | What happened |
+|---|---|
+| 18:40:43 | `SparkApplication` submitted |
+| 18:40:52 → 18:41:32 | Driver pod scheduled; Spark image downloaded (1.44 GB, about 37 s; `imagePullPolicy: Always` downloads it on every run) |
+| 18:41:36 → 18:41:41 | Spark starts in the driver and asks for 1 executor |
+| 18:41:41 | Executor pod pending: "0/4 nodes are available: 3 Insufficient cpu, 4 Insufficient memory" |
+| 18:41:47 | Karpenter launches a new node for it (NodeClaim `Launched`) |
+| 18:42:05 | New node `Ready` (about 18 s after launch) |
+| 18:42:10 | **The driver stops waiting** and starts working without the executor |
+| 18:42:13 → 18:42:21 | Login to Polaris, `CREATE SCHEMA`, 8 `CREATE TABLE`, listing: **about 8 s** |
+| 18:42:25 | Job `COMPLETED` |
+| 18:42:34 → 18:42:35 | The executor finishes downloading the image, starts, and is killed at once: the driver is gone (`SparkExecutorFailed`, harmless) |
+| 18:43:25 | Karpenter removes the node: "Disrupting NodeClaim: Empty" |
+
+Why the driver did not wait for the node:
+
+- At start-up, the driver waits until 80% of the requested executors register
+  (`spark.scheduler.minRegisteredResourcesRatio`, default 0.8 on Kubernetes) **or** 30 s pass
+  (`spark.scheduler.maxRegisteredResourcesWaitingTime`, default 30 s), whichever comes first. Both
+  are Spark defaults; the project does not set them. The driver log shows it:
+  `SchedulerBackend is ready for scheduling beginning after waiting maxRegisteredResourcesWaitingTime: 30000.0(ms)`.
+- After that gate, executors that arrive later still join. Work that needs executors (reading or
+  writing data) waits in the queue until one is up.
+- This job does only DDL: calls to Polaris made by the driver, with no work for executors. So the
+  driver finished alone, and the executor arrived too late to matter.
+
+To watch the nodes during a run, open another Git Bash window before [5](#5-run-the-job) and leave
+this running; a new NodeClaim (Karpenter's request for a node) appears, becomes `READY`, and is
+removed about a minute after it is empty:
+
+```bash
+kubectl get nodeclaims -w
+```
+
+After a run, read the same story from the events (Kubernetes keeps them for about an hour):
+
+```bash
+kubectl get events -n spark --sort-by=.firstTimestamp -o custom-columns=TIME:.firstTimestamp,POD:.involvedObject.name,REASON:.reason
+```
+
+```bash
+kubectl get events -A --field-selector involvedObject.kind=NodeClaim --sort-by=.firstTimestamp -o custom-columns=TIME:.firstTimestamp,NODECLAIM:.involvedObject.name,REASON:.reason,MESSAGE:.message
+```
+
+The nodes now in the cluster, with their NodePool and instance type:
+
+```bash
+kubectl get nodes -L karpenter.sh/nodepool,node.kubernetes.io/instance-type
+```
+
+Argo CD does not show this: it tracks the applications it deploys from Git, and neither the Spark
+pods (created by the Spark Operator) nor the nodes (created by Karpenter) come from Git.
+
 ## Validation
 
 1. The job log, from [5](#5-run-the-job): 9 `done:` lines (the schema and 8 tables) and one
@@ -348,7 +407,35 @@ the schema and the tables as they were.
    | `orders` | 16 |
    | `lineitem` | 21 |
 
-2. In the DuckDB UI, the 8 tables:
+2. In the DuckDB UI, make sure `lake` is attached in this session. A DuckDB restart (such as the
+   `rollout restart` of lab 3.00) drops the secret and the attach; then `lake.silver.customer`
+   "does not exist" and the queries below return nothing. Run each cell in order:
+
+   Check whether the secret exists:
+
+   ```sql
+   SELECT name FROM duckdb_secrets();
+   ```
+
+   If `polaris` is not listed, create it:
+
+   ```sql
+   CREATE SECRET polaris (TYPE iceberg, CLIENT_ID getenv('POLARIS_CLIENT_ID'), CLIENT_SECRET getenv('POLARIS_CLIENT_SECRET'), OAUTH2_SERVER_URI 'http://polaris.polaris.svc.cluster.local:8181/api/catalog/v1/oauth/tokens', OAUTH2_SCOPE 'PRINCIPAL_ROLE:ALL');
+   ```
+
+   Check whether `lake` is attached:
+
+   ```sql
+   SELECT database_name FROM duckdb_databases() WHERE database_name = 'lake';
+   ```
+
+   If no row comes back, attach it, with `prod` replaced by your catalog name:
+
+   ```sql
+   ATTACH 'prod' AS lake (TYPE iceberg, URI 'http://polaris.polaris.svc.cluster.local:8181/api/catalog', SECRET polaris, ACCESS_DELEGATION_MODE 'vended_credentials');
+   ```
+
+   Then list the 8 tables:
 
    ```sql
    SELECT table_name FROM duckdb_tables() WHERE database_name = 'lake' AND schema_name = 'silver' ORDER BY table_name;
