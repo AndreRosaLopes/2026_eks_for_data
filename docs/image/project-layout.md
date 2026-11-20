@@ -18,11 +18,11 @@ Decisions:
 |---|---|---|---|
 | **Header, title (top-left)** | Project name | "Open Data Platform" | Title and subtitle |
 | **Header, product logo (top-right)** | AWS + Kubernetes | The cloud and the runtime | Largest logo pair |
-| **Layer 1 (outermost, leftmost): infrastructure as code** | **Terraform** | Creates the network, the cluster, the buckets, Argo CD and Velero (`infra/aws/`) | The largest card, behind everything, with a green dashed border; its left strip holds the title "Infrastructure as code" and the Terraform logo |
-| | **Amazon VPC** | Private network with NAT gateways and a free S3 endpoint | Layer 2, on top of the Terraform card, with a green dashed border: its left strip holds the title "AWS" and the VPC logo |
+| **Layer 1 (outermost, leftmost): infrastructure as code** | **Terraform** | Creates the network, the cluster, the buckets, Argo CD and Velero (`infra/aws/`) | The largest card, behind everything, with a green dashed border; title "Infrastructure as code" on its top-left frame line; its left strip holds the Terraform logo |
+| | **Amazon VPC** | Private network with NAT gateways and a free S3 endpoint | Layer 2, on top of the Terraform card, with a green dashed border: title "Cloud" on its top-left frame line; its left strip holds the VPC logo |
 | | **Amazon EKS (Auto Mode)** | The managed Kubernetes cluster | Layer 2 strip, EKS logo |
 | | **IAM (IRSA)** | One AWS role per service, linked to its Kubernetes service account. IRSA = IAM Roles for Service Accounts | Layer 2 strip, small text "IAM · IRSA" |
-| | **Velero** | Backs up the databases and buckets when the lab is turned off and restores them when it comes back up | A grey "Backup and restore" bar across the bottom of the GitOps box, from Observability to Metabase |
+| | **Velero** | Backs up the databases and buckets when the lab is turned off and restores them when it comes back up | A grey "Backup and restore" bar across the bottom of the GitOps box, from Observability to Metabase, with the Velero symbol and its name below it |
 | **Wrapping the center: CI/CD / governance** | **GitHub + Argo CD** | GitOps: every service is a manifest in Git, and Argo CD applies it to the cluster | A dashed box around the whole Kubernetes area, with both logos on the frame line |
 | **Left-center: data source** | **PostgreSQL** | Simulated transactional (OLTP) database holding TPC-H data, with CDC (Change Data Capture) | Main logo in the column |
 | | **DuckDB** | Generates the TPC-H data and is used to explore it | Second logo, labelled "Data generation" |

@@ -64,21 +64,22 @@ HEADER (top 18% of the height)
 - Subtitle below, in #8A968E: "Open-source lakehouse on Amazon EKS, built hands-on".
 - Top-right: two large logo slots side by side, labelled "AWS" and "KUBERNETES".
 
-LAYERS (peeled from left to right, like stacked cards; each layer's left strip holds a vertical
-title and its logos, and the next layer sits on top of it, to the right)
-1. Layer 1, the largest card, behind everything (#101311, soft-lime #89F336 dashed border): left
-   strip with the vertical title "INFRASTRUCTURE AS CODE" and slot "TERRAFORM".
-2. Layer 2, on top of it (#1E2420, soft-lime dashed border): left strip with the vertical title "AWS", slots
-   "AMAZON EKS" and "AMAZON VPC" stacked, and the small text "IAM · IRSA".
-3. Layer 3, on top of it: a soft-lime (#89F336) dashed rounded box filled with #161A18. On its
-   top frame line: the label "GITOPS" on the left (same style as "ORCHESTRATION", soft-lime),
-   and chips "GITHUB" and "ARGO CD" centered.
+LAYERS (peeled from left to right, like stacked cards; each layer's left strip holds its logos,
+and the next layer sits on top of it, to the right). Every frame title (INFRASTRUCTURE AS CODE,
+CLOUD, GITOPS, ORCHESTRATION, CATALOG) uses the same style: on the top-left frame line, breaking
+the dashed line, bold uppercase, the same font and size.
+1. Layer 1, the largest card, behind everything (#101311, soft-lime #89F336 dashed border):
+   title "INFRASTRUCTURE AS CODE"; left strip with slot "TERRAFORM".
+2. Layer 2, on top of it (#1E2420, soft-lime dashed border): title "CLOUD"; left strip with
+   slots "AMAZON EKS" and "AMAZON VPC" stacked, and the small text "IAM · IRSA".
+3. Layer 3, on top of it: a soft-lime (#89F336) dashed rounded box filled with #161A18. Title
+   "GITOPS"; on the same top frame line, centered: "GITHUB" and "ARGO CD" (logo + name, no box).
 
 MAIN AREA (inside the GITOPS box)
 - Along the left edge: a band in #1F2421 with the vertical title "OBSERVABILITY" and slots
   "PROMETHEUS" and "GRAFANA" stacked.
 - Across the bottom of the box: a grey bar (#2A302C) as wide as everything above it, from the
-  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with a large "VELERO" slot (about twice the height of the other logo slots), with the word "VELERO" in pure white.
+  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with slot "VELERO": only the round blue Velero symbol, with the name "VELERO" written below it, like the other tools.
 - Then, left to right, with thick lime arrows between the columns:
   1. Column "DATA SOURCE": slots "POSTGRESQL" (caption "TPC-H OLTP · CDC") and "DUCKDB"
      (caption "Data generation").
@@ -97,7 +98,7 @@ MAIN AREA (inside the GITOPS box)
      - The three format badges sit a little lower, apart from the buckets. A soft-lime dashed
        rectangle as wide as the ORCHESTRATION box wraps them. Its title "CATALOG" sits on the
        top-left frame line, in the same style as "ORCHESTRATION" but soft-lime; an
-       "APACHE POLARIS" chip (logo + name) sits in its bottom-left corner.
+       "APACHE POLARIS" (logo + name, no box) sits in its bottom-left corner.
      - Near the top of the box, centered above the first "APACHE SPARK" column: slot
        "APACHE AIRFLOW", with a very thin lime line arrow running top-down from it to each task
        it triggers: "AIRBYTE" and both "APACHE SPARK" slots.
