@@ -19,7 +19,7 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 | 1.07 | Storage | PersistentVolume, PersistentVolumeClaim, StorageClass (EBS). Why Postgres needs state and Spark does not. |
 | 1.08 | Resources and scheduling | Requests and limits, QoS (Quality of Service) classes, OOMKilled, taints and tolerations, node affinity. |
 | 1.09 | Autoscaling with Karpenter | Create a pending pod and watch a node appear. Then watch consolidation remove it, and see how `do-not-disrupt` protects Spark and Airflow pods. |
-| 1.10 | AWS identity | Pod Identity: a ServiceAccount gets an IAM role, then the pod reads S3 with no access keys. Break the permission and read the `AccessDenied` error. |
+| 1.10 | AWS identity | Pod Identity: a ServiceAccount gets an IAM role, then the pod reads S3 with no access keys. |
 | 1.11 | GitOps with Argo CD | Application, sync, drift, and self-heal: change something by hand and watch Argo CD revert it. Roll back through Git. |
 | 1.12 | RBAC (Role-Based Access Control) | Role, RoleBinding, `kubectl auth can-i`, and the Airflow-to-SparkApplication case. |
 | 1.13 | Troubleshooting | `CrashLoopBackOff`, `ImagePullBackOff`, `Pending`, events, `kubectl debug`. |
@@ -29,6 +29,11 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
 | # | Topic | Concept | Practice on this platform |
 |---|---|---|---|
+| 2.01 | [TPC-H generation](lab_ingestion_2.01.md) | TPC-H, scale factor, `dbgen`, DuckDB attached to Postgres. | Generate the 8 TPC-H tables with DuckDB into the `tpch` schema of the source Postgres. |
+| 2.02 | [OLTP baseline and day simulation](lab_ingestion_2.02.md) | Cutoff and date shift, order status, `created_at` and `updated_at`, keys without cascade, facts vs. dimensions. | Build the `oltp` schema from `tpch`, then simulate days of inserts, updates and deletes. |
+| 2.03 | [CDC setup on Postgres](lab_ingestion_2.03.md) | WAL, logical replication, `pgoutput`, publication, replication slot, `REPLICA IDENTITY`, the WAL limit. | Create the publication and the slot that Airbyte's CDC reads, and watch the slot hold WAL. |
+| 2.04 | [Date cursor ingestion with Airbyte](lab_ingestion_2.04.md) | Source, destination, connection, stream, sync, Incremental \| Append, cursor. | Ingest `oltp` into bronze by `updated_at`, simulate a day, sync again, and see that deletes are missed. |
+| 2.05 | [CDC ingestion with Airbyte](lab_ingestion_2.05.md) | Snapshot then changes, `_ab_cdc_*` metadata columns, deletes in bronze. | Ingest `oltp` into bronze by CDC, simulate a day, sync again, and see that deletes arrive. |
 | 2.1 | Ingestion concepts | Batch vs. streaming, ELT (Extract, Load, Transform) vs. ETL, push vs. pull, the medallion architecture (bronze, silver, gold). | Map each concept to the platform's components (Airbyte, S3 bronze, Spark, Iceberg). |
 | 2.2 | Airbyte architecture | Source, destination, connection, and the pods that run each sync (orchestrator, source, destination). Where state is stored. | Run a sync, watch its pods appear and finish, and find where its state is stored. |
 | 2.3 | First connection in the UI | The files, formats and partitioning a connection creates in the destination. | Create a public API source to S3 bronze connection in the UI and look at the files it writes. |
@@ -60,6 +65,7 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 
 | # | Lab | What the student does and learns |
 |---|---|---|
+| 3.00 | [Polaris catalog setup](lab_transformation_3.00.md) | Learn what an Iceberg catalog is and why Polaris. Create the catalog that holds silver and gold, the engines' principal and its roles, give the credentials to Spark and DuckDB, and attach the catalog in DuckDB as `lake`. |
 | 3.01 | Bronze to silver, day by day | Write each day's rows of the 8 tables from the date-cursor bronze to silver Iceberg tables, choosing the day's rows by ingestion time (`_airbyte_extracted_at`) in two ways: a watermark read from silver, or a time interval passed to the job. Keep each key's last state of the day, trim text, and extract numbers with regex. Partition silver by batch and overwrite the batch on each run, so reruns are idempotent. Declare each table's schema and cast bronze to it. Organize the code in three ways, one lab each: metadata-driven (A), one script per table (B), per-table spec and shared module (C). Run 3 simulated days and two reruns. |
 | 3.02 | Silver to gold, day by day | Build a star schema (date, customer, supplier and part dimensions; a line-item fact) and a monthly sales aggregate from the 3.01 C silver tables, then query it from DuckDB. Take each key's current state, rebuild the dimensions and the aggregate in full, and rewrite only the fact's months touched by new silver batches (`overwritePartitions()` on a table partitioned by `months(orderdate)`). Check grain, referential integrity, revenue against the source, and that a rerun changes nothing. |
 | 3.03 | Bronze to silver with dirty data | Same as 3.01, after inserting invalid rows at the source: regex and allowed-value checks on `name`, `phone`, `mktsegment`, `orderpriority`, ranges and dates. Rows that fail go to a quarantine table (`<table>_rejected`). |
@@ -99,4 +105,4 @@ Spark Operator, Iceberg with the Polaris REST catalog, and Airflow.
 ## 5. Lab format
 
 Every lab uses the same sections: **Goal, Prerequisites, Concepts, Steps, Validation (expected
-result), Break it (a controlled failure to diagnose), Questions, Cleanup.**
+result), Questions, Cleanup.**
