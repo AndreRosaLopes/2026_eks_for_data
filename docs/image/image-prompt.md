@@ -87,9 +87,14 @@ MAIN AREA (to the right of the infrastructure column)
      - Column "TRANSFORM": slot "APACHE SPARK".
      - Column "GOLD": a gold bucket icon labelled "S3 GOLD", with a small table-format badge slot
        "ICEBERG" below it.
-     - Above the silver and gold buckets: slot "APACHE POLARIS", with the caption "Catalog".
-     - At the bottom center of the box: slot "APACHE AIRFLOW", with a very thin lime line
-       arrow from it to each task it triggers: "AIRBYTE" and both "APACHE SPARK" slots.
+     - Each data layer (BRONZE, SILVER, GOLD: column title and bucket) sits in its own small
+       thin dashed rectangle; the tool columns between them are not framed.
+     - The three format badges sit a little lower, apart from the buckets, and a soft-lime
+       dashed rectangle titled "CATALOG" wraps them, with an "APACHE POLARIS" chip inside it,
+       centered below the badges.
+     - At the top center of the box: slot "APACHE AIRFLOW", with a very thin lime line arrow
+       running top-down from it to each task it triggers: "AIRBYTE" and both "APACHE SPARK"
+       slots.
   3. Column "BI", outside the orchestration box, last on the right: slot "METABASE".
 
 FOOTER (bottom 8% of the height)

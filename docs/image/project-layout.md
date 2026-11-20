@@ -27,12 +27,12 @@ Decisions:
 | **Left-center: data source** | **PostgreSQL** | Simulated transactional (OLTP) database holding TPC-H data, with CDC (Change Data Capture) | Main logo in the column |
 | | **DuckDB** | Generates the TPC-H data and is used to explore it | Second logo, labelled "Data generation" |
 | **Center-left: extract and load** | **Airbyte** | Copies the Postgres tables to S3 with an incremental cursor and with CDC | Single logo |
-| **Center: storage + transformation** | **S3 Bronze (Parquet)** | Raw layer written by Airbyte | Bronze bucket carrying the Apache Parquet logo |
+| **Center: storage + transformation** | **S3 Bronze (Parquet)** | Raw layer written by Airbyte | Bronze bucket, with an Apache Parquet format badge below it |
 | | **Apache Spark (Spark Operator)** | Bronze → Silver (deduplication) and Silver → Gold | Transform logo between the buckets |
-| | **S3 Silver + Apache Iceberg** | Clean Iceberg tables | Silver bucket carrying the Iceberg logo |
-| | **S3 Gold + Apache Iceberg** | Business-ready Iceberg tables | Gold bucket carrying the Iceberg logo |
-| | **Apache Polaris** | Iceberg REST catalog for Silver and Gold: it stores which tables exist and where their files are | Above the Silver and Gold buckets, labelled "Catalog" |
-| **Across the center: orchestration** | **Apache Airflow** | Triggers Airbyte and Spark | Dashed box around Airbyte → Bronze → Silver → Gold, with the Airflow logo at the bottom center and a thin arrow from Airflow to each task it triggers (Airbyte and both Spark steps) |
+| | **S3 Silver + Apache Iceberg** | Clean Iceberg tables | Silver bucket, with an Iceberg format badge below it |
+| | **S3 Gold + Apache Iceberg** | Business-ready Iceberg tables | Gold bucket, with an Iceberg format badge below it |
+| | **Apache Polaris** | Iceberg REST catalog for Silver and Gold: it stores which tables exist and where their files are | A "Catalog" frame around the three format badges, with the Polaris logo inside |
+| **Across the center: orchestration** | **Apache Airflow** | Triggers Airbyte and Spark | Dashed box around Airbyte → Bronze → Silver → Gold, with the Airflow logo at the top center and a thin top-down arrow from Airflow to each task it triggers (Airbyte and both Spark steps) |
 | **Side band: observability** | **Prometheus + Grafana** | Metrics and dashboards for the platform | A vertical band along the edge of the Kubernetes area |
 | **Far right: BI** | **Metabase** | Dashboards over the Gold tables | Last column, outside the orchestration box |
 | **Footer, signature (bottom-right)** | **Author photo + name and title** | Identifies the author | Small round photo, ~7–9% W, with the name and title beside it |
