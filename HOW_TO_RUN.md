@@ -91,8 +91,8 @@ the catalog Postgres, which [3.1](#31-bring-up) step 8 restores:
 
 - **Continue:** the catalog, the principal and the `POLARIS_CLIENT_ID` and `POLARIS_CLIENT_SECRET`
   lines in `.env` are still valid. Run only step 7.
-- **First time:** run every step. Polaris generates new credentials, so first delete any old
-  `POLARIS_CLIENT_ID` and `POLARIS_CLIENT_SECRET` lines from `.env` (step 5 appends to it).
+- **First time:** run every step. The principal's credentials are the `POLARIS_CLIENT_ID` and
+  `POLARIS_CLIENT_SECRET` lines in `.env`, generated once and kept: step 5 loads them into Polaris.
 
 You choose the catalog name; the commands use `<catalog>`. The names `engines`, `engine_role` and
 `<catalog>_contributor` are examples: the principal, its roles and their privileges are lab
@@ -122,15 +122,33 @@ choices.
    polaris --client-id root --client-secret "$POLARIS_ROOT_SECRET" catalogs list
    ```
 
-5. Create the principal and save its credentials in `.env` (they are printed only once):
+5. Create the principal with the credentials in `.env`. First add them to `.env` if they are
+   missing (each command keeps an existing value):
 
    ```bash
-   polaris --client-id root --client-secret "$POLARIS_ROOT_SECRET" principals create engines | python -c "import sys,json; d=json.load(sys.stdin); print(f\"POLARIS_CLIENT_ID={d['clientId']}\nPOLARIS_CLIENT_SECRET={d['clientSecret']}\")" >> .env
+   grep -q "^POLARIS_CLIENT_ID=." .env || echo "POLARIS_CLIENT_ID=$(openssl rand -hex 8)" >> .env
+   ```
+
+   ```bash
+   grep -q "^POLARIS_CLIENT_SECRET=." .env || echo "POLARIS_CLIENT_SECRET=$(openssl rand -hex 16)" >> .env
    ```
 
    ```bash
    set -a; source .env; set +a
    ```
+
+   Create the principal, discarding the random credentials Polaris generates, then replace them
+   with the ones in `.env` (root only; the reset is on by default, `ENABLE_CREDENTIAL_RESET`):
+
+   ```bash
+   polaris --client-id root --client-secret "$POLARIS_ROOT_SECRET" principals create engines > /dev/null
+   ```
+
+   ```bash
+   polaris --client-id root --client-secret "$POLARIS_ROOT_SECRET" principals reset engines --new-client-id "$POLARIS_CLIENT_ID" --new-client-secret "$POLARIS_CLIENT_SECRET"
+   ```
+
+   Expected result: the output shows `clientId` equal to `POLARIS_CLIENT_ID` in `.env`.
 
 6. Create the roles, connect them (principal → principal role → catalog role) and grant the
    privilege on the catalog:
