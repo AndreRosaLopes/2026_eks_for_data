@@ -61,7 +61,7 @@
 
   /* Main panel */
   .panel {
-    position: absolute; top: 200px; left: 48px; right: 48px; bottom: 96px;
+    position: absolute; top: 204px; left: 48px; right: 48px; bottom: 92px;
     background: var(--panel); border-radius: 28px; padding: 26px; display: flex; gap: 26px;
     border: 1px solid #1c211e;
   }
@@ -100,12 +100,39 @@
   }
   .chip img { height: 36px; width: 36px; object-fit: contain; }
 
-  /* Observability band */
+  /* Layers peeled from left to right: Terraform (outermost), AWS, then the GitOps box.
+     Each layer is a card whose left strip holds its title and logos. */
+  .panel.layer-tf { background: #101311; border: 1.5px solid var(--outline); border-radius: 28px; overflow: hidden; padding: 0; gap: 0; }
+  .layer-aws {
+    flex: 1; display: flex; background: #1E2420; border-radius: 26px 0 0 26px;
+    border-left: 1.5px solid var(--outline); padding: 22px 22px 22px 0;
+  }
+  .strip { width: 132px; flex: none; display: flex; align-items: stretch; }
+  .strip .vtitle { border-left: none; border-right: 1px solid var(--outline); padding: 0 12px; }
+  .strip-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+  .strip .slot { width: 66px; height: 66px; border-radius: 14px; }
+  .strip .slot img { width: 56px; height: 56px; }
+  .strip .name { font-size: 11px; margin-top: 6px; }
+  .layer-tf > .strip .vtitle, .layer-aws > .strip .vtitle { color: var(--text); }
+
+  /* GitOps box: main row on top, backup bar across the bottom */
+  .gitops { background: var(--panel); flex-direction: column; gap: 16px; }
+  .gitops .frame-label { background: #1E2420; }
+  .gitops-main { flex: 1; display: flex; gap: 18px; align-items: stretch; }
+
   .obs {
     width: 128px; background: var(--card); border: 1px solid var(--outline); border-radius: 16px;
     display: flex; align-items: stretch;
   }
   .obs .band-body { gap: 26px; }
+
+  .backup-bar {
+    height: 64px; flex: none; display: flex; align-items: center; justify-content: center; gap: 22px;
+    background: #2A302C; border: 1px solid #3A453E; border-radius: 14px;
+  }
+  .bar-title { font: 800 14px Montserrat, sans-serif; letter-spacing: 1.6px; color: var(--text); }
+  .backup-bar .slot.wide { width: 132px; height: 48px; border-radius: 12px; background: var(--card); }
+  .backup-bar .slot.wide img { width: 112px; height: 40px; }
 
   .column { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; width: 150px; }
 
@@ -117,7 +144,7 @@
   /* Orchestration box */
   .orch {
     position: relative; flex: 1; border: 2px dashed var(--lime); border-radius: 22px;
-    padding: 34px 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 64px;
+    padding: 34px 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 48px;
     box-shadow: 0 0 22px rgba(57,255,20,.12), inset 0 0 22px rgba(57,255,20,.05);
   }
   .orch-title {
@@ -186,35 +213,27 @@
     </div>
   </header>
 
-  <div class="panel">
-
-    <!-- Left column: infrastructure -->
-    <aside class="infra">
-      <div class="band">
-        <div class="vtitle">INFRASTRUCTURE AS CODE</div>
-        <div class="band-body">
-          <div class="item"><div class="slot"><img src="logos/terraform-icon.svg" alt="Terraform"></div><div class="name">Terraform</div></div>
-        </div>
+  <!-- Layer 1 (outermost): Terraform creates everything inside it. Layers peel from left to right -->
+  <div class="panel layer-tf">
+    <div class="strip">
+      <div class="vtitle">INFRASTRUCTURE AS CODE</div>
+      <div class="strip-body">
+        <div class="item"><div class="slot"><img src="logos/terraform-icon.svg" alt="Terraform"></div><div class="name">Terraform</div></div>
       </div>
-      <div class="band" style="flex:1.25">
+    </div>
+
+    <!-- Layer 2: AWS -->
+    <div class="layer-aws">
+      <div class="strip">
         <div class="vtitle">AWS</div>
-        <div class="band-body">
-          <div class="row">
-            <div class="item"><div class="slot"><img src="logos/aws-eks.svg" alt="Amazon EKS"></div><div class="name">Amazon EKS</div></div>
-            <div class="item"><div class="slot"><img src="logos/aws-vpc.svg" alt="Amazon VPC"></div><div class="name">Amazon VPC</div></div>
-          </div>
+        <div class="strip-body">
+          <div class="item"><div class="slot"><img src="logos/aws-eks.svg" alt="Amazon EKS"></div><div class="name">Amazon EKS</div></div>
+          <div class="item"><div class="slot"><img src="logos/aws-vpc.svg" alt="Amazon VPC"></div><div class="name">Amazon VPC</div></div>
           <div class="small-text">IAM · IRSA</div>
         </div>
       </div>
-      <div class="band">
-        <div class="vtitle">LAB STATE</div>
-        <div class="band-body">
-          <div class="item"><div class="slot wide"><img src="logos/velero.svg" alt="Velero"></div><div class="name">Velero</div><div class="cap">Backup and restore<br>between sessions</div></div>
-        </div>
-      </div>
-    </aside>
 
-    <!-- GitOps box -->
+    <!-- Layer 3: GitOps box -->
     <section class="gitops">
       <div class="frame-label">
         <div class="chip"><img src="logos/github-icon.svg" alt="GitHub">GITHUB</div>
@@ -222,6 +241,7 @@
         <div class="chip"><img src="logos/argo-icon.svg" alt="Argo CD">ARGO CD</div>
       </div>
 
+      <div class="gitops-main">
       <!-- Observability band -->
       <div class="obs">
         <div class="vtitle">OBSERVABILITY</div>
@@ -280,7 +300,15 @@
         <div class="col-title">BI</div>
         <div class="item"><div class="slot"><img src="logos/metabase.svg" alt="Metabase"></div><div class="name">Metabase</div></div>
       </div>
+      </div>
+
+      <!-- Backup and restore: a grey bar across the whole width, from Observability to Metabase -->
+      <div class="backup-bar">
+        <div class="bar-title">BACKUP AND RESTORE</div>
+        <div class="slot wide"><img src="logos/velero.svg" alt="Velero"></div>
+      </div>
     </section>
+    </div>
   </div>
 
   <footer>

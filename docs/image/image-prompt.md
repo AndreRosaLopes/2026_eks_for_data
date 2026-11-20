@@ -63,17 +63,20 @@ HEADER (top 18% of the height)
 - Subtitle below, in #8A968E: "Open-source lakehouse on Amazon EKS, built hands-on".
 - Top-right: two large logo slots side by side, labelled "AWS" and "KUBERNETES".
 
-LEFT COLUMN: INFRASTRUCTURE (narrow, ~10% of the width, three stacked vertical bands in #1F2421,
-with the band titles written vertically)
-1. Band "INFRASTRUCTURE AS CODE": one slot, "TERRAFORM".
-2. Band "AWS": slots "AMAZON EKS" and "AMAZON VPC", and below them the small text "IAM · IRSA".
-3. Band "LAB STATE": one slot, "VELERO", caption "Backup and restore between sessions".
+LAYERS (peeled from left to right, like stacked cards; each layer's left strip holds a vertical
+title and its logos, and the next layer sits on top of it, to the right)
+1. Layer 1, the largest card, behind everything (#101311): left strip with the vertical title
+   "INFRASTRUCTURE AS CODE" and slot "TERRAFORM".
+2. Layer 2, on top of it (#1E2420): left strip with the vertical title "AWS", slots
+   "AMAZON EKS" and "AMAZON VPC" stacked, and the small text "IAM · IRSA".
+3. Layer 3, on top of it: a soft-lime (#89F336) dashed rounded box filled with #161A18. On its
+   top frame line, centered: chips "GITHUB" and "ARGO CD", and the label "GITOPS".
 
-MAIN AREA (to the right of the infrastructure column)
-- A soft-lime (#89F336) dashed rounded box wraps the whole main area. On its top frame line:
-  slots "GITHUB" and "ARGO CD", and the label "GITOPS".
-- Along the left edge inside that box: a narrow vertical band titled "OBSERVABILITY" (vertical
-  text) with slots "PROMETHEUS" and "GRAFANA" stacked.
+MAIN AREA (inside the GITOPS box)
+- Along the left edge: a band in #1F2421 with the vertical title "OBSERVABILITY" and slots
+  "PROMETHEUS" and "GRAFANA" stacked.
+- Across the bottom of the box: a grey bar (#2A302C) as wide as everything above it, from the
+  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with slot "VELERO".
 - Then, left to right, with thick lime arrows between the columns:
   1. Column "DATA SOURCE": slots "POSTGRESQL" (caption "TPC-H OLTP · CDC") and "DUCKDB"
      (caption "Data generation").

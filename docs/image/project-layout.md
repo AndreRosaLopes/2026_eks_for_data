@@ -18,11 +18,11 @@ Decisions:
 |---|---|---|---|
 | **Header, title (top-left)** | Project name | "Open Data Platform" | Title and subtitle |
 | **Header, product logo (top-right)** | AWS + Kubernetes | The cloud and the runtime | Largest logo pair |
-| **Far left: environment / infrastructure** | **Terraform** | Creates the network, the cluster, the buckets, Argo CD and Velero (`infra/aws/`) | Top band |
-| | **Amazon VPC** | Private network with NAT gateways and a free S3 endpoint | Middle band, AWS group |
-| | **Amazon EKS (Auto Mode)** | The managed Kubernetes cluster | Middle band, AWS group |
-| | **IAM (IRSA)** | One AWS role per service, linked to its Kubernetes service account. IRSA = IAM Roles for Service Accounts | Middle band, small icon |
-| | **Velero** | Backs up the databases and buckets when the lab is turned off and restores them when it comes back up | Bottom band, "Lab state" |
+| **Layer 1 (outermost, leftmost): infrastructure as code** | **Terraform** | Creates the network, the cluster, the buckets, Argo CD and Velero (`infra/aws/`) | The largest card, behind everything; its left strip holds the title "Infrastructure as code" and the Terraform logo |
+| | **Amazon VPC** | Private network with NAT gateways and a free S3 endpoint | Layer 2, on top of the Terraform card: its left strip holds the title "AWS" and the VPC logo |
+| | **Amazon EKS (Auto Mode)** | The managed Kubernetes cluster | Layer 2 strip, EKS logo |
+| | **IAM (IRSA)** | One AWS role per service, linked to its Kubernetes service account. IRSA = IAM Roles for Service Accounts | Layer 2 strip, small text "IAM · IRSA" |
+| | **Velero** | Backs up the databases and buckets when the lab is turned off and restores them when it comes back up | A grey "Backup and restore" bar across the bottom of the GitOps box, from Observability to Metabase |
 | **Wrapping the center: CI/CD / governance** | **GitHub + Argo CD** | GitOps: every service is a manifest in Git, and Argo CD applies it to the cluster | A dashed box around the whole Kubernetes area, with both logos on the frame line |
 | **Left-center: data source** | **PostgreSQL** | Simulated transactional (OLTP) database holding TPC-H data, with CDC (Change Data Capture) | Main logo in the column |
 | | **DuckDB** | Generates the TPC-H data and is used to explore it | Second logo, labelled "Data generation" |
@@ -49,20 +49,24 @@ Internal support pieces that are not drawn:
 ## 3. Sketch
 
 ```text
-┌ Title: OPEN DATA PLATFORM ON KUBERNETES ──────────────────────────────── [AWS + K8s] ┐
-│┌──────────┐ ┌ ─ ─ ─ ─ ─ GITOPS: GitHub + Argo CD ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐ │
-││TERRAFORM │ │O│ SOURCE     ┌ ─ ─ ─ ─ ORCHESTRATION ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  BI      │ │
-││──────────│ │B│ PostgreSQL │ AIRBYTE → [BRONZE] → SPARK → [SILVER] →  │           │ │
-││AWS: VPC  │ │S│ DuckDB   → │                      SPARK → [GOLD]      │→ METABASE │ │
-││EKS · IRSA│ │ │            │          Iceberg + Polaris (catalog)     │           │ │
-││──────────│ │P│Grafana     └ ─ ─ ─ ─ ─ ─ ─ AIRFLOW ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘           │ │
-││VELERO    │ │ │Prometheus                                                        │ │
-│└──────────┘ └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘ │
-└──────────────────────────────────────────────────────── (photo) Name · Title ┘
+  Title: OPEN DATA PLATFORM ON KUBERNETES                                    [AWS + K8s]
+┌─────┬─────┬ ─ ─ ─ ─ ─ ─ ─ ─ GITOPS: GitHub + Argo CD ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐
+│  I  │  A  │┌───────┐ SOURCE     ┌ ─ ─ ─ ORCHESTRATION ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  BI      │
+│  N  │  W  ││OBSERV.│ PostgreSQL │              AIRFLOW                    │          │
+│  F  │  S  ││Prometh│ DuckDB   → │   ↓            ↓              ↓         │→ METABASE│
+│  R  │     ││Grafana│            │ AIRBYTE → [BRONZE] → SPARK → [SILVER]   │          │
+│  A  │ EKS ││       │            │                     → SPARK → [GOLD]    │          │
+│     │ VPC ││       │            │ ┌ CATALOG: Parquet · Iceberg · Iceberg ┐│          │
+│ Ter-│ IAM ││       │            │ └ ─ ─ ─ ─ ─ Apache Polaris ─ ─ ─ ─ ─ ─ ┘│          │
+│ ra- │ IRSA│└───────┘            └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘          │
+│ form│     │[░░░░░░░░░░░░░░ BACKUP AND RESTORE · Velero ░░░░░░░░░░░░░░░░░░░░░░░░░░░░]│
+└─────┴─────┴ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+ Layer 1     Layer 2   Layer 3 (GitOps box): layers peel from left to right
+                                                              (photo) Name · Title
 ```
 
 About 18 logos, above the readable range of 10–15 ([layout-patterns.md](layout-patterns.md),
-section 7). Writing VPC and IRSA as text in the AWS band instead of as icons brings it to 16.
+section 7). Writing IRSA as text instead of as an icon brings it to 17.
 
 ## 4. Author photo
 
