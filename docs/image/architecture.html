@@ -127,12 +127,12 @@
   .obs .band-body { gap: 26px; }
 
   .backup-bar {
-    height: 64px; flex: none; display: flex; align-items: center; justify-content: center; gap: 22px;
+    height: 100px; flex: none; display: flex; align-items: center; justify-content: center; gap: 22px;
     background: #2A302C; border: 1px solid #3A453E; border-radius: 14px;
   }
   .bar-title { font: 800 14px Montserrat, sans-serif; letter-spacing: 1.6px; color: var(--text); }
-  .backup-bar .slot.wide { width: 132px; height: 48px; border-radius: 12px; background: var(--card); }
-  .backup-bar .slot.wide img { width: 112px; height: 40px; }
+  .backup-bar .slot.wide { width: 248px; height: 88px; border-radius: 16px; background: var(--card); }
+  .backup-bar .slot.wide img { width: 224px; height: 80px; }
 
   .column { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; width: 150px; }
 
@@ -192,7 +192,8 @@
     position: absolute; right: 64px; bottom: 10px; height: 80px;
     display: flex; align-items: center; gap: 16px;
   }
-  .photo { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--soft-lime); background: var(--card); }
+  .photo { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--soft-lime); background: var(--card); overflow: hidden; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.14); }
   .sig-name { font: 800 20px Montserrat, sans-serif; color: var(--text); }
   .sig-title { font-size: 15px; color: var(--muted); margin-top: 2px; }
   /* Wordmark logos (Velero, Iceberg) need a wider slot */
@@ -316,10 +317,10 @@
   </div>
 
   <footer>
-    <div class="photo"></div>
+    <div class="photo"><img src="author.png" alt="Andre Lopes"></div>
     <div>
-      <div class="sig-name">&lt;NAME&gt;</div>
-      <div class="sig-title">&lt;TITLE&gt;</div>
+      <div class="sig-name">Andre Lopes</div>
+      <div class="sig-title">Data Engineer</div>
     </div>
   </footer>
 

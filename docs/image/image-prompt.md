@@ -76,7 +76,7 @@ MAIN AREA (inside the GITOPS box)
 - Along the left edge: a band in #1F2421 with the vertical title "OBSERVABILITY" and slots
   "PROMETHEUS" and "GRAFANA" stacked.
 - Across the bottom of the box: a grey bar (#2A302C) as wide as everything above it, from the
-  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with slot "VELERO".
+  OBSERVABILITY band to the BI column, titled "BACKUP AND RESTORE", with a large "VELERO" slot (about twice the height of the other logo slots).
 - Then, left to right, with thick lime arrows between the columns:
   1. Column "DATA SOURCE": slots "POSTGRESQL" (caption "TPC-H OLTP · CDC") and "DUCKDB"
      (caption "Data generation").
@@ -102,8 +102,8 @@ MAIN AREA (inside the GITOPS box)
   3. Column "BI", outside the orchestration box, last on the right: slot "METABASE".
 
 FOOTER (bottom 8% of the height)
-- Bottom-right: an empty circle (~7% of the width) for the author photo, with "<NAME>" and
-  "<TITLE>" beside it in #E8F0EA and #8A968E.
+- Bottom-right: an empty circle (~7% of the width) for the author photo, with "Andre Lopes" and
+  "Data Engineer" beside it in #E8F0EA and #8A968E.
 
 Clean, generous spacing; no extra icons, text or decorations beyond what is listed.
 ```

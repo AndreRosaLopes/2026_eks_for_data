@@ -71,7 +71,8 @@ section 7). Writing IRSA as text instead of as an icon brings it to 17.
 ## 4. Author photo
 
 Image-generation models cannot reproduce a face faithfully. Leave an empty circle in the prompt
-and paste the real photo in afterwards (for example, in Canva).
+and paste the real photo in afterwards (for example, in Canva). The HTML version
+(`architecture.html`) uses `author.png`, taken from the author's LinkedIn profile photo.
 
 ## 5. Color palette
 
