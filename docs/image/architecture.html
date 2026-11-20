@@ -50,10 +50,10 @@
     width: 84px; height: 84px; border-radius: 18px; background: var(--card);
     border: 1.5px solid var(--outline); display: flex; align-items: center; justify-content: center;
   }
-  .slot img { width: 58px; height: 58px; object-fit: contain; }
-  .slot.wide img { width: 72px; }
+  /* Logos fill about 85% of their slot */
+  .slot img { width: 72px; height: 72px; object-fit: contain; }
   .slot.lg { width: 120px; height: 120px; border-radius: 24px; }
-  .slot.lg img { width: 86px; height: 80px; }
+  .slot.lg img { width: 102px; height: 102px; }
   .name { font: 800 13px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; margin-top: 8px; }
   .lg + .name { font-size: 16px; }
   .cap { font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -80,7 +80,7 @@
   .band-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 12px 6px; }
   .band-body .row { display: flex; gap: 14px; }
   .band-body .slot { width: 66px; height: 66px; border-radius: 14px; background: var(--panel); }
-  .band-body .slot img { width: 46px; height: 46px; }
+  .band-body .slot img { width: 56px; height: 56px; }
   .band-body .name { font-size: 11px; margin-top: 6px; }
   .small-text { font: 800 12px Inter, sans-serif; letter-spacing: .6px; color: var(--muted); }
 
@@ -131,7 +131,7 @@
 
   .catalog-row { display: flex; justify-content: flex-end; padding-right: 2px; }
   .catalog {
-    width: 470px; border: 1.5px dashed var(--outline); border-radius: 16px; padding: 12px 16px 10px;
+    width: 440px; border: 1.5px dashed var(--outline); border-radius: 16px; padding: 12px 16px 10px;
     display: flex; align-items: center; justify-content: center; gap: 34px;
   }
   .catalog .cap-title { font: 800 13px Montserrat, sans-serif; letter-spacing: 1.2px; color: var(--soft-lime); }
@@ -140,7 +140,17 @@
   .bucket svg { width: 74px; height: 74px; }
   .bronze { color: var(--bronze); } .silver { color: var(--silver); } .gold { color: var(--gold); }
 
+  /* Table-format badge under each bucket */
+  .fmt {
+    width: 104px; height: 40px; margin-top: 8px; border-radius: 10px; background: var(--card);
+    border: 1.5px solid var(--outline); display: flex; align-items: center; justify-content: center;
+  }
+  .fmt img { width: 88px; height: 30px; object-fit: contain; }
+
   .airflow-row { display: flex; justify-content: center; }
+
+  /* Thin arrows from Airflow to the tasks it triggers (drawn by the script below) */
+  .orch-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 
   /* Footer: bottom 8% */
   footer {
@@ -152,7 +162,9 @@
   .sig-title { font-size: 15px; color: var(--muted); margin-top: 2px; }
   /* Wordmark logos (Velero, Iceberg) need a wider slot */
   .slot.wide, .band-body .slot.wide { width: 132px; }
-  .slot.wide img, .band-body .slot.wide img { width: 112px; height: 52px; }
+  .slot.wide img, .band-body .slot.wide img { width: 112px; height: 56px; }
+  .flow .slot.wide { width: 100px; }
+  .flow .slot.wide img { width: 86px; height: 60px; }
 </style>
 </head>
 <body>
@@ -226,32 +238,32 @@
 
       <!-- Orchestration box -->
       <div class="orch">
+        <svg class="orch-lines" id="orch-lines"></svg>
         <div class="orch-title">ORCHESTRATION</div>
 
         <div class="catalog-row">
           <div class="catalog">
             <div class="cap-title">CATALOG</div>
-            <div class="item"><div class="slot wide"><img src="logos/iceberg.svg" alt="Apache Iceberg"></div><div class="name">Apache Iceberg</div></div>
             <div class="item"><div class="slot"><img src="logos/polaris.svg" alt="Apache Polaris"></div><div class="name">Apache Polaris</div></div>
           </div>
         </div>
 
         <div class="flow">
-          <div class="item stage"><div class="col-title">EXTRACT AND LOAD</div><div class="slot"><img src="logos/airbyte-icon.svg" alt="Airbyte"></div><div class="name">Airbyte</div></div>
+          <div class="item stage"><div class="col-title">EXTRACT AND LOAD</div><div class="slot" data-task><img src="logos/airbyte-icon.svg" alt="Airbyte"></div><div class="name">Airbyte</div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage"><div class="col-title">BRONZE</div><div class="bucket bronze"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Bronze · Parquet</div></div>
+          <div class="item stage"><div class="col-title">BRONZE</div><div class="bucket bronze"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Bronze</div><div class="fmt"><img src="logos/parquet.svg" alt="Apache Parquet"></div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot"><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
+          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage"><div class="col-title">SILVER</div><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Silver · Iceberg</div></div>
+          <div class="item stage"><div class="col-title">SILVER</div><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Silver</div><div class="fmt"><img src="logos/iceberg.svg" alt="Apache Iceberg"></div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot"><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
+          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage"><div class="col-title">GOLD</div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Gold · Iceberg</div></div>
+          <div class="item stage"><div class="col-title">GOLD</div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Gold</div><div class="fmt"><img src="logos/iceberg.svg" alt="Apache Iceberg"></div></div>
         </div>
 
         <div class="airflow-row">
-          <div class="item"><div class="slot"><img src="logos/airflow-icon.svg" alt="Apache Airflow"></div><div class="name">Apache Airflow</div></div>
+          <div class="item"><div class="slot" id="airflow"><img src="logos/airflow-icon.svg" alt="Apache Airflow"></div><div class="name">Apache Airflow</div></div>
         </div>
       </div>
 
@@ -274,5 +286,23 @@
   </footer>
 
 </div>
+<script>
+  // Thin arrows from Airflow to each task it triggers (Airbyte and both Spark steps)
+  window.addEventListener('load', () => {
+    const svg = document.getElementById('orch-lines');
+    const box = svg.getBoundingClientRect();
+    const a = document.getElementById('airflow').getBoundingClientRect();
+    const x0 = a.left + a.width / 2 - box.left, y0 = a.top - box.top - 4;
+    let paths = '<defs><marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">'
+      + '<path d="M0 0L8 4L0 8z" fill="#39FF14"/></marker></defs>';
+    document.querySelectorAll('[data-task]').forEach(t => {
+      const s = t.closest('.stage').getBoundingClientRect();
+      const x1 = s.left + s.width / 2 - box.left, y1 = s.bottom - box.top + 6;
+      paths += `<path d="M${x0} ${y0} C${x0} ${y0 - 50} ${x1} ${y1 + 50} ${x1} ${y1}" fill="none"`
+        + ' stroke="#39FF14" stroke-width="1.3" stroke-opacity=".85" marker-end="url(#head)"/>';
+    });
+    svg.innerHTML = paths;
+  });
+</script>
 </body>
 </html>
