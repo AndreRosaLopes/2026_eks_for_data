@@ -18,8 +18,8 @@ Decisions:
 |---|---|---|---|
 | **Header, title (top-left)** | Project name | "Open Data Platform" | Title and subtitle |
 | **Header, product logo (top-right)** | AWS + Kubernetes | The cloud and the runtime | Largest logo pair |
-| **Layer 1 (outermost, leftmost): infrastructure as code** | **Terraform** | Creates the network, the cluster, the buckets, Argo CD and Velero (`infra/aws/`) | The largest card, behind everything; its left strip holds the title "Infrastructure as code" and the Terraform logo |
-| | **Amazon VPC** | Private network with NAT gateways and a free S3 endpoint | Layer 2, on top of the Terraform card: its left strip holds the title "AWS" and the VPC logo |
+| **Layer 1 (outermost, leftmost): infrastructure as code** | **Terraform** | Creates the network, the cluster, the buckets, Argo CD and Velero (`infra/aws/`) | The largest card, behind everything, with a green dashed border; its left strip holds the title "Infrastructure as code" and the Terraform logo |
+| | **Amazon VPC** | Private network with NAT gateways and a free S3 endpoint | Layer 2, on top of the Terraform card, with a green dashed border: its left strip holds the title "AWS" and the VPC logo |
 | | **Amazon EKS (Auto Mode)** | The managed Kubernetes cluster | Layer 2 strip, EKS logo |
 | | **IAM (IRSA)** | One AWS role per service, linked to its Kubernetes service account. IRSA = IAM Roles for Service Accounts | Layer 2 strip, small text "IAM · IRSA" |
 | | **Velero** | Backs up the databases and buckets when the lab is turned off and restores them when it comes back up | A grey "Backup and restore" bar across the bottom of the GitOps box, from Observability to Metabase |
@@ -31,8 +31,8 @@ Decisions:
 | | **Apache Spark (Spark Operator)** | Bronze → Silver (deduplication) and Silver → Gold | Transform logo between the buckets |
 | | **S3 Silver + Apache Iceberg** | Clean Iceberg tables | Silver bucket, with an Iceberg format badge below it |
 | | **S3 Gold + Apache Iceberg** | Business-ready Iceberg tables | Gold bucket, with an Iceberg format badge below it |
-| | **Apache Polaris** | Iceberg REST catalog for Silver and Gold: it stores which tables exist and where their files are | A "Catalog" frame around the three format badges, with the Polaris logo inside |
-| **Across the center: orchestration** | **Apache Airflow** | Triggers Airbyte and Spark | Dashed box around Airbyte → Bronze → Silver → Gold, with the Airflow logo at the top center and a thin top-down arrow from Airflow to each task it triggers (Airbyte and both Spark steps) |
+| | **Apache Polaris** | Iceberg REST catalog for Silver and Gold: it stores which tables exist and where their files are | A "Catalog" frame as wide as the Orchestration box, around the three format badges; title on its top-left line, Polaris logo and name in its bottom-left corner |
+| **Across the center: orchestration** | **Apache Airflow** | Triggers Airbyte and Spark | Dashed box around Airbyte → Bronze → Silver → Gold, with the Airflow logo near the top, centered above the first Spark step, and a thin top-down arrow from Airflow to each task it triggers (Airbyte and both Spark steps) |
 | **Side band: observability** | **Prometheus + Grafana** | Metrics and dashboards for the platform | A vertical band along the edge of the Kubernetes area |
 | **Far right: BI** | **Metabase** | Dashboards over the Gold tables | Last column, outside the orchestration box |
 | **Footer, signature (bottom-right)** | **Author photo + name and title** | Identifies the author | Small round photo, ~7–9% W, with the name and title beside it |

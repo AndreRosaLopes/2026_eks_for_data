@@ -65,9 +65,9 @@ HEADER (top 18% of the height)
 
 LAYERS (peeled from left to right, like stacked cards; each layer's left strip holds a vertical
 title and its logos, and the next layer sits on top of it, to the right)
-1. Layer 1, the largest card, behind everything (#101311): left strip with the vertical title
-   "INFRASTRUCTURE AS CODE" and slot "TERRAFORM".
-2. Layer 2, on top of it (#1E2420): left strip with the vertical title "AWS", slots
+1. Layer 1, the largest card, behind everything (#101311, soft-lime #89F336 dashed border): left
+   strip with the vertical title "INFRASTRUCTURE AS CODE" and slot "TERRAFORM".
+2. Layer 2, on top of it (#1E2420, soft-lime dashed border): left strip with the vertical title "AWS", slots
    "AMAZON EKS" and "AMAZON VPC" stacked, and the small text "IAM · IRSA".
 3. Layer 3, on top of it: a soft-lime (#89F336) dashed rounded box filled with #161A18. On its
    top frame line, centered: chips "GITHUB" and "ARGO CD", and the label "GITOPS".
@@ -92,12 +92,13 @@ MAIN AREA (inside the GITOPS box)
        "ICEBERG" below it.
      - Each data layer (BRONZE, SILVER, GOLD: column title and bucket) sits in its own small
        thin dashed rectangle; the tool columns between them are not framed.
-     - The three format badges sit a little lower, apart from the buckets, and a soft-lime
-       dashed rectangle titled "CATALOG" wraps them, with an "APACHE POLARIS" chip inside it,
-       centered below the badges.
-     - At the top center of the box: slot "APACHE AIRFLOW", with a very thin lime line arrow
-       running top-down from it to each task it triggers: "AIRBYTE" and both "APACHE SPARK"
-       slots.
+     - The three format badges sit a little lower, apart from the buckets. A soft-lime dashed
+       rectangle as wide as the ORCHESTRATION box wraps them. Its title "CATALOG" sits on the
+       top-left frame line, in the same style as "ORCHESTRATION" but soft-lime; an
+       "APACHE POLARIS" chip (logo + name) sits in its bottom-left corner.
+     - Near the top of the box, centered above the first "APACHE SPARK" column: slot
+       "APACHE AIRFLOW", with a very thin lime line arrow running top-down from it to each task
+       it triggers: "AIRBYTE" and both "APACHE SPARK" slots.
   3. Column "BI", outside the orchestration box, last on the right: slot "METABASE".
 
 FOOTER (bottom 8% of the height)

@@ -102,10 +102,10 @@
 
   /* Layers peeled from left to right: Terraform (outermost), AWS, then the GitOps box.
      Each layer is a card whose left strip holds its title and logos. */
-  .panel.layer-tf { background: #101311; border: 1.5px solid var(--outline); border-radius: 28px; overflow: hidden; padding: 0; gap: 0; }
+  .panel.layer-tf { background: #101311; border: 2px dashed var(--soft-lime); border-radius: 28px; padding: 10px 10px 10px 0; gap: 0; }
   .layer-aws {
-    flex: 1; display: flex; background: #1E2420; border-radius: 26px 0 0 26px;
-    border-left: 1.5px solid var(--outline); padding: 22px 22px 22px 0;
+    flex: 1; display: flex; background: #1E2420; border-radius: 22px;
+    border: 2px dashed var(--soft-lime); padding: 32px 18px 18px 0;
   }
   .strip { width: 132px; flex: none; display: flex; align-items: stretch; }
   .strip .vtitle { border-left: none; border-right: 1px solid var(--outline); padding: 0 12px; }
@@ -144,7 +144,7 @@
   /* Orchestration box */
   .orch {
     position: relative; flex: 1; border: 2px dashed var(--lime); border-radius: 22px;
-    padding: 34px 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 48px;
+    padding: 34px 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 30px;
     box-shadow: 0 0 22px rgba(57,255,20,.12), inset 0 0 22px rgba(57,255,20,.05);
   }
   .orch-title {
@@ -158,14 +158,18 @@
   .layer-box { width: 118px; display: flex; flex-direction: column; align-items: center; border: 1.5px dashed #3A453E; border-radius: 14px; padding: 9px 0 10px; margin-top: -10px; }
   .flow .arrow { margin-top: 70px; }
 
-  /* Catalog frame around the format badges; its label sits on the bottom frame line */
+  /* Catalog frame: as wide as the Orchestration box, around the format badges.
+     Title on the top-left frame line (same pattern as ORCHESTRATION), Polaris chip bottom-left. */
   .catalog-frame { position: absolute; border: 1.5px dashed var(--soft-lime); border-radius: 16px; display: none; }
-  .catalog-label {
-    position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
-    background: var(--panel); padding: 0 12px; display: flex; align-items: center; gap: 14px; white-space: nowrap;
+  .catalog-title {
+    position: absolute; top: -13px; left: 28px; background: var(--panel); padding: 0 12px;
+    font: 900 18px Montserrat, sans-serif; letter-spacing: 2px; color: var(--soft-lime);
+    text-shadow: 0 0 12px rgba(137,243,54,.45);
   }
-  .catalog-label .cap-title { font: 800 13px Montserrat, sans-serif; letter-spacing: 1.2px; color: var(--soft-lime); }
-  .catalog-space { height: 70px; }
+  .catalog-label { position: absolute; left: 16px; bottom: 12px; }
+  .catalog-space { height: 40px; }
+  /* Airflow higher, so its arrows have room above the column titles */
+  .airflow-row { margin-bottom: 22px; }
 
   .bucket { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
   .bucket svg { width: 74px; height: 74px; }
@@ -173,7 +177,7 @@
 
   /* Table-format badge under each bucket */
   .fmt {
-    width: 104px; height: 40px; margin-top: 40px; border-radius: 10px; background: var(--card);
+    width: 104px; height: 40px; margin-top: 58px; border-radius: 10px; background: var(--card);
     border: 1.5px solid var(--outline); display: flex; align-items: center; justify-content: center;
   }
   .fmt img { width: 88px; height: 30px; object-fit: contain; }
@@ -271,9 +275,9 @@
 
         <!-- Catalog frame around the table-format badges, positioned by the script below -->
         <div class="catalog-frame" id="catalog-frame">
+          <div class="catalog-title">CATALOG</div>
           <div class="catalog-label">
             <div class="chip"><img src="logos/polaris.svg" alt="Apache Polaris">APACHE POLARIS</div>
-            <div class="cap-title">CATALOG</div>
           </div>
         </div>
 
@@ -325,6 +329,11 @@
   window.addEventListener('load', () => {
     const svg = document.getElementById('orch-lines');
     const box = svg.getBoundingClientRect();
+    // Center Airflow above the first Spark step
+    const airflowItem = document.getElementById('airflow').closest('.item');
+    const spark1 = document.querySelectorAll('.slot[data-task]')[1].closest('.stage').getBoundingClientRect();
+    const ai = airflowItem.getBoundingClientRect();
+    airflowItem.style.transform = `translateX(${(spark1.left + spark1.width / 2) - (ai.left + ai.width / 2)}px)`;
     const a = document.getElementById('airflow').getBoundingClientRect();
     // Airflow sits on top: arrows run top-down to the column title of each task
     const label = document.getElementById('airflow').closest('.item').getBoundingClientRect();
@@ -339,12 +348,12 @@
     });
     svg.innerHTML = paths;
 
-    // Catalog frame: wraps the three format badges, with padding
+    // Catalog frame: as wide as the Orchestration box (inside its padding), around the format badges
     const orch = document.querySelector('.orch').getBoundingClientRect();
     const fmts = [...document.querySelectorAll('.fmt')].map(f => f.getBoundingClientRect());
-    const pad = 16, frame = document.getElementById('catalog-frame');
-    const left = Math.min(...fmts.map(r => r.left)) - pad, right = Math.max(...fmts.map(r => r.right)) + pad;
-    const top = Math.min(...fmts.map(r => r.top)) - pad, bottom = Math.max(...fmts.map(r => r.bottom)) + 66;
+    const frame = document.getElementById('catalog-frame');
+    const left = orch.left + 16, right = orch.right - 16;
+    const top = Math.min(...fmts.map(r => r.top)) - 22, bottom = Math.max(...fmts.map(r => r.bottom)) + 76;
     Object.assign(frame.style, {
       display: 'block', left: (left - orch.left - 2) + 'px', top: (top - orch.top - 2) + 'px',
       width: (right - left) + 'px', height: (bottom - top) + 'px'
