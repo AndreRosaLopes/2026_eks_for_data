@@ -1,0 +1,45 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: create-objects
+  namespace: spark
+spec:
+  type: Python
+  mode: cluster
+  sparkVersion: 4.0.5
+  image: ghcr.io/andrerosalopes/spark:4.0.5-iceberg1.12.0
+  imagePullPolicy: Always
+  mainApplicationFile: local:///opt/spark/jobs/create_objects.py
+  arguments:
+    - "<catalog>"
+  restartPolicy:
+    type: Never
+  sparkConf:
+    spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+    spark.sql.catalog.lake: org.apache.iceberg.spark.SparkCatalog
+    spark.sql.catalog.lake.type: rest
+    spark.sql.catalog.lake.uri: http://polaris.polaris.svc.cluster.local:8181/api/catalog
+    spark.sql.catalog.lake.scope: PRINCIPAL_ROLE:ALL
+    spark.sql.catalog.lake.token-refresh-enabled: "true"
+    spark.sql.catalog.lake.client.region: us-east-1
+    spark.sql.catalog.lake.header.X-Iceberg-Access-Delegation: vended-credentials
+    spark.redaction.regex: (?i)secret|password|token|access[.]?key|credential
+  volumes:
+    - name: jobs
+      configMap:
+        name: spark-jobs
+  driver:
+    annotations:
+      karpenter.sh/do-not-disrupt: "true"
+    serviceAccount: spark
+    volumeMounts:
+      - name: jobs
+        mountPath: /opt/spark/jobs
+    envFrom:
+      - secretRef:
+          name: polaris-credentials
+  executor:
+    instances: 1
+    annotations:
+      karpenter.sh/do-not-disrupt: "true"
+    serviceAccount: spark
