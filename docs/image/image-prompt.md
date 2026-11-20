@@ -23,7 +23,11 @@ Attach to the model, together with the prompt: the four reference images in this
 |---|---|---|
 | AWS, Amazon VPC, Amazon EKS, IAM, Amazon S3 | [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) | Not verified |
 | Kubernetes, Argo CD, Prometheus | [CNCF artwork](https://github.com/cncf/artwork) | Repository found; project folders not verified |
-| Apache Spark, Apache Iceberg, Apache Polaris, Apache Airflow | [Apache logos](https://www.apache.org/logos/), or each project's homepage | Not verified per project |
+| Apache Spark (reversed, for dark backgrounds) | [spark-logo-rev.svg](https://spark.apache.org/images/spark-logo-rev.svg) | Found |
+| Apache Parquet | [Apache logos: parquet.svg](https://www.apache.org/logos/originals/parquet.svg) | Found |
+| Apache Iceberg | [Iceberg-logo.svg](https://iceberg.apache.org/assets/images/Iceberg-logo.svg) | Found |
+| Apache Polaris (white brandmark) | GitHub `apache/polaris`, `site/static/img/logos/polaris-brandmark-white.svg` | Found |
+| Apache Airflow | [Apache logos](https://www.apache.org/logos/), or the project's homepage | Not verified |
 | DuckDB | [DuckDB design](https://duckdb.org/design/) | Found |
 | Terraform | HashiCorp brand page | Not found |
 | Velero | velero.io / GitHub `vmware-tanzu/velero` | Not found |
@@ -41,7 +45,8 @@ four images as style and layout references: same structure (title top-left, nest
 left-to-right data flow, BI column last, small signature bottom-right), but with the dark palette
 below. Do NOT draw any logos: wherever a logo goes, draw an empty rounded-square slot with a thin
 #2A322D outline and write the tool name in UPPERCASE bold below it. Every logo slot has the same
-size. All text must be crisp, legible and spelled exactly as written here.
+size, and the logo placed in it fills about 85% of the slot. All text must be crisp, legible and
+spelled exactly as written here.
 
 PALETTE
 - Page background #0D0F0E (near-black), with a very subtle dark texture.
@@ -74,14 +79,17 @@ MAIN AREA (to the right of the infrastructure column)
      (caption "Data generation").
   2. A lime (#39FF14) dashed rounded box titled "ORCHESTRATION" containing:
      - Column "EXTRACT AND LOAD": slot "AIRBYTE".
-     - Column "BRONZE": a bronze bucket icon labelled "S3 BRONZE · PARQUET".
+     - Column "BRONZE": a bronze bucket icon labelled "S3 BRONZE", with a small table-format
+       badge slot "PARQUET" below it.
      - Column "TRANSFORM": slot "APACHE SPARK".
-     - Column "SILVER": a silver bucket icon labelled "S3 SILVER · ICEBERG".
+     - Column "SILVER": a silver bucket icon labelled "S3 SILVER", with a small table-format
+       badge slot "ICEBERG" below it.
      - Column "TRANSFORM": slot "APACHE SPARK".
-     - Column "GOLD": a gold bucket icon labelled "S3 GOLD · ICEBERG".
-     - Above the silver and gold buckets: slots "APACHE ICEBERG" and "APACHE POLARIS", with the
-       caption "Catalog".
-     - At the bottom center of the box: slot "APACHE AIRFLOW".
+     - Column "GOLD": a gold bucket icon labelled "S3 GOLD", with a small table-format badge slot
+       "ICEBERG" below it.
+     - Above the silver and gold buckets: slot "APACHE POLARIS", with the caption "Catalog".
+     - At the bottom center of the box: slot "APACHE AIRFLOW", with a very thin lime line
+       arrow from it to each task it triggers: "AIRBYTE" and both "APACHE SPARK" slots.
   3. Column "BI", outside the orchestration box, last on the right: slot "METABASE".
 
 FOOTER (bottom 8% of the height)
