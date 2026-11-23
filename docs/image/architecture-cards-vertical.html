@@ -89,17 +89,22 @@
   .column { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; flex: none; }
 
   .arrow { display: flex; align-items: center; justify-content: center; flex: none; }
-  .arrow, .arrow svg { width: 28px; }
-  .arrow.sm, .arrow.sm svg { width: 18px; }
+  /* One arrow size for the whole flow */
+  .arrow, .arrow svg, .arrow.sm, .arrow.sm svg { width: 28px; }
   .arrow svg { height: 20px; filter: drop-shadow(0 0 5px rgba(57,255,20,.6)); }
 
   /* Pipeline (Airflow, flow, table formats and catalog), no frame */
-  .orch { position: relative; flex: 1; display: flex; flex-direction: column; gap: 18px; }
+  .orch { position: relative; flex: 1; padding: 0 8px; display: flex; flex-direction: column; gap: 18px; }
   .flow { display: flex; align-items: flex-start; justify-content: space-between; }
   .flow .stage { width: 92px; }
   .layer-box { width: 92px; display: flex; flex-direction: column; align-items: center; border: 1.5px dashed #3A453E; border-radius: 14px; padding: 9px 0 10px; margin-top: -10px; }
-  .flow .arrow { margin-top: 58px; }
-  .airflow-row { display: flex; justify-content: center; margin-bottom: 56px; }
+  .flow .arrow { margin-top: 54px; }
+  .airflow-row { display: flex; justify-content: center; margin-bottom: 76px; }
+  /* Every column title takes two lines of height, so all symbols and arrows sit on one level */
+  .flow .col-title { height: 30px; display: flex; align-items: flex-end; justify-content: center; text-align: center; }
+  .flow .stage.src { width: 104px; }
+  .flow .stage.bi { width: 80px; }
+  .src .gap { height: 22px; }
   .flow .slot.wide { width: 88px; height: 56px; }
   .flow .slot.wide img { width: 86px; height: 56px; }
   .flow .name { white-space: nowrap; }
@@ -113,14 +118,21 @@
   .fmt img { width: 40px; height: 40px; object-fit: contain; }
   .fmt .name { margin-top: 6px; }
 
-  /* Apache Polaris (catalog of the silver and gold Iceberg tables), below and centered between the Iceberg badges */
-  .polaris-row { display: flex; margin-top: 6px; }
+  /* Silver and gold side by side in one box: grey bucket on top, gold bucket below and slightly to the right, in front */
+  .flow .stage.duo, .duo .layer-box { width: 124px; }
+  .buckets { position: relative; width: 62px; height: 66px; }
+  .buckets .bucket { position: absolute; }
+  .buckets .silver { left: 0; top: 0; }
+  .buckets .gold { left: 14px; top: 18px; }
+  /* Apache Polaris (catalog of the Iceberg tables): symbol with its name below, under Iceberg */
+  .fmt.polaris { margin-top: 22px; }
+  .fmt.polaris .name { white-space: nowrap; }
   .chip { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 8px; font: 800 12px Inter, sans-serif; letter-spacing: .6px; }
   .chip img { height: 40px; width: 40px; object-fit: contain; }
 
   .orch-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 
-  /* Footer */
+  /* Footer: author signature below the front card; the name ends near the card's right border (card right edge at 36 px) */
   footer { position: absolute; right: 44px; bottom: 16px; height: 76px; display: flex; align-items: center; gap: 14px; }
   .photo { width: 68px; height: 68px; border-radius: 50%; border: 2px solid var(--soft-lime); background: var(--card); overflow: hidden; }
   .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.14); }
@@ -180,14 +192,6 @@
 
     <!-- Card 5 (front): data flow left to right: source, pipeline, BI -->
     <div class="card front">
-      <div class="column">
-        <div class="col-title">DATA SOURCE</div>
-        <div class="item"><div class="slot"><img src="logos/postgresql.svg" alt="PostgreSQL"></div><div class="name">PostgreSQL</div><div class="cap">TPC-H OLTP · CDC</div></div>
-        <div class="item"><div class="slot"><img src="logos/duckdb.svg" alt="DuckDB"></div><div class="name">DuckDB</div><div class="cap">Data generation</div></div>
-      </div>
-
-      <div class="arrow"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-
       <div class="orch">
         <svg class="orch-lines" id="orch-lines"></svg>
 
@@ -196,29 +200,18 @@
         </div>
 
         <div class="flow">
+          <div class="item stage src"><div class="col-title">DATA SOURCE</div><div class="item"><div class="slot"><img src="logos/postgresql.svg" alt="PostgreSQL"></div><div class="name">PostgreSQL</div><div class="cap">TPC-H OLTP · CDC</div></div><div class="gap"></div><div class="item"><div class="slot"><img src="logos/duckdb.svg" alt="DuckDB"></div><div class="name">DuckDB</div><div class="cap">Data generation</div></div></div>
+          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="item stage"><div class="col-title">EXTRACT AND LOAD</div><div class="slot" data-task><img src="logos/airbyte-icon.svg" alt="Airbyte"></div><div class="name">Airbyte</div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="item stage layer"><div class="layer-box"><div class="col-title">BRONZE</div><div class="bucket bronze"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3</div></div><div class="fmt"><img src="logos/parquet-icon.svg" alt="Apache Parquet"><div class="name">Parquet</div></div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage layer"><div class="layer-box"><div class="col-title">SILVER</div><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
+          <div class="item stage layer duo"><div class="layer-box"><div class="col-title">SILVER AND GOLD</div><div class="buckets"><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div></div><div class="name">S3</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div><div class="fmt polaris"><img src="logos/polaris.svg" alt="Apache Polaris"><div class="name">Apache Polaris</div></div></div>
           <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
-          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="item stage layer"><div class="layer-box"><div class="col-title">GOLD</div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
+          <div class="item stage bi"><div class="col-title">BI</div><div class="item"><div class="slot"><img src="logos/metabase.svg" alt="Metabase"></div><div class="name">Metabase</div></div></div>
         </div>
-
-        <div class="polaris-row">
-          <div class="chip" id="polaris"><img src="logos/polaris.svg" alt="Apache Polaris">APACHE POLARIS</div>
-        </div>
-      </div>
-
-      <div class="arrow"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-
-      <div class="column">
-        <div class="col-title">BI</div>
-        <div class="item"><div class="slot"><img src="logos/metabase.svg" alt="Metabase"></div><div class="name">Metabase</div></div>
       </div>
     </div>
   </div>
@@ -237,11 +230,12 @@
     // Thin arrows from Airflow to each task it triggers (Airbyte and both Spark steps)
     const svg = document.getElementById('orch-lines');
     const box = svg.getBoundingClientRect();
-    // Center Airflow above the first Spark step
+    // Center Airflow between Extract and Load (Airbyte) and Transform (Spark)
     const airflowItem = document.getElementById('airflow').closest('.item');
-    const spark1 = document.querySelectorAll('.slot[data-task]')[1].closest('.stage').getBoundingClientRect();
+    const tasks = [...document.querySelectorAll('.slot[data-task]')].map(t => t.closest('.stage').getBoundingClientRect());
+    const mid = (tasks[0].left + tasks[0].width / 2 + tasks[1].left + tasks[1].width / 2) / 2;
     const ai = airflowItem.getBoundingClientRect();
-    airflowItem.style.transform = `translateX(${(spark1.left + spark1.width / 2) - (ai.left + ai.width / 2)}px)`;
+    airflowItem.style.transform = `translateX(${mid - (ai.left + ai.width / 2)}px)`;
     const a = document.getElementById('airflow').getBoundingClientRect();
     const label = airflowItem.getBoundingClientRect();
     const x0 = a.left + a.width / 2 - box.left, y0 = label.bottom - box.top + 4;
@@ -255,12 +249,7 @@
     });
     svg.innerHTML = paths;
 
-    // Apache Polaris centered between the Iceberg badges (silver and gold); bronze Parquet is not in Polaris
-    const ice = [...document.querySelectorAll('.fmt[data-catalog] img')].map(f => f.getBoundingClientRect());
-    const polaris = document.getElementById('polaris');
-    const p = polaris.getBoundingClientRect();
-    const cx = (ice[0].left + ice[0].width / 2 + ice[1].left + ice[1].width / 2) / 2;
-    polaris.style.transform = `translateX(${cx - (p.left + p.width / 2)}px)`;
+
   });
 </script>
 </body>
