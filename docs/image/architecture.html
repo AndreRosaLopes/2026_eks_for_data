@@ -47,11 +47,12 @@
   /* Logo slot + label */
   .item { display: flex; flex-direction: column; align-items: center; text-align: center; }
   .slot {
-    width: 84px; height: 84px; border-radius: 18px; background: transparent;
+    width: 66px; height: 66px; border-radius: 18px; background: transparent;
     border: none; display: flex; align-items: center; justify-content: center;
   }
   /* Logos fill about 85% of their slot */
-  .slot img { width: 72px; height: 72px; object-fit: contain; }
+  /* All symbols share the size of the layer-strip logos (56 px); Spark keeps its own slot */
+  .slot img { width: 56px; height: 56px; object-fit: contain; }
   .slot.lg { width: 120px; height: 120px; border-radius: 24px; }
   .slot.lg img { width: 102px; height: 102px; }
   .name { font: 800 13px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; margin-top: 8px; }
@@ -147,7 +148,7 @@
   }
   .bar-title { font: 800 14px Montserrat, sans-serif; letter-spacing: 1.6px; color: var(--text); }
   .backup-bar .slot.velero { width: 64px; height: 64px; }
-  .backup-bar .slot.velero img { width: 64px; height: 64px; }
+  .backup-bar .slot.velero img { width: 56px; height: 56px; }
   .backup-bar .name { margin-top: 4px; }
 
   .column { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; width: 150px; }
@@ -187,8 +188,8 @@
   /* Airflow higher, so its arrows have room above the column titles */
   .airflow-row { margin-bottom: 22px; }
 
-  .bucket { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
-  .bucket svg { width: 74px; height: 74px; }
+  .bucket { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; }
+  .bucket svg { width: 56px; height: 56px; }
   .bronze { color: var(--bronze); } .silver { color: var(--silver); } .gold { color: var(--gold); }
 
   /* Table-format badge under each bucket */
