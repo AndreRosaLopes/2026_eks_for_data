@@ -47,8 +47,9 @@
 
   /* Logo slot + label */
   .item { display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .slot { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
-  .slot img { width: 72px; height: 72px; object-fit: contain; }
+  .slot { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+  /* All symbols share the size of the card logos (52 px); Spark keeps its own slot */
+  .slot img { width: 52px; height: 52px; object-fit: contain; }
   .slot.lg { width: 120px; height: 120px; }
   .slot.lg img { width: 102px; height: 102px; }
   .name { font: 800 13px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; margin-top: 8px; }
@@ -112,20 +113,20 @@
   .flow .arrow { margin-top: 70px; }
 
   /* Catalog frame around the table-format badges, positioned by the script below */
-  .catalog-frame { position: absolute; border: 2px dashed var(--lime); border-radius: 16px; box-shadow: 0 0 22px rgba(57,255,20,.12), inset 0 0 22px rgba(57,255,20,.05); display: none; }
-  .catalog-label { position: absolute; left: 16px; bottom: 12px; }
+  /* Apache Polaris (catalog of the silver and gold Iceberg tables), below the Iceberg badges, centered between them */
+  .polaris { position: absolute; display: none; }
   .chip { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 8px; font: 800 13px Inter, sans-serif; letter-spacing: .6px; }
-  .chip img { height: 36px; width: 36px; object-fit: contain; }
+  .chip img { height: 52px; width: 52px; object-fit: contain; }
   .catalog-space { height: 112px; }
   .airflow-row { display: flex; justify-content: center; margin-bottom: 22px; }
 
-  .bucket { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
-  .bucket svg { width: 74px; height: 74px; }
+  .bucket { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+  .bucket svg { width: 52px; height: 52px; }
   .bronze { color: var(--bronze); } .silver { color: var(--silver); } .gold { color: var(--gold); }
 
   /* Table-format symbol with its name below, like Velero */
   .fmt { width: 104px; margin-top: 52px; display: flex; flex-direction: column; align-items: center; }
-  .fmt img { width: 60px; height: 60px; object-fit: contain; }
+  .fmt img { width: 52px; height: 52px; object-fit: contain; }
   .fmt .name { margin-top: 6px; }
 
   .orch-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
@@ -210,11 +211,8 @@
             <div class="item"><div class="slot" id="airflow"><img src="logos/airflow-icon.svg" alt="Apache Airflow"></div><div class="name">Apache Airflow</div></div>
           </div>
 
-          <div class="catalog-frame" id="catalog-frame">
-            <div class="frame-title">CATALOG</div>
-            <div class="catalog-label">
-              <div class="chip"><img src="logos/polaris.svg" alt="Apache Polaris">APACHE POLARIS</div>
-            </div>
+          <div class="polaris" id="polaris">
+            <div class="chip"><img src="logos/polaris.svg" alt="Apache Polaris">APACHE POLARIS</div>
           </div>
 
           <div class="flow">
@@ -276,16 +274,17 @@
     });
     svg.innerHTML = paths;
 
-    // Catalog frame: only around the Iceberg badges (silver and gold); bronze Parquet is not in Polaris
+    // Apache Polaris below and centered between the Iceberg badges (silver and gold); bronze Parquet is not in Polaris
     const orch = document.querySelector('.orch').getBoundingClientRect();
-    const fmts = [...document.querySelectorAll('.fmt[data-catalog]')].map(f => f.getBoundingClientRect());
-    const frame = document.getElementById('catalog-frame');
-    const left = Math.min(...fmts.map(r => r.left)) - 34, right = orch.right - 16;
-    const top = Math.min(...fmts.map(r => r.top)) - 22, bottom = Math.max(...fmts.map(r => r.bottom)) + 132;
-    Object.assign(frame.style, {
-      display: 'block', left: (left - orch.left - 2) + 'px', top: (top - orch.top - 2) + 'px',
-      width: (right - left) + 'px', height: (bottom - top) + 'px'
-    });
+    const ice = [...document.querySelectorAll('.fmt[data-catalog] img')].map(f => f.getBoundingClientRect());
+    const polaris = document.getElementById('polaris');
+    polaris.style.display = 'block';
+    const p = polaris.getBoundingClientRect();
+    const cx = (ice[0].left + ice[0].width / 2 + ice[1].left + ice[1].width / 2) / 2;
+    // Same height as before: bottom 118 px below the Iceberg names
+    const names = [...document.querySelectorAll('.fmt[data-catalog]')].map(f => f.getBoundingClientRect());
+    const bottom = Math.max(...names.map(r => r.bottom)) + 118;
+    Object.assign(polaris.style, { left: (cx - p.width / 2 - orch.left) + 'px', top: (bottom - p.height - orch.top) + 'px' });
   });
 </script>
 </body>
