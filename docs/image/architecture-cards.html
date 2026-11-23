@@ -118,7 +118,7 @@
   .chip { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 8px; font: 800 13px Inter, sans-serif; letter-spacing: .6px; }
   .chip img { height: 52px; width: 52px; object-fit: contain; }
   .catalog-space { height: 112px; }
-  .airflow-row { display: flex; justify-content: center; margin-bottom: 22px; }
+  .airflow-row { display: flex; justify-content: center; margin-bottom: 40px; }
 
   .bucket { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
   .bucket svg { width: 52px; height: 52px; }
@@ -141,6 +141,10 @@
   .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.14); }
   .sig-name { font: 800 20px Montserrat, sans-serif; color: var(--text); }
   .sig-title { font-size: 15px; color: var(--muted); margin-top: 2px; }
+
+  /* Alignment: every flow title ends on the same line (room for two lines), so symbols and arrows share one level */
+  .flow .col-title { min-height: 34px; display: flex; align-items: flex-end; justify-content: center; text-align: center; }
+  .column .col-title { margin-bottom: -12px; } /* column gap 26 px - 12 = the 14 px under the flow titles */
 </style>
 </head>
 <body>
@@ -254,6 +258,22 @@
 <script>
   // Thin arrows from Airflow to each task it triggers (Airbyte and both Spark steps)
   window.addEventListener('load', () => {
+    // Alignment: Data Source and BI titles on the level of the flow titles; every arrow on the level of the symbols
+    const refTitle = document.querySelector('.flow .col-title').getBoundingClientRect();
+    document.querySelectorAll('.column').forEach(c => {
+      c.style.justifyContent = 'flex-start';
+      const t = c.querySelector('.col-title').getBoundingClientRect();
+      c.style.paddingTop = (refTitle.bottom - t.bottom) + 'px';
+    });
+    const icon = document.querySelector('.slot[data-task]').getBoundingClientRect();
+    const cy = icon.top + icon.height / 2;
+    document.querySelectorAll('.arrow').forEach(a => {
+      a.style.alignSelf = 'flex-start';
+      a.style.marginTop = '0px';
+      const r = a.getBoundingClientRect();
+      a.style.marginTop = (cy - (r.top + r.height / 2)) + 'px';
+    });
+
     const svg = document.getElementById('orch-lines');
     const box = svg.getBoundingClientRect();
     // Center Airflow above the first Spark step

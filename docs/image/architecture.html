@@ -186,7 +186,7 @@
   .catalog-label { position: absolute; left: 16px; bottom: 12px; }
   .catalog-space { height: 40px; }
   /* Airflow higher, so its arrows have room above the column titles */
-  .airflow-row { margin-bottom: 22px; }
+  .airflow-row { margin-bottom: 40px; }
 
   .bucket { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; }
   .bucket svg { width: 56px; height: 56px; }
@@ -218,6 +218,10 @@
   .slot.wide img, .band-body .slot.wide img { width: 112px; height: 56px; }
   .flow .slot.wide { width: 100px; }
   .flow .slot.wide img { width: 86px; height: 60px; }
+
+  /* Alignment: every flow title ends on the same line (room for two lines), so symbols and arrows share one level */
+  .flow .col-title { min-height: 34px; display: flex; align-items: flex-end; justify-content: center; text-align: center; }
+  .column .col-title { margin-bottom: -12px; } /* column gap 26 px - 12 = the 14 px under the flow titles */
 </style>
 </head>
 <body>
@@ -345,6 +349,22 @@
 <script>
   // Thin arrows from Airflow to each task it triggers (Airbyte and both Spark steps)
   window.addEventListener('load', () => {
+    // Alignment: Data Source and BI titles on the level of the flow titles; every arrow on the level of the symbols
+    const refTitle = document.querySelector('.flow .col-title').getBoundingClientRect();
+    document.querySelectorAll('.column').forEach(c => {
+      c.style.justifyContent = 'flex-start';
+      const t = c.querySelector('.col-title').getBoundingClientRect();
+      c.style.paddingTop = (refTitle.bottom - t.bottom) + 'px';
+    });
+    const icon = document.querySelector('.slot[data-task]').getBoundingClientRect();
+    const cy = icon.top + icon.height / 2;
+    document.querySelectorAll('.arrow').forEach(a => {
+      a.style.alignSelf = 'flex-start';
+      a.style.marginTop = '0px';
+      const r = a.getBoundingClientRect();
+      a.style.marginTop = (cy - (r.top + r.height / 2)) + 'px';
+    });
+
     const svg = document.getElementById('orch-lines');
     const box = svg.getBoundingClientRect();
     // Center Airflow above the first Spark step
