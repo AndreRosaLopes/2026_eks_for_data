@@ -17,7 +17,7 @@
     --bronze: #CD7F32;
     --silver: #C0C0C0;
     --gold: #FFD700;
-    --strip: 138px; /* visible height of each back card */
+    --strip: 112px; /* visible height of each back card */
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #050605; font-family: Inter, Arial, sans-serif; color: var(--text); }
@@ -76,7 +76,7 @@
 
   /* Back-card strip: title on top, logos with their names centered below it.
      Bottom padding keeps the logos clear of the next card's edge and shadow. */
-  .strip { height: var(--strip); flex: 1; display: flex; flex-direction: column; padding: 20px 28px 18px; align-self: flex-start; }
+  .strip { height: var(--strip); flex: 1; display: flex; flex-direction: column; padding: 20px 28px 12px; align-self: flex-start; }
   .tools { flex: 1; display: flex; align-items: center; justify-content: center; gap: 56px; }
   .htitle {
     font: 900 18px Montserrat, sans-serif; letter-spacing: 2px; color: var(--lime);
