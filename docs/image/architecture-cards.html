@@ -116,7 +116,7 @@
   .catalog-label { position: absolute; left: 16px; bottom: 12px; }
   .chip { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 8px; font: 800 13px Inter, sans-serif; letter-spacing: .6px; }
   .chip img { height: 36px; width: 36px; object-fit: contain; }
-  .catalog-space { height: 40px; }
+  .catalog-space { height: 112px; }
   .airflow-row { display: flex; justify-content: center; margin-bottom: 22px; }
 
   .bucket { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
@@ -224,11 +224,11 @@
             <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
             <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-            <div class="item stage layer"><div class="layer-box"><div class="col-title">SILVER</div><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Silver</div></div><div class="fmt"><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
+            <div class="item stage layer"><div class="layer-box"><div class="col-title">SILVER</div><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Silver</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
             <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
             <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-            <div class="item stage layer"><div class="layer-box"><div class="col-title">GOLD</div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Gold</div></div><div class="fmt"><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
+            <div class="item stage layer"><div class="layer-box"><div class="col-title">GOLD</div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Gold</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
           </div>
           <div class="catalog-space"></div>
         </div>
@@ -276,12 +276,12 @@
     });
     svg.innerHTML = paths;
 
-    // Catalog frame: as wide as the Orchestration box, around the format badges
+    // Catalog frame: only around the Iceberg badges (silver and gold); bronze Parquet is not in Polaris
     const orch = document.querySelector('.orch').getBoundingClientRect();
-    const fmts = [...document.querySelectorAll('.fmt')].map(f => f.getBoundingClientRect());
+    const fmts = [...document.querySelectorAll('.fmt[data-catalog]')].map(f => f.getBoundingClientRect());
     const frame = document.getElementById('catalog-frame');
-    const left = orch.left + 16, right = orch.right - 16;
-    const top = Math.min(...fmts.map(r => r.top)) - 22, bottom = Math.max(...fmts.map(r => r.bottom)) + 60;
+    const left = Math.min(...fmts.map(r => r.left)) - 34, right = orch.right - 16;
+    const top = Math.min(...fmts.map(r => r.top)) - 22, bottom = Math.max(...fmts.map(r => r.bottom)) + 132;
     Object.assign(frame.style, {
       display: 'block', left: (left - orch.left - 2) + 'px', top: (top - orch.top - 2) + 'px',
       width: (right - left) + 'px', height: (bottom - top) + 'px'
