@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Open Data Platform Architecture (cards, vertical)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0F0E;
+    --panel: #161A18;
+    --card: #1F2421;
+    --lime: #39FF14;
+    --soft-lime: #89F336;
+    --text: #E8F0EA;
+    --muted: #8A968E;
+    --bronze: #CD7F32;
+    --silver: #C0C0C0;
+    --gold: #FFD700;
+    --strip: 64px; /* visible height of each back card */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050605; font-family: Inter, Arial, sans-serif; color: var(--text); }
+
+  /* 4:5 portrait canvas for a LinkedIn image post */
+  .canvas {
+    position: relative; width: 1080px; height: 1350px; margin: 0 auto; overflow: hidden;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(57,255,20,.06) 1px, transparent 0),
+      radial-gradient(ellipse at 85% 0%, rgba(57,255,20,.07), transparent 45%),
+      radial-gradient(ellipse at 0% 100%, rgba(137,243,54,.05), transparent 40%);
+    background-size: 28px 28px, 100% 100%, 100% 100%;
+  }
+
+  /* Header */
+  header {
+    position: absolute; top: 0; left: 0; right: 0; height: 206px;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 44px;
+  }
+  .kicker { font: 600 22px Montserrat, sans-serif; color: var(--text); letter-spacing: .5px; }
+  h1 { font: 900 54px/1.05 Montserrat, sans-serif; letter-spacing: .5px; margin-top: 6px; }
+  h1 em { font-style: normal; color: var(--lime); text-shadow: 0 0 18px rgba(57,255,20,.45); }
+  .subtitle { font-size: 19px; color: var(--muted); margin-top: 10px; }
+  .hero { display: flex; gap: 18px; }
+
+  /* Logo slot + label */
+  .item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .slot { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+  /* All symbols share the size of the card logos (40 px); Spark keeps its own slot */
+  .slot img { width: 40px; height: 40px; object-fit: contain; }
+  .slot.lg { width: 92px; height: 92px; }
+  .slot.lg img { width: 80px; height: 80px; }
+  .name { font: 800 12px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; margin-top: 6px; }
+  .lg + .name { font-size: 14px; }
+  .cap { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .col-title { font: 800 12px Montserrat, sans-serif; letter-spacing: 1.2px; color: var(--soft-lime); margin-bottom: 10px; }
+
+  /* Card stack: every card has the same width, each one shifted down by one strip.
+     Back cards show only their top strip (title + logos); the front card holds the data flow. */
+  .stack { position: absolute; top: 208px; left: 36px; right: 36px; bottom: 104px; }
+  .card {
+    position: absolute; left: 0; right: 0; bottom: 0; display: flex;
+    border-radius: 26px; border: 1.5px solid rgba(57,255,20,.35);
+    box-shadow: 0 -12px 26px rgba(0,0,0,.6);
+  }
+  .card.c1 { top: 0;                       background: #121614; }
+  .card.c2 { top: calc(var(--strip) * 1);  background: #161B18; }
+  .card.c3 { top: calc(var(--strip) * 2);  background: #1A201C; }
+  .card.c4 { top: calc(var(--strip) * 3);  background: #1E2420; }
+  .card.front {
+    top: calc(var(--strip) * 4); background: var(--panel);
+    border: 2px solid var(--lime); box-shadow: 0 -12px 26px rgba(0,0,0,.6), 0 0 22px rgba(57,255,20,.12);
+    flex-direction: column; align-items: stretch; justify-content: space-evenly; padding: 18px 24px;
+  }
+
+  /* Back-card strip: title on the left, logos with their names in a row.
+     Bottom padding keeps the logos clear of the next card's edge and shadow. */
+  .strip { height: var(--strip); flex: 1; display: flex; align-items: center; gap: 28px; padding: 0 28px 10px; align-self: flex-start; }
+  .htitle {
+    width: 330px; font: 900 18px Montserrat, sans-serif; letter-spacing: 2px; color: var(--lime);
+    text-shadow: 0 0 12px rgba(57,255,20,.5);
+  }
+  .tool { display: flex; align-items: center; gap: 10px; font: 800 12px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; }
+  .tool img { width: 40px; height: 40px; object-fit: contain; }
+
+  /* Front card rows */
+  .row { display: flex; align-items: center; justify-content: center; gap: 46px; }
+  .row .col-title { margin: 0; width: 120px; text-align: right; }
+  .down { display: flex; justify-content: center; }
+  .down svg { width: 20px; height: 34px; filter: drop-shadow(0 0 5px rgba(57,255,20,.6)); }
+
+  .arrow { display: flex; align-items: center; justify-content: center; flex: none; }
+  .arrow.sm, .arrow.sm svg { width: 30px; }
+  .arrow svg { height: 20px; filter: drop-shadow(0 0 5px rgba(57,255,20,.6)); }
+
+  /* Pipeline (Airflow, flow, table formats and catalog), no frame */
+  .orch { position: relative; display: flex; flex-direction: column; gap: 18px; }
+  .flow { display: flex; align-items: flex-start; justify-content: space-between; }
+  .flow .stage { width: 118px; }
+  .layer-box { width: 118px; display: flex; flex-direction: column; align-items: center; border: 1.5px dashed #3A453E; border-radius: 14px; padding: 9px 0 10px; margin-top: -10px; }
+  .flow .arrow { margin-top: 62px; }
+  .airflow-row { display: flex; justify-content: center; margin-bottom: 12px; }
+  .flow .slot.wide { width: 100px; height: 56px; }
+  .flow .slot.wide img { width: 86px; height: 56px; }
+
+  .bucket { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+  .bucket svg { width: 40px; height: 40px; }
+  .bronze { color: var(--bronze); } .silver { color: var(--silver); } .gold { color: var(--gold); }
+
+  /* Table-format symbol with its name below, like Velero */
+  .fmt { width: 104px; margin-top: 26px; display: flex; flex-direction: column; align-items: center; }
+  .fmt img { width: 40px; height: 40px; object-fit: contain; }
+  .fmt .name { margin-top: 6px; }
+
+  /* Apache Polaris (catalog of the silver and gold Iceberg tables), below and centered between the Iceberg badges */
+  .polaris-row { display: flex; margin-top: 6px; }
+  .chip { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 8px; font: 800 12px Inter, sans-serif; letter-spacing: .6px; }
+  .chip img { height: 40px; width: 40px; object-fit: contain; }
+
+  .orch-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+  /* Footer */
+  footer { position: absolute; right: 44px; bottom: 16px; height: 76px; display: flex; align-items: center; gap: 14px; }
+  .photo { width: 68px; height: 68px; border-radius: 50%; border: 2px solid var(--soft-lime); background: var(--card); overflow: hidden; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.14); }
+  .sig-name { font: 800 19px Montserrat, sans-serif; color: var(--text); }
+  .sig-title { font-size: 14px; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <header>
+    <div>
+      <div class="kicker">Solution Architecture</div>
+      <h1>OPEN DATA PLATFORM<br><em>ON KUBERNETES</em></h1>
+      <div class="subtitle">Open-source lakehouse on Amazon EKS, built hands-on</div>
+    </div>
+    <div class="hero">
+      <div class="item"><div class="slot lg"><img src="logos/aws.svg" alt="AWS"></div><div class="name">AWS</div></div>
+      <div class="item"><div class="slot lg"><img src="logos/kubernetes.svg" alt="Kubernetes"></div><div class="name">Kubernetes</div></div>
+    </div>
+  </header>
+
+  <div class="stack">
+    <!-- Card 1 (back): Infrastructure as Code -->
+    <div class="card c1"><div class="strip">
+      <div class="htitle">INFRASTRUCTURE AS CODE</div>
+      <div class="tool"><img src="logos/terraform-icon.svg" alt="Terraform">Terraform</div>
+    </div></div>
+
+    <!-- Card 2: Backup and Restore -->
+    <div class="card c2"><div class="strip">
+      <div class="htitle">BACKUP AND RESTORE</div>
+      <div class="tool"><img src="logos/velero-icon.svg" alt="Velero">Velero</div>
+    </div></div>
+
+    <!-- Card 3: GitOps -->
+    <div class="card c3"><div class="strip">
+      <div class="htitle">GITOPS</div>
+      <div class="tool"><img src="logos/github-icon.svg" alt="GitHub">GitHub</div>
+      <div class="tool"><img src="logos/argo-icon.svg" alt="Argo CD">Argo CD</div>
+    </div></div>
+
+    <!-- Card 4: Observability -->
+    <div class="card c4"><div class="strip">
+      <div class="htitle">OBSERVABILITY</div>
+      <div class="tool"><img src="logos/prometheus.svg" alt="Prometheus">Prometheus</div>
+      <div class="tool"><img src="logos/grafana.svg" alt="Grafana">Grafana</div>
+    </div></div>
+
+    <!-- Card 5 (front): data flow, top to bottom: source, pipeline, BI -->
+    <div class="card front">
+      <div class="row">
+        <div class="col-title">DATA SOURCE</div>
+        <div class="item"><div class="slot"><img src="logos/postgresql.svg" alt="PostgreSQL"></div><div class="name">PostgreSQL</div><div class="cap">TPC-H OLTP · CDC</div></div>
+        <div class="item"><div class="slot"><img src="logos/duckdb.svg" alt="DuckDB"></div><div class="name">DuckDB</div><div class="cap">Data generation</div></div>
+        <div style="width:120px"></div>
+      </div>
+
+      <div class="down"><svg viewBox="0 0 20 34"><path d="M10 2V26M3 19l7 8 7-8" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+      <div class="orch">
+        <svg class="orch-lines" id="orch-lines"></svg>
+
+        <div class="airflow-row">
+          <div class="item"><div class="slot" id="airflow"><img src="logos/airflow-icon.svg" alt="Apache Airflow"></div><div class="name">Apache Airflow</div></div>
+        </div>
+
+        <div class="flow">
+          <div class="item stage"><div class="col-title">EXTRACT AND LOAD</div><div class="slot" data-task><img src="logos/airbyte-icon.svg" alt="Airbyte"></div><div class="name">Airbyte</div></div>
+          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="item stage layer"><div class="layer-box"><div class="col-title">BRONZE</div><div class="bucket bronze"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Bronze</div></div><div class="fmt"><img src="logos/parquet-icon.svg" alt="Apache Parquet"><div class="name">Parquet</div></div></div>
+          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
+          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="item stage layer"><div class="layer-box"><div class="col-title">SILVER</div><div class="bucket silver"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Silver</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
+          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="item stage"><div class="col-title">TRANSFORM</div><div class="slot wide" data-task><img src="logos/spark.svg" alt="Apache Spark"></div><div class="name">Apache Spark</div></div>
+          <div class="arrow sm"><svg viewBox="0 0 30 20"><path d="M2 10H22M15 3l9 7-9 7" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="item stage layer"><div class="layer-box"><div class="col-title">GOLD</div><div class="bucket gold"><svg viewBox="0 0 64 64"><path d="M10 15 L16 54 Q32 61 48 54 L54 15" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="15" rx="22" ry="7" fill="#161A18" stroke="currentColor" stroke-width="3"/></svg></div><div class="name">S3 Gold</div></div><div class="fmt" data-catalog><img src="logos/iceberg-icon.svg" alt="Apache Iceberg"><div class="name">Iceberg</div></div></div>
+        </div>
+
+        <div class="polaris-row">
+          <div class="chip" id="polaris"><img src="logos/polaris.svg" alt="Apache Polaris">APACHE POLARIS</div>
+        </div>
+      </div>
+
+      <div class="down"><svg viewBox="0 0 20 34"><path d="M10 2V26M3 19l7 8 7-8" fill="none" stroke="#39FF14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+      <div class="row">
+        <div class="col-title">BI</div>
+        <div class="item"><div class="slot"><img src="logos/metabase.svg" alt="Metabase"></div><div class="name">Metabase</div></div>
+        <div style="width:120px"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="photo"><img src="author.png" alt="Andre Lopes"></div>
+    <div>
+      <div class="sig-name">Andre Lopes</div>
+      <div class="sig-title">Data Engineer</div>
+    </div>
+  </footer>
+
+</div>
+<script>
+  window.addEventListener('load', () => {
+    // Thin arrows from Airflow to each task it triggers (Airbyte and both Spark steps)
+    const svg = document.getElementById('orch-lines');
+    const box = svg.getBoundingClientRect();
+    // Center Airflow above the first Spark step
+    const airflowItem = document.getElementById('airflow').closest('.item');
+    const spark1 = document.querySelectorAll('.slot[data-task]')[1].closest('.stage').getBoundingClientRect();
+    const ai = airflowItem.getBoundingClientRect();
+    airflowItem.style.transform = `translateX(${(spark1.left + spark1.width / 2) - (ai.left + ai.width / 2)}px)`;
+    const a = document.getElementById('airflow').getBoundingClientRect();
+    const label = airflowItem.getBoundingClientRect();
+    const x0 = a.left + a.width / 2 - box.left, y0 = label.bottom - box.top + 4;
+    let paths = '<defs><marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">'
+      + '<path d="M0 0L8 4L0 8z" fill="#39FF14"/></marker></defs>';
+    document.querySelectorAll('[data-task]').forEach(t => {
+      const s = t.closest('.stage').getBoundingClientRect();
+      const x1 = s.left + s.width / 2 - box.left, y1 = s.top - box.top - 6;
+      paths += `<path d="M${x0} ${y0} C${x0} ${y0 + 30} ${x1} ${y1 - 30} ${x1} ${y1}" fill="none"`
+        + ' stroke="#39FF14" stroke-width="1.3" stroke-opacity=".85" marker-end="url(#head)"/>';
+    });
+    svg.innerHTML = paths;
+
+    // Apache Polaris centered between the Iceberg badges (silver and gold); bronze Parquet is not in Polaris
+    const ice = [...document.querySelectorAll('.fmt[data-catalog] img')].map(f => f.getBoundingClientRect());
+    const polaris = document.getElementById('polaris');
+    const p = polaris.getBoundingClientRect();
+    const cx = (ice[0].left + ice[0].width / 2 + ice[1].left + ice[1].width / 2) / 2;
+    polaris.style.transform = `translateX(${cx - (p.left + p.width / 2)}px)`;
+  });
+</script>
+</body>
+</html>
